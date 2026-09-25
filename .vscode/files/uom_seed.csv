@@ -1,0 +1,12 @@
+ingredient,purchase_unit,purchase_price_placeholder,recipe_unit,volume_to_weight_rule,yield_factor
+All-Purpose Flour,Kilogram,0.00,Cup,1 cup = 120g,8.33
+Granulated Sugar,Kilogram,0.00,Cup,1 cup = 200g,5.00
+Brown Sugar (Packed),Kilogram,0.00,Cup,1 cup = 213g,4.69
+Cocoa Powder,Kilogram,0.00,Cup,1 cup = 100g,10.00
+Unsalted Butter,Kilogram,0.00,Cup,1 cup = 227g,4.41
+Vegetable Oil,Liter,0.00,Cup,1 cup = 240ml,4.17
+Whole Milk,Liter,0.00,Cup,1 cup = 240ml,4.17
+Baking Powder,100g Container,0.00,tsp,1 tsp = 5g,20.00
+Baking Soda,100g Container,0.00,tsp,1 tsp = 5g,20.00
+Vanilla Extract,100ml Bottle,0.00,tsp,1 tsp = 5ml,20.00
+Large Eggs,Dozen,0.00,pcs,1 dozen = 12 pcs,12.00

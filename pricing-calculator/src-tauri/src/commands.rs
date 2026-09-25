@@ -1,0 +1,613 @@
+// Tauri IPC command handlers — ingredients CRUD + recipe costing engine
+use crate::db::get_db_path;
+use crate::models::*;
+use rusqlite::{params, Connection};
+use std::sync::Mutex;
+use tauri::State;
+
+pub struct DbState(pub Mutex<Connection>);
+
+// ── Ingredients ──────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT ingredient_id, name, purchase_unit, purchase_price, recipe_unit, yield_factor
+             FROM ingredients ORDER BY name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map([], |row| {
+            Ok(Ingredient {
+                ingredient_id: row.get(0)?,
+                name: row.get(1)?,
+                purchase_unit: row.get(2)?,
+                purchase_price: row.get(3)?,
+                recipe_unit: row.get(4)?,
+                yield_factor: row.get(5)?,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn create_ingredient(
+    state: State<DbState>,
+    input: IngredientInput,
+) -> Result<Ingredient, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "INSERT INTO ingredients (name, purchase_unit, purchase_price, recipe_unit, yield_factor)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![
+            input.name,
+            input.purchase_unit,
+            input.purchase_price,
+            input.recipe_unit,
+            input.yield_factor
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    let id = conn.last_insert_rowid();
+    Ok(Ingredient {
+        ingredient_id: id,
+        name: input.name,
+        purchase_unit: input.purchase_unit,
+        purchase_price: input.purchase_price,
+        recipe_unit: input.recipe_unit,
+        yield_factor: input.yield_factor,
+    })
+}
+
+#[tauri::command]
+pub fn update_ingredient(
+    state: State<DbState>,
+    ingredient_id: i64,
+    input: IngredientInput,
+) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE ingredients SET name=?1, purchase_unit=?2, purchase_price=?3,
+         recipe_unit=?4, yield_factor=?5, updated_at=datetime('now')
+         WHERE ingredient_id=?6",
+        params![
+            input.name,
+            input.purchase_unit,
+            input.purchase_price,
+            input.recipe_unit,
+            input.yield_factor,
+            ingredient_id
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_ingredient(state: State<DbState>, ingredient_id: i64) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "DELETE FROM ingredients WHERE ingredient_id=?1",
+        params![ingredient_id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+// ── Recipes ──────────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_recipes(state: State<DbState>) -> Result<Vec<Recipe>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT r.recipe_id, r.name, r.yield_qty, r.labor_cost, r.electricity_cost,
+                    r.other_overhead, r.target_markup_pct, r.reseller_markup_pct, r.desired_profit_alert,
+                    COALESCE((
+                        SELECT SUM(ri.batch_qty * (i.purchase_price / CASE WHEN i.yield_factor != 0.0 THEN i.yield_factor ELSE 1.0 END))
+                        FROM recipe_ingredients ri
+                        JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
+                        WHERE ri.recipe_id = r.recipe_id
+                    ), 0.0) AS ingredient_cost
+             FROM recipes r ORDER BY r.name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map([], |row| {
+            let recipe_id: i64 = row.get(0)?;
+            let name: String = row.get(1)?;
+            let yield_qty: f64 = row.get(2)?;
+            let labor_cost: f64 = row.get(3)?;
+            let electricity_cost: f64 = row.get(4)?;
+            let other_overhead: f64 = row.get(5)?;
+            let target_markup_pct: f64 = row.get(6)?;
+            let reseller_markup_pct: f64 = row.get(7)?;
+            let desired_profit_alert: f64 = row.get(8)?;
+            let ingredient_cost: f64 = row.get(9)?;
+
+            let total_overhead = labor_cost + electricity_cost + other_overhead;
+            let total_batch_cost = ingredient_cost + total_overhead;
+            let unit_cost = if yield_qty > 0.0 {
+                total_batch_cost / yield_qty
+            } else {
+                0.0
+            };
+            let unit_retail_price = unit_cost * (1.0 + target_markup_pct / 100.0);
+
+            Ok(Recipe {
+                recipe_id,
+                name,
+                yield_qty,
+                labor_cost,
+                electricity_cost,
+                other_overhead,
+                target_markup_pct,
+                reseller_markup_pct,
+                desired_profit_alert,
+                ingredient_cost,
+                unit_retail_price,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn create_recipe(state: State<DbState>, input: RecipeInput) -> Result<Recipe, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "INSERT INTO recipes (name, yield_qty, labor_cost, electricity_cost, other_overhead,
+         target_markup_pct, reseller_markup_pct, desired_profit_alert)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        params![
+            input.name,
+            input.yield_qty,
+            input.labor_cost,
+            input.electricity_cost,
+            input.other_overhead,
+            input.target_markup_pct,
+            input.reseller_markup_pct,
+            input.desired_profit_alert
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    let id = conn.last_insert_rowid();
+    let total_overhead = input.labor_cost + input.electricity_cost + input.other_overhead;
+    let unit_cost = if input.yield_qty > 0.0 {
+        total_overhead / input.yield_qty
+    } else {
+        0.0
+    };
+    let unit_retail_price = unit_cost * (1.0 + input.target_markup_pct / 100.0);
+
+    Ok(Recipe {
+        recipe_id: id,
+        name: input.name,
+        yield_qty: input.yield_qty,
+        labor_cost: input.labor_cost,
+        electricity_cost: input.electricity_cost,
+        other_overhead: input.other_overhead,
+        target_markup_pct: input.target_markup_pct,
+        reseller_markup_pct: input.reseller_markup_pct,
+        desired_profit_alert: input.desired_profit_alert,
+        ingredient_cost: 0.0,
+        unit_retail_price,
+    })
+}
+
+#[tauri::command]
+pub fn update_recipe(
+    state: State<DbState>,
+    recipe_id: i64,
+    input: RecipeInput,
+) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE recipes SET name=?1, yield_qty=?2, labor_cost=?3, electricity_cost=?4,
+         other_overhead=?5, target_markup_pct=?6, reseller_markup_pct=?7,
+         desired_profit_alert=?8, updated_at=datetime('now')
+         WHERE recipe_id=?9",
+        params![
+            input.name,
+            input.yield_qty,
+            input.labor_cost,
+            input.electricity_cost,
+            input.other_overhead,
+            input.target_markup_pct,
+            input.reseller_markup_pct,
+            input.desired_profit_alert,
+            recipe_id
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_recipe(state: State<DbState>, recipe_id: i64) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM recipes WHERE recipe_id=?1", params![recipe_id])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+// ── Recipe Ingredients ───────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_recipe_ingredients(
+    state: State<DbState>,
+    recipe_id: i64,
+) -> Result<Vec<RecipeIngredient>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT ri.id, ri.recipe_id, ri.ingredient_id, ri.batch_qty,
+                    i.name, i.purchase_unit, i.purchase_price, i.recipe_unit, i.yield_factor
+             FROM recipe_ingredients ri
+             JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
+             WHERE ri.recipe_id = ?1
+             ORDER BY i.name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map(params![recipe_id], |row| {
+            let batch_qty: f64 = row.get(3)?;
+            let purchase_price: f64 = row.get(6)?;
+            let yield_factor: f64 = row.get(8)?;
+            let normalized_unit_cost = if yield_factor != 0.0 {
+                purchase_price / yield_factor
+            } else {
+                0.0
+            };
+            let line_item_cost = batch_qty * normalized_unit_cost;
+
+            Ok(RecipeIngredient {
+                id: row.get(0)?,
+                recipe_id: row.get(1)?,
+                ingredient_id: row.get(2)?,
+                batch_qty,
+                ingredient_name: row.get(4)?,
+                purchase_unit: row.get(5)?,
+                purchase_price,
+                recipe_unit: row.get(7)?,
+                yield_factor,
+                normalized_unit_cost,
+                line_item_cost,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn upsert_recipe_ingredient(
+    state: State<DbState>,
+    recipe_id: i64,
+    input: RecipeIngredientInput,
+) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "INSERT INTO recipe_ingredients (recipe_id, ingredient_id, batch_qty)
+         VALUES (?1, ?2, ?3)
+         ON CONFLICT(recipe_id, ingredient_id) DO UPDATE SET batch_qty=excluded.batch_qty",
+        params![recipe_id, input.ingredient_id, input.batch_qty],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn remove_recipe_ingredient(state: State<DbState>, id: i64) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "DELETE FROM recipe_ingredients WHERE id=?1",
+        params![id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+// ── Costing Engine ────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn calculate_recipe_cost(
+    state: State<DbState>,
+    recipe_id: i64,
+) -> Result<RecipeCostResult, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    // Fetch recipe
+    let mut recipe = conn
+        .query_row(
+            "SELECT recipe_id, name, yield_qty, labor_cost, electricity_cost,
+                    other_overhead, target_markup_pct, reseller_markup_pct, desired_profit_alert
+             FROM recipes WHERE recipe_id=?1",
+            params![recipe_id],
+            |row| {
+                Ok(Recipe {
+                    recipe_id: row.get(0)?,
+                    name: row.get(1)?,
+                    yield_qty: row.get(2)?,
+                    labor_cost: row.get(3)?,
+                    electricity_cost: row.get(4)?,
+                    other_overhead: row.get(5)?,
+                    target_markup_pct: row.get(6)?,
+                    reseller_markup_pct: row.get(7)?,
+                    desired_profit_alert: row.get(8)?,
+                    ingredient_cost: 0.0,
+                    unit_retail_price: 0.0,
+                })
+            },
+        )
+        .map_err(|e| e.to_string())?;
+
+    // Fetch line items with JOIN
+    let mut stmt = conn
+        .prepare(
+            "SELECT ri.id, ri.recipe_id, ri.ingredient_id, ri.batch_qty,
+                    i.name, i.purchase_unit, i.purchase_price, i.recipe_unit, i.yield_factor
+             FROM recipe_ingredients ri
+             JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
+             WHERE ri.recipe_id = ?1",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let line_items: Vec<RecipeIngredient> = stmt
+        .query_map(params![recipe_id], |row| {
+            let batch_qty: f64 = row.get(3)?;
+            let purchase_price: f64 = row.get(6)?;
+            let yield_factor: f64 = row.get(8)?;
+            let normalized_unit_cost = if yield_factor != 0.0 {
+                purchase_price / yield_factor
+            } else {
+                0.0
+            };
+            let line_item_cost = batch_qty * normalized_unit_cost;
+            Ok(RecipeIngredient {
+                id: row.get(0)?,
+                recipe_id: row.get(1)?,
+                ingredient_id: row.get(2)?,
+                batch_qty,
+                ingredient_name: row.get(4)?,
+                purchase_unit: row.get(5)?,
+                purchase_price,
+                recipe_unit: row.get(7)?,
+                yield_factor,
+                normalized_unit_cost,
+                line_item_cost,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    // ── Business logic (floating-point precision maintained) ─────────────────
+    let total_variable_cost: f64 = line_items.iter().map(|li| li.line_item_cost).sum();
+    let total_overhead = recipe.labor_cost + recipe.electricity_cost + recipe.other_overhead;
+    let total_cost_per_batch = total_variable_cost + total_overhead;
+
+    let cost_per_item = if recipe.yield_qty != 0.0 {
+        total_cost_per_batch / recipe.yield_qty
+    } else {
+        0.0
+    };
+
+    // ── Markup normalization (whole-number UI input → decimal) ────────────
+    // User types "50" in UI → stored as 50.0 → divided by 100 → 0.50
+    let retail_markup_decimal = recipe.target_markup_pct / 100.0;
+    let reseller_markup_decimal = recipe.reseller_markup_pct / 100.0;
+
+    let retail_price_per_item = cost_per_item * (1.0 + retail_markup_decimal);
+    let reseller_price_per_item = cost_per_item * (1.0 + reseller_markup_decimal);
+    let gross_profit_per_batch =
+        (retail_price_per_item * recipe.yield_qty) - total_cost_per_batch;
+    let profit_alert_triggered = gross_profit_per_batch < recipe.desired_profit_alert;
+
+    // ── New profitability metrics (f64, unrounded) ───────────────────────
+    // Recommended Retail Price / Item = Cost/Item × (1 + markup%)
+    let recommended_retail_price_item = retail_price_per_item;
+
+    // Gross Profit / Item = Retail Price − Cost
+    let gross_profit_item = recommended_retail_price_item - cost_per_item;
+
+    // Gross Margin % = (Gross Profit / Retail Price) × 100
+    let gross_margin_pct = if recommended_retail_price_item != 0.0 {
+        (gross_profit_item / recommended_retail_price_item) * 100.0
+    } else {
+        0.0
+    };
+
+    // Retail Revenue / Batch = Retail Price × Items per Batch
+    let retail_revenue_batch = recommended_retail_price_item * recipe.yield_qty;
+
+    recipe.ingredient_cost = total_variable_cost;
+    recipe.unit_retail_price = recommended_retail_price_item;
+
+    Ok(RecipeCostResult {
+        recipe,
+        line_items,
+        total_variable_cost,
+        total_overhead,
+        total_cost_per_batch,
+        cost_per_item,
+        retail_price_per_item,
+        reseller_price_per_item,
+        gross_profit_per_batch,
+        profit_alert_triggered,
+        recommended_retail_price_item,
+        gross_profit_item,
+        gross_margin_pct,
+        retail_revenue_batch,
+    })
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_settings(state: State<DbState>) -> Result<Vec<AppSetting>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare("SELECT setting_key, setting_value FROM app_settings ORDER BY setting_key")
+        .map_err(|e| e.to_string())?;
+
+    let settings = stmt
+        .query_map([], |row| {
+            Ok(AppSetting {
+                setting_key: row.get(0)?,
+                setting_value: row.get(1)?,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(settings)
+}
+
+#[tauri::command]
+pub fn set_setting(
+    state: State<DbState>,
+    key: String,
+    value: String,
+) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "INSERT INTO app_settings (setting_key, setting_value) VALUES (?1, ?2)
+         ON CONFLICT(setting_key) DO UPDATE SET setting_value=excluded.setting_value",
+        params![key, value],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn export_data_csv(state: State<DbState>, recipe_id: i64) -> Result<String, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    let recipe: Recipe = conn
+        .query_row(
+            "SELECT recipe_id, name, yield_qty, labor_cost, electricity_cost,
+                    other_overhead, target_markup_pct, reseller_markup_pct, desired_profit_alert
+             FROM recipes WHERE recipe_id=?1",
+            params![recipe_id],
+            |row| {
+                Ok(Recipe {
+                    recipe_id: row.get(0)?,
+                    name: row.get(1)?,
+                    yield_qty: row.get(2)?,
+                    labor_cost: row.get(3)?,
+                    electricity_cost: row.get(4)?,
+                    other_overhead: row.get(5)?,
+                    target_markup_pct: row.get(6)?,
+                    reseller_markup_pct: row.get(7)?,
+                    desired_profit_alert: row.get(8)?,
+                    ingredient_cost: 0.0,
+                    unit_retail_price: 0.0,
+                })
+            },
+        )
+        .map_err(|e| e.to_string())?;
+
+    let mut wtr = csv::Writer::from_writer(vec![]);
+    wtr.write_record(["Recipe", "Ingredient", "Purchase Unit", "Purchase Price",
+        "Recipe Unit", "Yield Factor", "Normalized Unit Cost", "Batch Qty", "Line Item Cost"])
+        .map_err(|e| e.to_string())?;
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT ri.batch_qty, i.name, i.purchase_unit, i.purchase_price, i.recipe_unit, i.yield_factor
+             FROM recipe_ingredients ri JOIN ingredients i ON i.ingredient_id=ri.ingredient_id
+             WHERE ri.recipe_id=?1",
+        )
+        .map_err(|e| e.to_string())?;
+
+    stmt.query_map(params![recipe_id], |row| {
+        let batch_qty: f64 = row.get(0)?;
+        let purchase_price: f64 = row.get(3)?;
+        let yield_factor: f64 = row.get(5)?;
+        Ok((
+            row.get::<_, String>(1)?,
+            row.get::<_, String>(2)?,
+            purchase_price,
+            row.get::<_, String>(4)?,
+            yield_factor,
+            batch_qty,
+        ))
+    })
+    .map_err(|e| e.to_string())?
+    .for_each(|r| {
+        if let Ok((name, pu, pp, ru, yf, bq)) = r {
+            let nuc = if yf != 0.0 { pp / yf } else { 0.0 };
+            let lic = bq * nuc;
+            let _ = wtr.write_record([
+                recipe.name.as_str(),
+                name.as_str(),
+                pu.as_str(),
+                &format!("{:.4}", pp),
+                ru.as_str(),
+                &format!("{:.4}", yf),
+                &format!("{:.4}", nuc),
+                &format!("{:.4}", bq),
+                &format!("{:.4}", lic),
+            ]);
+        }
+    });
+
+    let data = String::from_utf8(wtr.into_inner().map_err(|e| e.to_string())?)
+        .map_err(|e| e.to_string())?;
+    Ok(data)
+}
+
+#[tauri::command]
+pub fn backup_database(
+    app_handle: tauri::AppHandle,
+    state: State<DbState>,
+    backup_path: String,
+) -> Result<String, String> {
+    let source = get_db_path(&app_handle);
+    let dest_dir = if backup_path.is_empty() {
+        source
+            .parent()
+            .unwrap()
+            .join("Backups")
+    } else {
+        std::path::PathBuf::from(&backup_path)
+    };
+
+    std::fs::create_dir_all(&dest_dir).map_err(|e| e.to_string())?;
+
+    let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
+    let dest = dest_dir.join(format!("pricing_calculator_{}.db", timestamp));
+    std::fs::copy(&source, &dest).map_err(|e| e.to_string())?;
+
+    // Update last backup time
+    {
+        let conn = state.0.lock().map_err(|e| e.to_string())?;
+        conn.execute(
+            "UPDATE app_settings SET setting_value=?1 WHERE setting_key='last_backup'",
+            params![chrono::Local::now().to_rfc3339()],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+
+    Ok(dest.to_string_lossy().to_string())
+}

@@ -1,0 +1,11 @@
+[target.x86_64-pc-windows-gnu]
+linker = "C:\\msys64\\mingw64\\bin\\gcc.exe"
+ar = "C:\\msys64\\mingw64\\bin\\ar.exe"
+
+[target.x86_64-pc-windows-msvc]
+# Fallback — unused but prevents accidental MSVC selection
+linker = "C:\\msys64\\mingw64\\bin\\gcc.exe"
+
+[build]
+# Force all builds (including build scripts / proc-macros) to use GNU target
+target = "x86_64-pc-windows-gnu"
