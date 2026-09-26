@@ -2,34 +2,73 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-artisan-canvas: #FAF8F5;
+  --color-artisan-surface: #FFFFFF;
+  --color-artisan-subtle: #F4EFEB;
+  --color-artisan-border: #E8E1D9;
+  --color-artisan-dark-border: #DDD5CC;
+
+  --color-espresso-900: #1A120B;
+  --color-espresso-850: #231810;
+  --color-espresso-800: #2D1F15;
+  --color-espresso-700: #433022;
+  --color-espresso-600: #634835;
+  --color-espresso-400: #8C7362;
+  --color-espresso-300: #B5A795;
+  --color-espresso-200: #C7B9AC;
+
+  --color-culinary-50: #F0FDF4;
+  --color-culinary-100: #DCFCE7;
+  --color-culinary-200: #BBF7D0;
+  --color-culinary-500: #22C55E;
+  --color-culinary-600: #16A34A;
+  --color-culinary-700: #15803D;
+  --color-culinary-800: #166534;
+
+  --color-caramel-50: #FFFBEB;
+  --color-caramel-100: #FEF3C7;
+  --color-caramel-200: #FDE68A;
+  --color-caramel-500: #F59E0B;
+  --color-caramel-600: #D97706;
+  --color-caramel-700: #B45309;
+
+  --shadow-artisan-subtle: 0 1px 3px rgba(35, 24, 16, 0.04), 0 1px 2px rgba(35, 24, 16, 0.02);
+  --shadow-artisan-card: 0 4px 16px -2px rgba(35, 24, 16, 0.05), 0 2px 6px -1px rgba(35, 24, 16, 0.03);
+  --shadow-artisan-glow: 0 8px 24px -4px rgba(22, 163, 74, 0.16);
+}
+
 @layer base {
   :root {
-    /* ── Light theme tokens (Luminous Light Edition) ── */
-    --background: 210 40% 98%; /* #f8fafc */
-    --foreground: 222 47% 11%; /* #0f172a */
+    /* ── Light theme tokens (Artisan Canvas & Luminous Edition) ── */
+    --background: 34 33% 97%; /* #FAF8F5 */
+    --foreground: 28 44% 8%; /* #1A120B */
     --card: 0 0% 100%; /* #ffffff */
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 28 44% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 158 64% 39%; /* #16a34a Culinary Green */
+    --popover-foreground: 28 44% 8%;
+    --primary: 142 76% 36%; /* #16A34A Culinary Green */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 152 76% 96%;
-    --accent-foreground: 161 94% 25%;
+    --secondary: 30 24% 94%; /* #F4EFEB */
+    --secondary-foreground: 28 44% 8%;
+    --muted: 30 24% 94%;
+    --muted-foreground: 25 18% 46%; /* #8C7362 */
+    --accent: 142 72% 95%; /* #F0FDF4 */
+    --accent-foreground: 142 76% 29%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%; /* #e2e8f0 */
-    --input: 214 32% 91%;
-    --ring: 158 64% 39%;
+    --border: 33 21% 88%; /* #E8E1D9 */
+    --input: 33 21% 88%;
+    --ring: 142 76% 36%;
     --success: 142 72% 29%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-    --radius: 0.5rem;
-    --sidebar-width: 240px;
+    --radius: 0.75rem;
+    --sidebar-width: 256px;
   }
 
   .dark {
@@ -40,19 +79,19 @@
     --card-foreground: 213 31% 91%;
     --popover: 224 71% 7%;
     --popover-foreground: 213 31% 91%;
-    --primary: 263 70% 70%;
+    --primary: 142 76% 45%;
     --primary-foreground: 224 71% 4%;
     --secondary: 222 47% 11%;
     --secondary-foreground: 213 31% 91%;
     --muted: 223 47% 11%;
     --muted-foreground: 215 20% 65%;
     --accent: 216 34% 17%;
-    --accent-foreground: 263 70% 75%;
+    --accent-foreground: 142 76% 75%;
     --destructive: 0 63% 55%;
     --destructive-foreground: 0 0% 100%;
     --border: 216 34% 17%;
     --input: 216 34% 17%;
-    --ring: 263 70% 70%;
+    --ring: 142 76% 45%;
     --success: 142 76% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 60%;
@@ -69,7 +108,8 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     margin: 0;
     min-height: 100vh;
     transition: background-color 0.2s ease, color 0.2s ease;
@@ -79,6 +119,32 @@
   html, body, #root {
     height: 100%;
   }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF8F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8CEBE;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B5A795;
+}
+.dark ::-webkit-scrollbar-track {
+  background: #080c14;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #1e293b;
 }
 
 /* Smooth scrollbars */

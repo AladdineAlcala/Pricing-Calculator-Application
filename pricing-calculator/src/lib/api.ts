@@ -8,6 +8,9 @@ export interface Ingredient {
   purchase_price: number;
   recipe_unit: string;
   yield_factor: number;
+  package_type?: string;
+  net_quantity?: number;
+  net_unit?: string;
 }
 
 export interface IngredientInput {
@@ -16,6 +19,9 @@ export interface IngredientInput {
   purchase_price: number;
   recipe_unit: string;
   yield_factor: number;
+  package_type: string;
+  net_quantity: number;
+  net_unit: string;
 }
 
 export interface Recipe {
@@ -53,6 +59,9 @@ export interface RecipeIngredient {
   purchase_price: number;
   recipe_unit: string;
   yield_factor: number;
+  package_type?: string;
+  net_quantity?: number;
+  net_unit?: string;
   normalized_unit_cost: number;
   line_item_cost: number;
 }

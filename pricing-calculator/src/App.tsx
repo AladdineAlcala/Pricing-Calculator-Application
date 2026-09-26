@@ -12,7 +12,7 @@ export default function App() {
   return (
     <AppProvider>
       <BrowserRouter>
-        <div className="flex h-screen overflow-hidden bg-[hsl(var(--background))]">
+        <div className="flex h-screen overflow-hidden bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 font-sans selection:bg-culinary-100 selection:text-culinary-800">
           <Sidebar />
           <main className="flex-1 flex flex-col overflow-hidden">
             <Routes>

@@ -24,6 +24,7 @@ import {
   Scale,
   ArrowUpDown,
   FileSpreadsheet,
+  Package,
 } from "lucide-react";
 import {
   getIngredients,
@@ -35,6 +36,7 @@ import {
 } from "@/lib/api";
 import { Spinner, Tooltip } from "@/components/ui";
 import { useApp } from "@/context/AppContext";
+import { Header } from "@/components/Header";
 
 const STANDARD_CATEGORIES = [
   "Bulk Dry Goods",
@@ -48,15 +50,30 @@ const STANDARD_CATEGORIES = [
   "Packaging & Consumables",
 ];
 
-const PURCHASE_PACKAGING_PRESETS = [
-  { label: "Kilogram (kg)", value: "Kilogram" },
-  { label: "100g Container", value: "100g Container" },
-  { label: "1 Liter (L)", value: "1 Liter" },
-  { label: "1 kl", value: "1 kl" },
-  { label: "Dozen (12 pcs)", value: "Dozen" },
-  { label: "500g Pack", value: "500g Pack" },
-  { label: "25 kg Sack", value: "25 kg Sack" },
-  { label: "Piece (pc)", value: "Piece" },
+const PACKAGE_CONTAINERS = [
+  "Box",
+  "Sack",
+  "Bag",
+  "Tub",
+  "Carton",
+  "Can",
+  "Bottle",
+  "Pack",
+  "Case",
+  "Jar",
+  "Pouch",
+  "Bucket",
+  "Package",
+];
+
+const NET_CONTENT_UNITS = [
+  { label: "Grams (g)", value: "g" },
+  { label: "Kilograms (kg)", value: "kg" },
+  { label: "Milliliters (ml)", value: "ml" },
+  { label: "Liters (L)", value: "L" },
+  { label: "Pieces (pcs)", value: "pcs" },
+  { label: "Ounces (oz)", value: "oz" },
+  { label: "Pounds (lb)", value: "lb" },
 ];
 
 const RECIPE_UNITS = [
@@ -69,22 +86,131 @@ const RECIPE_UNITS = [
   { label: "Kilogram (kg)", value: "Kilogram" },
 ];
 
-const CONVERSION_PRESETS = [
-  { label: "Flour (8.33 cups/kg)", yieldFactor: 8.33, recipeUnit: "Cup", purchaseUnit: "Kilogram", hint: "1kg = 8.33 cups" },
-  { label: "Sugar (5.00 cups/kg)", yieldFactor: 5.0, recipeUnit: "Cup", purchaseUnit: "Kilogram", hint: "200g / cup" },
-  { label: "Baking Powder (20 tsp/100g)", yieldFactor: 20.0, recipeUnit: "tsp", purchaseUnit: "100g Container", hint: "5g / tsp" },
-  { label: "Baking Soda (20 tsp/100g)", yieldFactor: 20.0, recipeUnit: "tsp", purchaseUnit: "100g Container", hint: "5g / tsp" },
-  { label: "Banana (14 pcs/kg)", yieldFactor: 14.0, recipeUnit: "pc", purchaseUnit: "1 kl", hint: "~14 pcs/kg" },
-  { label: "Milk (4.17 cups/L)", yieldFactor: 4.17, recipeUnit: "Cup", purchaseUnit: "1 Liter", hint: "240ml / cup" },
-  { label: "Eggs (12 pcs/dozen)", yieldFactor: 12.0, recipeUnit: "pcs", purchaseUnit: "Dozen", hint: "1 doz = 12 pcs" },
-  { label: "Butter (4.41 cups/kg)", yieldFactor: 4.41, recipeUnit: "Cup", purchaseUnit: "Kilogram", hint: "227g / cup" },
+const PACKAGE_CONTENT_PRESETS = [
+  {
+    label: "🧈 Butter Box (225g → 0.99 cup)",
+    name: "Unsalted Butter",
+    packageType: "Box",
+    netQuantity: 225,
+    netUnit: "g",
+    recipeUnit: "Cup",
+    yieldFactor: 0.9912,
+    category: "Refrigerated Dairy",
+    hint: "225g box @ 227g/cup = 0.9912 cups",
+  },
+  {
+    label: "🌾 Flour Sack (25kg → 208.25 cups)",
+    name: "All-Purpose Flour",
+    packageType: "Sack",
+    netQuantity: 25,
+    netUnit: "kg",
+    recipeUnit: "Cup",
+    yieldFactor: 208.25,
+    category: "Bulk Dry Goods",
+    hint: "25kg sack @ 120g/cup = 208.25 cups",
+  },
+  {
+    label: "🍬 Sugar Bag (1kg → 5.00 cups)",
+    name: "Granulated Sugar",
+    packageType: "Bag",
+    netQuantity: 1,
+    netUnit: "kg",
+    recipeUnit: "Cup",
+    yieldFactor: 5.0,
+    category: "Bulk Dry Goods",
+    hint: "1kg bag @ 200g/cup = 5.0 cups",
+  },
+  {
+    label: "🥛 Fresh Milk (1L → 4.17 cups)",
+    name: "Fresh Whole Milk",
+    packageType: "Bottle",
+    netQuantity: 1,
+    netUnit: "L",
+    recipeUnit: "Cup",
+    yieldFactor: 4.1667,
+    category: "Refrigerated Dairy",
+    hint: "1L bottle @ 240ml/cup = 4.17 cups",
+  },
+  {
+    label: "🥄 Baking Powder (100g → 20 tsp)",
+    name: "Baking Powder",
+    packageType: "Can",
+    netQuantity: 100,
+    netUnit: "g",
+    recipeUnit: "tsp",
+    yieldFactor: 20.0,
+    category: "Leavening Agents",
+    hint: "100g can @ 5g/tsp = 20 tsp",
+  },
+  {
+    label: "🥚 Eggs Flat (30 pcs → 30 pcs)",
+    name: "Large Fresh Eggs",
+    packageType: "Case",
+    netQuantity: 30,
+    netUnit: "pcs",
+    recipeUnit: "pc",
+    yieldFactor: 30.0,
+    category: "Chilled Poultry",
+    hint: "1 flat tray = 30 pcs",
+  },
 ];
+
+// Pure mathematical culinary density and secondary UOM conversion engine
+function calculateAutoYield(
+  netQty: number,
+  netUnit: string,
+  recipeUnit: string,
+  ingredientName: string
+): number {
+  if (netQty <= 0) return 1.0;
+  const n = ingredientName.toLowerCase();
+
+  // Direct unit matches
+  if (netUnit === "g" && (recipeUnit === "Gram" || recipeUnit === "g")) return netQty;
+  if (netUnit === "kg" && (recipeUnit === "Kilogram" || recipeUnit === "kg")) return netQty;
+  if (netUnit === "kg" && (recipeUnit === "Gram" || recipeUnit === "g")) return netQty * 1000;
+  if (netUnit === "g" && (recipeUnit === "Kilogram" || recipeUnit === "kg")) return Number((netQty / 1000).toFixed(4));
+  if (netUnit === "ml" && recipeUnit === "ml") return netQty;
+  if (netUnit === "L" && recipeUnit === "ml") return netQty * 1000;
+  if (netUnit === "pcs" && (recipeUnit === "pc" || recipeUnit === "pcs")) return netQty;
+
+  // Volumetric conversions using standard culinary densities
+  if (recipeUnit === "Cup") {
+    let gramsPerCup = 120; // default dry flour
+    if (n.includes("butter")) gramsPerCup = 227;
+    else if (n.includes("sugar")) gramsPerCup = 200;
+    else if (n.includes("powder") || n.includes("soda")) gramsPerCup = 144;
+    else if (n.includes("milk") || n.includes("water") || n.includes("liquid") || n.includes("oil")) gramsPerCup = 240;
+
+    if (netUnit === "g") return Number((netQty / gramsPerCup).toFixed(4));
+    if (netUnit === "kg") return Number(((netQty * 1000) / gramsPerCup).toFixed(4));
+    if (netUnit === "ml") return Number((netQty / 240).toFixed(4));
+    if (netUnit === "L") return Number(((netQty * 1000) / 240).toFixed(4));
+  }
+
+  if (recipeUnit === "tsp") {
+    const gramsPerTsp = 5;
+    if (netUnit === "g") return Number((netQty / gramsPerTsp).toFixed(4));
+    if (netUnit === "kg") return Number(((netQty * 1000) / gramsPerTsp).toFixed(4));
+  }
+
+  if (recipeUnit === "tbsp") {
+    const gramsPerTbsp = 15;
+    if (netUnit === "g") return Number((netQty / gramsPerTbsp).toFixed(4));
+    if (netUnit === "kg") return Number(((netQty * 1000) / gramsPerTbsp).toFixed(4));
+  }
+
+  return netQty;
+}
 
 interface FormState {
   name: string;
   category: string;
   supplier: string;
   sku: string;
+  packageType: string;
+  netQuantity: number;
+  netUnit: string;
   packageQty: number;
   purchaseUnit: string;
   purchasePrice: number;
@@ -97,11 +223,14 @@ const DEFAULT_FORM: FormState = {
   category: "Bulk Dry Goods",
   supplier: "",
   sku: "",
+  packageType: "Box",
+  netQuantity: 10,
+  netUnit: "g",
   packageQty: 1,
-  purchaseUnit: "Kilogram",
+  purchaseUnit: "Box (10 g)",
   purchasePrice: 0,
   recipeUnit: "Cup",
-  yieldFactor: 8.33,
+  yieldFactor: 0.9912,
 };
 
 // Category badge color mapper
@@ -149,6 +278,94 @@ function generateSku(name: string, id: number): string {
   return `ING-${String(id).padStart(3, "0")}`;
 }
 
+// ── High-Fidelity Shimmer Loading Skeleton ────────────────────────────────────
+function IngredientsSkeleton() {
+  return (
+    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-50 dark:bg-[#080c14] min-h-screen text-slate-900 dark:text-slate-100 transition-colors animate-pulse">
+      {/* Header Skeleton */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="space-y-2.5">
+          <div className="flex items-center gap-2">
+            <div className="h-6 w-44 rounded-full bg-slate-200 dark:bg-slate-800" />
+            <div className="h-6 w-24 rounded-full bg-slate-200/80 dark:bg-slate-800/60" />
+            <div className="h-6 w-28 rounded-full bg-slate-200/80 dark:bg-slate-800/60" />
+          </div>
+          <div className="h-4 w-52 rounded-md bg-slate-200/60 dark:bg-slate-800/50" />
+          <div className="h-9 w-80 rounded-xl bg-slate-200 dark:bg-slate-800" />
+          <div className="h-4 w-full max-w-2xl rounded-md bg-slate-200/70 dark:bg-slate-800/60" />
+        </div>
+        <div className="flex items-center gap-2.5">
+          <div className="h-10 w-32 rounded-xl bg-slate-200 dark:bg-slate-800" />
+          <div className="h-10 w-36 rounded-xl bg-slate-200 dark:bg-slate-800" />
+          <div className="h-10 w-40 rounded-xl bg-emerald-600/30 dark:bg-emerald-600/20" />
+        </div>
+      </div>
+
+      {/* 4 KPI Cards Skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="h-3 w-28 rounded bg-slate-200 dark:bg-slate-800" />
+              <div className="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <div className="h-8 w-20 rounded-lg bg-slate-200 dark:bg-slate-800" />
+              <div className="h-3 w-16 rounded bg-slate-200/60 dark:bg-slate-800/50" />
+            </div>
+            <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800" />
+          </div>
+        ))}
+      </div>
+
+      {/* Search & Filter Toolbar Skeleton */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#0d121c] p-3 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 shadow-xs">
+        <div className="h-10 w-72 rounded-xl bg-slate-200/80 dark:bg-slate-800/70" />
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {[1, 2, 3, 4, 5].map((pill) => (
+            <div key={pill} className="h-8 w-20 rounded-xl bg-slate-200/70 dark:bg-slate-800/60" />
+          ))}
+        </div>
+        <div className="h-10 w-44 rounded-xl bg-slate-200/80 dark:bg-slate-800/70" />
+      </div>
+
+      {/* Table Skeleton */}
+      <div className="rounded-3xl bg-white dark:bg-[#0d121c] border border-slate-200/90 dark:border-slate-800/90 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+          <div className="h-4 w-40 rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="h-4 w-28 rounded bg-slate-200/60 dark:bg-slate-800/50" />
+        </div>
+        <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+          {[1, 2, 3, 4, 5, 6].map((row) => (
+            <div key={row} className="py-4 px-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 rounded bg-slate-200 dark:bg-slate-800" />
+                <div className="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-800" />
+                <div className="space-y-1.5">
+                  <div className="h-4 w-32 rounded bg-slate-200 dark:bg-slate-800" />
+                  <div className="h-2.5 w-24 rounded bg-slate-200/60 dark:bg-slate-800/50" />
+                </div>
+              </div>
+              <div className="h-6 w-24 rounded-lg bg-slate-200/70 dark:bg-slate-800/60 hidden sm:block" />
+              <div className="h-6 w-28 rounded-lg bg-slate-200/70 dark:bg-slate-800/60 hidden md:block" />
+              <div className="h-4 w-16 rounded bg-slate-200 dark:bg-slate-800" />
+              <div className="h-4 w-12 rounded bg-slate-200 dark:bg-slate-800 hidden lg:block" />
+              <div className="h-4 w-16 rounded bg-slate-200 dark:bg-slate-800" />
+              <div className="flex items-center gap-1.5">
+                <div className="w-7 h-7 rounded-lg bg-slate-200/60 dark:bg-slate-800/50" />
+                <div className="w-7 h-7 rounded-lg bg-slate-200/60 dark:bg-slate-800/50" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Ingredients() {
   const { fmt } = useApp();
   const [items, setItems] = useState<Ingredient[]>([]);
@@ -179,6 +396,30 @@ export default function Ingredients() {
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [bulkAdjustmentPct, setBulkAdjustmentPct] = useState<number>(5);
 
+  // Toast Notification state
+  const [notification, setNotification] = useState<{
+    show: boolean;
+    type: "success" | "error" | "info";
+    title: string;
+    message: string;
+  } | null>(null);
+
+  const showToast = useCallback(
+    (title: string, message: string, type: "success" | "error" | "info" = "success") => {
+      setNotification({ show: true, type, title, message });
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (notification?.show) {
+      const timer = setTimeout(() => {
+        setNotification((prev) => (prev ? { ...prev, show: false } : null));
+      }, 3800);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
   const load = useCallback(() => {
     getIngredients().then((data) => {
       setItems(data);
@@ -202,13 +443,19 @@ export default function Ingredients() {
   // Open Edit Modal
   const openEdit = (ing: Ingredient) => {
     setEditTarget(ing);
+    const pkgType = ing.package_type || "Package";
+    const netQty = ing.net_quantity ?? 1;
+    const netU = ing.net_unit || "kg";
     setForm({
       name: ing.name,
       category: inferCategory(ing.name),
       supplier: "",
       sku: generateSku(ing.name, ing.ingredient_id),
+      packageType: pkgType,
+      netQuantity: netQty,
+      netUnit: netU,
       packageQty: 1,
-      purchaseUnit: ing.purchase_unit,
+      purchaseUnit: ing.purchase_unit || `${pkgType} (${netQty} ${netU})`,
       purchasePrice: ing.purchase_price,
       recipeUnit: ing.recipe_unit,
       yieldFactor: ing.yield_factor,
@@ -221,7 +468,9 @@ export default function Ingredients() {
   const validate = (): boolean => {
     const errs: Record<string, string> = {};
     if (!form.name.trim()) errs.name = "Ingredient name is required";
-    if (!form.purchaseUnit.trim()) errs.purchaseUnit = "Purchase unit is required";
+    if (!form.packageType.trim()) errs.packageType = "Package container is required";
+    if (form.netQuantity <= 0) errs.netQuantity = "Net content quantity must be > 0";
+    if (!form.netUnit.trim()) errs.netUnit = "Net unit is required";
     if (!form.recipeUnit.trim()) errs.recipeUnit = "Recipe unit is required";
     if (form.yieldFactor <= 0) errs.yieldFactor = "Yield factor must be > 0";
     if (form.purchasePrice < 0) errs.purchasePrice = "Price cannot be negative";
@@ -230,21 +479,36 @@ export default function Ingredients() {
   };
 
   const handleSave = async (andAddAnother = false) => {
-    if (!validate()) return;
+    if (!validate() || saving) return;
     setSaving(true);
+    const ingredientName = form.name.trim();
     try {
+      const formattedPurchaseUnit = `${form.packageType} (${form.netQuantity} ${form.netUnit})`;
       const payload: IngredientInput = {
-        name: form.name.trim(),
-        purchase_unit: form.purchaseUnit.trim(),
+        name: ingredientName,
+        purchase_unit: formattedPurchaseUnit,
         purchase_price: form.purchasePrice,
         recipe_unit: form.recipeUnit.trim(),
         yield_factor: form.yieldFactor,
+        package_type: form.packageType,
+        net_quantity: form.netQuantity,
+        net_unit: form.netUnit,
       };
 
       if (editTarget) {
         await updateIngredient(editTarget.ingredient_id, payload);
+        showToast(
+          "Ingredient Updated Successfully",
+          `"${ingredientName}" (${formattedPurchaseUnit}) has been saved and synchronized with the costing engine.`,
+          "success"
+        );
       } else {
         await createIngredient(payload);
+        showToast(
+          "Ingredient Saved Successfully",
+          `"${ingredientName}" (${formattedPurchaseUnit}) has been added to your Pantry Master.`,
+          "success"
+        );
       }
 
       await load();
@@ -256,6 +520,12 @@ export default function Ingredients() {
       } else {
         setModalOpen(false);
       }
+    } catch (err: unknown) {
+      showToast(
+        "Save Failed",
+        err instanceof Error ? err.message : String(err),
+        "error"
+      );
     } finally {
       setSaving(false);
     }
@@ -263,9 +533,11 @@ export default function Ingredients() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    const name = deleteTarget.name;
     await deleteIngredient(deleteTarget.ingredient_id);
     setDeleteTarget(null);
     setSelectedIds((prev) => prev.filter((id) => id !== deleteTarget.ingredient_id));
+    showToast("Ingredient Deleted", `"${name}" was removed from the inventory master.`, "info");
     await load();
   };
 
@@ -284,11 +556,25 @@ export default function Ingredients() {
             purchase_price: newPrice,
             recipe_unit: item.recipe_unit,
             yield_factor: item.yield_factor,
+            package_type: item.package_type || "Package",
+            net_quantity: item.net_quantity ?? 1,
+            net_unit: item.net_unit || "Kilogram",
           });
         }
       }
       setBulkModalOpen(false);
+      showToast(
+        "Bulk Prices Updated",
+        `Applied ${bulkAdjustmentPct > 0 ? "+" : ""}${bulkAdjustmentPct}% across ${selectedIds.length} items.`,
+        "success"
+      );
       await load();
+    } catch (err: unknown) {
+      showToast(
+        "Bulk Update Failed",
+        err instanceof Error ? err.message : String(err),
+        "error"
+      );
     } finally {
       setSaving(false);
     }
@@ -400,16 +686,70 @@ export default function Ingredients() {
     return 0;
   }, [form.purchasePrice, form.yieldFactor]);
 
+  // Live Net Content Unit Cost for Modal (e.g. ₱120 / 225g = ₱0.5333/g)
+  const calculatedCostPerNetUnit = useMemo(() => {
+    if (form.netQuantity > 0 && form.purchasePrice > 0) {
+      return form.purchasePrice / form.netQuantity;
+    }
+    return 0;
+  }, [form.purchasePrice, form.netQuantity]);
+
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Spinner className="w-10 h-10 text-violet-500" />
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14]">
+        <Header unpricedCount={unpricedCount} />
+        <IngredientsSkeleton />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-50 dark:bg-[#080c14] min-h-screen text-slate-900 dark:text-slate-100 transition-colors">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+      <Header unpricedCount={unpricedCount} />
+      <div className="flex-1 p-6 md:p-8 space-y-6">
+      {/* ── Toast Notification Banner ── */}
+      {notification && notification.show && (
+        <div
+          className={`fixed top-6 right-6 z-50 flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-[#0c101a] border shadow-xl backdrop-blur-md animate-in slide-in-from-top-4 fade-in duration-200 max-w-sm ${notification.type === "error"
+            ? "border-rose-500/40 text-rose-900 dark:text-rose-100 shadow-rose-950/10"
+            : notification.type === "info"
+              ? "border-sky-500/40 text-sky-900 dark:text-sky-100 shadow-sky-950/10"
+              : "border-emerald-500/40 text-emerald-950 dark:text-emerald-100 shadow-emerald-950/10"
+            }`}
+        >
+          <div
+            className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${notification.type === "error"
+              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+              : notification.type === "info"
+                ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              }`}
+          >
+            {notification.type === "error" ? (
+              <AlertTriangle className="w-4 h-4" />
+            ) : notification.type === "info" ? (
+              <Info className="w-4 h-4" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0 pr-1">
+            <h4 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
+              {notification.title}
+            </h4>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+              {notification.message}
+            </p>
+          </div>
+          <button
+            onClick={() => setNotification((prev) => (prev ? { ...prev, show: false } : null))}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* ── Top Header & Action Row ── */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
@@ -456,7 +796,7 @@ export default function Ingredients() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
               bg-white dark:bg-[#121826] text-slate-700 dark:text-slate-200
               border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#182033]
-              shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+              shadow-2xs hover:shadow-xs transition-all active:scale-[0.98] active:translate-y-0.5 cursor-pointer"
           >
             <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             <span>Export CSV / PDF</span>
@@ -473,7 +813,7 @@ export default function Ingredients() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
               bg-white dark:bg-[#121826] text-slate-700 dark:text-slate-200
               border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#182033]
-              shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+              shadow-2xs hover:shadow-xs transition-all active:scale-[0.98] active:translate-y-0.5 cursor-pointer"
           >
             <SlidersHorizontal className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Bulk Price Update</span>
@@ -483,8 +823,8 @@ export default function Ingredients() {
             onClick={openCreate}
             id="add-ingredient-btn"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white
-              bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20
-              transition-all active:scale-[0.98] cursor-pointer tracking-wide"
+              bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg shadow-emerald-600/25 active:shadow-xs
+              transition-all active:scale-[0.98] active:translate-y-0.5 cursor-pointer tracking-wide"
           >
             <Plus className="w-4 h-4" />
             <span>+ Add Ingredient</span>
@@ -617,55 +957,50 @@ export default function Ingredients() {
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
             onClick={() => setSelectedFilter("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              selectedFilter === "all"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-            }`}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "all"
+              ? "bg-emerald-600 text-white shadow-xs"
+              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              }`}
           >
             All ({items.length})
           </button>
 
           <button
             onClick={() => setSelectedFilter("priced")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              selectedFilter === "priced"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-            }`}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "priced"
+              ? "bg-emerald-600 text-white shadow-xs"
+              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              }`}
           >
             Fully Priced ({pricedCount})
           </button>
 
           <button
             onClick={() => setSelectedFilter("unpriced")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              selectedFilter === "unpriced"
-                ? "bg-amber-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-            }`}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "unpriced"
+              ? "bg-amber-600 text-white shadow-xs"
+              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              }`}
           >
             Needs Price ({unpricedCount})
           </button>
 
           <button
             onClick={() => setSelectedFilter("dry")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              selectedFilter === "dry"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-            }`}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "dry"
+              ? "bg-emerald-600 text-white shadow-xs"
+              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              }`}
           >
             Dry Goods ({items.filter((i) => inferCategory(i.name) === "Bulk Dry Goods").length})
           </button>
 
           <button
             onClick={() => setSelectedFilter("refrigerated")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              selectedFilter === "refrigerated"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-            }`}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "refrigerated"
+              ? "bg-emerald-600 text-white shadow-xs"
+              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+              }`}
           >
             Refrigerated ({items.filter((i) => inferCategory(i.name) === "Refrigerated Dairy").length})
           </button>
@@ -745,9 +1080,8 @@ export default function Ingredients() {
                   return (
                     <tr
                       key={ing.ingredient_id}
-                      className={`group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors ${
-                        isChecked ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""
-                      }`}
+                      className={`group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors ${isChecked ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""
+                        }`}
                     >
                       {/* Checkbox */}
                       <td className="py-3.5 px-4 text-center">
@@ -794,9 +1128,22 @@ export default function Ingredients() {
 
                       {/* Purchase Packaging */}
                       <td className="py-3.5 px-3">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-                          {ing.purchase_unit}
-                        </span>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                              <Package className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                              {ing.package_type || "Package"}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-400 dark:text-slate-400 font-medium mt-0.5">
+                            Net: <strong className="text-slate-700 dark:text-slate-200 font-semibold">{ing.net_quantity ?? 1} {ing.net_unit ?? "kg"}</strong>
+                            {isPriced && (ing.net_quantity ?? 0) > 0 && (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">
+                                ({fmt(ing.purchase_price / (ing.net_quantity ?? 1))}/{ing.net_unit ?? "kg"})
+                              </span>
+                            )}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Supplier Price (₱) */}
@@ -825,9 +1172,12 @@ export default function Ingredients() {
                         <div className="font-bold text-slate-900 dark:text-white">
                           {ing.yield_factor.toFixed(2)}{" "}
                           <span className="text-[11px] text-slate-400 font-normal">
-                            ratio {category === "Bulk Dry Goods" ? `(1kg = ${ing.yield_factor} ${ing.recipe_unit}s)` : ""}
+                            {ing.recipe_unit}s/{ing.package_type || "pack"}
                           </span>
                         </div>
+                        <span className="text-[10px] text-slate-400 block font-normal">
+                          1 {ing.package_type || "pack"} yields {ing.yield_factor.toFixed(2)} {ing.recipe_unit}s
+                        </span>
                       </td>
 
                       {/* Normalized Cost */}
@@ -853,7 +1203,7 @@ export default function Ingredients() {
                           <button
                             onClick={() => openEdit(ing)}
                             id={`edit-ingredient-${ing.ingredient_id}`}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:scale-110 active:scale-90 transition-all cursor-pointer"
                             title="Edit Ingredient"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -861,7 +1211,7 @@ export default function Ingredients() {
                           <button
                             onClick={() => setDeleteTarget(ing)}
                             id={`delete-ingredient-${ing.ingredient_id}`}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:scale-110 active:scale-90 transition-all cursor-pointer"
                             title="Delete Ingredient"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -923,11 +1273,10 @@ export default function Ingredients() {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  currentPage === page
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
-                }`}
+                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${currentPage === page
+                  ? "bg-emerald-600 text-white shadow-xs"
+                  : "border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
+                  }`}
               >
                 {page}
               </button>
@@ -1011,9 +1360,8 @@ export default function Ingredients() {
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     placeholder="e.g., All-Purpose Flour"
                     id="ingredient-name"
-                    className={`w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border ${
-                      errors.name ? "border-rose-400" : "border-slate-200 dark:border-slate-800"
-                    } text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium`}
+                    className={`w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border ${errors.name ? "border-rose-400" : "border-slate-200 dark:border-slate-800"
+                      } text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium`}
                   />
                   {errors.name && <p className="text-xs text-rose-500">{errors.name}</p>}
                 </div>
@@ -1065,54 +1413,101 @@ export default function Ingredients() {
                 </div>
               </div>
 
-              {/* Section 1: PURCHASE METRICS */}
+              {/* Section 1: PURCHASE PACKAGING & NET CONTENT */}
               <div className="pt-2">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                     <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>PURCHASE METRICS</span>
+                    <span>PURCHASE PACKAGING & NET USABLE CONTENT</span>
                   </div>
-                  <span className="text-xs text-slate-400">Enter packaging as billed by supplier</span>
+                  <span className="text-xs text-slate-400">Decouples commercial packaging from net physical mass/volume</span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
-                  {/* Package Net Quantity */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                      <span>PACKAGE NET QUANTITY <span className="text-rose-500">*</span></span>
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 mt-3.5">
+                  {/* Container Type */}
+                  <div className="sm:col-span-4 space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                      <span>PACKAGE CONTAINER</span> <span className="text-rose-500">*</span>
                     </label>
-                    <div className="flex rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all">
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={form.packageQty}
-                        onChange={(e) => setForm({ ...form, packageQty: parseFloat(e.target.value) || 0 })}
-                        className="w-24 px-3.5 py-2.5 text-sm bg-white dark:bg-[#141b2c] text-slate-900 dark:text-white focus:outline-none tabular-nums font-bold"
-                      />
-                      <select
-                        value={form.purchaseUnit}
-                        onChange={(e) => setForm({ ...form, purchaseUnit: e.target.value })}
-                        id="purchase-unit"
-                        className="flex-1 px-3 py-2.5 text-xs bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none font-semibold cursor-pointer"
-                      >
-                        {PURCHASE_PACKAGING_PRESETS.map((p) => (
-                          <option key={p.value} value={p.value}>
-                            {p.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <p className="text-[11px] text-slate-400">e.g., 25 kg sack, 1 kg bag, or 500 ml container</p>
+                    <select
+                      value={form.packageType}
+                      onChange={(e) => {
+                        const newType = e.target.value;
+                        const formatted = `${newType} (${form.netQuantity} ${form.netUnit})`;
+                        setForm({ ...form, packageType: newType, purchaseUnit: formatted });
+                      }}
+                      id="package-type"
+                      className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
+                    >
+                      {PACKAGE_CONTAINERS.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[11px] text-slate-400">e.g. Box, Sack, Tub, Carton</p>
                   </div>
 
-                  {/* Purchase Price (₱) */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      PURCHASE PRICE (₱) <span className="text-rose-500">*</span>
+                  {/* Net Quantity */}
+                  <div className="sm:col-span-4 space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
+                      <span>NET QUANTITY <span className="text-rose-500">*</span></span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Net Mass/Vol</span>
                     </label>
-                    <div className="flex rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c]">
-                      <span className="px-3.5 py-2.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-[#182033] border-r border-slate-200 dark:border-slate-800">
+                    <input
+                      type="number"
+                      min="0.001"
+                      step="any"
+                      value={form.netQuantity || ""}
+                      placeholder="e.g., 10"
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value) || 0;
+                        const formatted = `${form.packageType} (${val} ${form.netUnit})`;
+                        setForm({ ...form, netQuantity: val, purchaseUnit: formatted });
+                      }}
+                      id="net-quantity"
+                      className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                    />
+                    <p className="text-[11px] text-slate-400">e.g., 10 (grams) or 25 (kg)</p>
+                  </div>
+
+                  {/* Net Unit (Secondary UOM) */}
+                  <div className="sm:col-span-4 space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                      <span>CONTENT UNIT (UOM)</span> <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      value={form.netUnit}
+                      onChange={(e) => {
+                        const newUnit = e.target.value;
+                        const formatted = `${form.packageType} (${form.netQuantity} ${newUnit})`;
+                        setForm({ ...form, netUnit: newUnit, purchaseUnit: formatted });
+                      }}
+                      id="net-unit"
+                      className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
+                    >
+                      {NET_CONTENT_UNITS.map((u) => (
+                        <option key={u.value} value={u.value}>
+                          {u.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[11px] text-slate-400">Physical measurement</p>
+                  </div>
+                </div>
+
+                {/* Purchase Price Row & Live Cost per Net Unit Ribbon */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3.5">
+                  {/* Container Purchase Price */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        <span>CONTAINER PURCHASE PRICE (₱)</span> <span className="text-rose-500">*</span>
+                      </label>
+                      <span className="text-[10px] text-slate-400 font-medium">Per {form.packageType}</span>
+                    </div>
+                    <div className="flex h-[42px] items-center rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c]">
+                      <span className="h-full px-3 flex items-center justify-center text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-[#182033] border-r border-slate-200 dark:border-slate-800 shrink-0 select-none">
                         ₱
                       </span>
                       <input
@@ -1123,21 +1518,42 @@ export default function Ingredients() {
                         placeholder="0.00"
                         onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0 })}
                         id="purchase-price"
-                        className="flex-1 px-3.5 py-2.5 text-sm bg-transparent text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none"
+                        className="min-w-0 flex-1 h-full px-3 text-sm bg-transparent text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
-                      <span className="px-3 py-2.5 text-xs font-bold text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-800">
-                        PHP
+                      <span
+                        className="h-full px-3 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-800 shrink-0 whitespace-nowrap"
+                        title={`Cost in Philippine Pesos per ${form.packageType}`}
+                      >
+                        PHP / {form.packageType}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] px-0.5">
-                      <span className="text-slate-500 dark:text-slate-400">
-                        Base cost:{" "}
-                        <strong className="text-slate-800 dark:text-slate-200 font-semibold">
-                          {fmt(form.purchasePrice)} / {form.purchaseUnit}
-                        </strong>
-                      </span>
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold">Tax inc.</span>
+                    <p className="text-[11px] text-slate-400">Total invoice/purchase price for 1 {form.packageType}</p>
+                  </div>
+
+                  {/* Real-time Net Unit Metric Card (Harmonized & Aligned) */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        CALCULATED NET UNIT COST
+                      </label>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Live Rate</span>
                     </div>
+                    <div className="flex h-[42px] items-center justify-between px-3.5 rounded-xl bg-slate-50/90 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800">
+                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                        Effective Cost:
+                      </span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-base font-black text-emerald-700 dark:text-emerald-400 tabular-nums">
+                          {fmt(calculatedCostPerNetUnit)}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                          / {form.netUnit}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                      Billed packaging: <strong>1 {form.packageType} = {form.netQuantity} {form.netUnit}</strong>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1149,9 +1565,23 @@ export default function Ingredients() {
                     <Scale className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span>RECIPE USAGE & YIELD CONVERSION</span>
                   </div>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-                    Auto-calculates
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const autoFactor = calculateAutoYield(
+                        form.netQuantity,
+                        form.netUnit,
+                        form.recipeUnit,
+                        form.name
+                      );
+                      setForm({ ...form, yieldFactor: autoFactor });
+                    }}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer"
+                    title="Auto-calculate yield factor based on net content and recipe unit"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Auto-Sync Yield</span>
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
@@ -1162,7 +1592,16 @@ export default function Ingredients() {
                     </label>
                     <select
                       value={form.recipeUnit}
-                      onChange={(e) => setForm({ ...form, recipeUnit: e.target.value })}
+                      onChange={(e) => {
+                        const newRecipeUnit = e.target.value;
+                        const autoFactor = calculateAutoYield(
+                          form.netQuantity,
+                          form.netUnit,
+                          newRecipeUnit,
+                          form.name
+                        );
+                        setForm({ ...form, recipeUnit: newRecipeUnit, yieldFactor: autoFactor });
+                      }}
                       id="recipe-unit"
                       className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
                     >
@@ -1172,30 +1611,31 @@ export default function Ingredients() {
                         </option>
                       ))}
                     </select>
+                    <p className="text-[11px] text-slate-400">Unit called in formula (Cup, tsp, Gram, etc.)</p>
                   </div>
 
                   {/* Yield Factor */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        YIELD FACTOR
+                        YIELD FACTOR ({form.recipeUnit}s per {form.packageType})
                       </label>
                       <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                        {form.yieldFactor === 1 ? "100% Usable Yield" : `${form.yieldFactor} portions/pack`}
+                        {form.yieldFactor === 1 ? "1:1 Exact" : `${form.yieldFactor} ${form.recipeUnit}s`}
                       </span>
                     </div>
                     <div className="flex rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c]">
                       <input
                         type="number"
-                        min="0.01"
-                        step="0.01"
+                        min="0.0001"
+                        step="any"
                         value={form.yieldFactor}
                         onChange={(e) => setForm({ ...form, yieldFactor: parseFloat(e.target.value) || 1 })}
                         id="yield-factor"
                         className="flex-1 px-3.5 py-2.5 text-sm bg-transparent text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none"
                       />
                       <span className="px-3 py-2.5 text-xs text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-800 font-semibold">
-                        ratio
+                        {form.recipeUnit}s
                       </span>
                     </div>
                     {errors.yieldFactor && <p className="text-xs text-rose-500">{errors.yieldFactor}</p>}
@@ -1206,23 +1646,28 @@ export default function Ingredients() {
                 <div className="mt-3">
                   <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
                     <span className="font-bold text-slate-700 dark:text-slate-300">
-                      ⚡ Quick Conversion Presets:
+                      ⚡ Quick Package & Culinary Conversion Presets:
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {CONVERSION_PRESETS.map((p) => (
+                    {PACKAGE_CONTENT_PRESETS.map((p) => (
                       <button
                         key={p.label}
                         type="button"
                         onClick={() =>
                           setForm({
                             ...form,
-                            yieldFactor: p.yieldFactor,
+                            packageType: p.packageType,
+                            netQuantity: p.netQuantity,
+                            netUnit: p.netUnit,
                             recipeUnit: p.recipeUnit,
-                            purchaseUnit: p.purchaseUnit,
+                            yieldFactor: p.yieldFactor,
+                            purchaseUnit: `${p.packageType} (${p.netQuantity} ${p.netUnit})`,
+                            category: p.category || form.category,
                           })
                         }
                         className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 dark:bg-[#141b2c] dark:hover:bg-emerald-950/70 dark:text-slate-300 dark:hover:text-emerald-300 transition-colors border border-slate-200 dark:border-slate-800 cursor-pointer"
+                        title={p.hint}
                       >
                         {p.label}
                       </button>
@@ -1255,10 +1700,11 @@ export default function Ingredients() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                    {form.yieldFactor > 0 ? `1 ${form.purchaseUnit} = ${form.yieldFactor} ${form.recipeUnit}s` : ""}
+                    {form.yieldFactor > 0 ? `1 ${form.packageType} (${form.netQuantity} ${form.netUnit}) = ${form.yieldFactor} ${form.recipeUnit}s` : ""}
                   </p>
                 </div>
               </div>
+
             </div>
 
             {/* Modal Actions Footer */}
@@ -1266,7 +1712,8 @@ export default function Ingredients() {
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+                disabled={saving}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 active:scale-[0.98] transition-all shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
@@ -1276,9 +1723,10 @@ export default function Ingredients() {
                   type="button"
                   onClick={() => handleSave(true)}
                   disabled={saving}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors shadow-2xs cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 active:scale-[0.98] active:translate-y-0.5 transition-all shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save & Add Another
+                  {saving && <Spinner className="w-3.5 h-3.5 text-emerald-600 animate-spin" />}
+                  <span>{saving ? "Saving..." : "Save & Add Another"}</span>
                 </button>
               )}
 
@@ -1287,10 +1735,19 @@ export default function Ingredients() {
                 onClick={() => handleSave(false)}
                 disabled={saving}
                 id="save-ingredient-btn"
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] active:translate-y-0.5 shadow-md hover:shadow-lg shadow-emerald-600/25 active:shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Plus className="w-4 h-4" />
-                <span>{editTarget ? "Save Changes" : "+ Add Ingredient"}</span>
+                {saving ? (
+                  <>
+                    <Spinner className="w-4 h-4 text-white animate-spin" />
+                    <span>{editTarget ? "Updating..." : "Adding Ingredient..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>{editTarget ? "Save Changes" : "+ Add Ingredient"}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -1421,6 +1878,7 @@ export default function Ingredients() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

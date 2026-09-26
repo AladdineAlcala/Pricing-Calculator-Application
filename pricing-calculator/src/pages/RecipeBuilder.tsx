@@ -26,6 +26,9 @@ import {
   Scale,
   DollarSign,
   FileSpreadsheet,
+  Search,
+  ChevronDown,
+  ShoppingBag,
 } from "lucide-react";
 import {
   calculateRecipeCost,
@@ -40,6 +43,66 @@ import {
 } from "@/lib/api";
 import { Spinner, Tooltip } from "@/components/ui";
 import { useApp } from "@/context/AppContext";
+
+function getModalIngredientCategory(name: string): "sweeteners" | "baking" | "dairy" | "produce" | "other" {
+  const n = name.toLowerCase();
+  if (
+    n.includes("sugar") ||
+    n.includes("syrup") ||
+    n.includes("honey") ||
+    n.includes("sweetener") ||
+    n.includes("molasses")
+  ) {
+    return "sweeteners";
+  }
+  if (
+    n.includes("flour") ||
+    n.includes("baking powder") ||
+    n.includes("baking soda") ||
+    n.includes("yeast") ||
+    n.includes("cocoa") ||
+    n.includes("chocolate") ||
+    n.includes("vanilla") ||
+    n.includes("cornstarch") ||
+    n.includes("oat")
+  ) {
+    return "baking";
+  }
+  if (
+    n.includes("butter") ||
+    n.includes("milk") ||
+    n.includes("cheese") ||
+    n.includes("cream") ||
+    n.includes("oil") ||
+    n.includes("fat") ||
+    n.includes("egg") ||
+    n.includes("margarine")
+  ) {
+    return "dairy";
+  }
+  if (
+    n.includes("banana") ||
+    n.includes("apple") ||
+    n.includes("fruit") ||
+    n.includes("lemon") ||
+    n.includes("berry") ||
+    n.includes("carrot") ||
+    n.includes("nut")
+  ) {
+    return "produce";
+  }
+  return "other";
+}
+
+const MODAL_MEASURE_UNITS = [
+  { label: "Grams (g)", value: "Gram" },
+  { label: "Kilograms (kg)", value: "Kilogram" },
+  { label: "Cups", value: "Cup" },
+  { label: "Tablespoons (tbsp)", value: "tbsp" },
+  { label: "Teaspoons (tsp)", value: "tsp" },
+  { label: "Milliliters (ml)", value: "ml" },
+  { label: "Pieces (pcs)", value: "pc" },
+];
 
 export default function RecipeBuilder() {
   const { id } = useParams<{ id: string }>();
@@ -61,12 +124,67 @@ export default function RecipeBuilder() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editForm, setEditForm] = useState<RecipeInput | null>(null);
 
-  // Add ingredient
+  // Add ingredient modal state
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedIngId, setSelectedIngId] = useState<number | null>(null);
+  const [selectedMeasureUnit, setSelectedMeasureUnit] = useState<string>("");
   const [batchQty, setBatchQty] = useState<number>(0);
   const [addSearch, setAddSearch] = useState("");
+  const [addCategory, setAddCategory] = useState<string>("all");
   const [addSaving, setAddSaving] = useState(false);
+  const [addModalLoading, setAddModalLoading] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Floating Toast Notification
+  const [toast, setToast] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    type: "success" | "error" | "info";
+  } | null>(null);
+
+  const showToast = useCallback(
+    (title: string, message: string, type: "success" | "error" | "info" = "success") => {
+      setToast({ show: true, title, message, type });
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (toast?.show) {
+      const timer = setTimeout(() => {
+        setToast((prev) => (prev ? { ...prev, show: false } : null));
+      }, 3800);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    if (!addModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setAddModalOpen(false);
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [addModalOpen]);
+
+  const openAddModal = () => {
+    setAddSearch("");
+    setAddCategory("all");
+    setSelectedIngId(null);
+    setBatchQty(0);
+    setAddModalLoading(true);
+    setAddModalOpen(true);
+    setTimeout(() => {
+      setAddModalLoading(false);
+      searchInputRef.current?.focus();
+    }, 180);
+  };
 
   // Print ref
   const printRef = useRef<HTMLDivElement>(null);
@@ -159,15 +277,33 @@ export default function RecipeBuilder() {
   };
 
   const handleAddIngredient = async () => {
-    if (!selectedIngId || batchQty <= 0) return;
+    if (!selectedIngId || batchQty <= 0 || addSaving) return;
     setAddSaving(true);
     try {
       await upsertRecipeIngredient(recipeId, { ingredient_id: selectedIngId, batch_qty: batchQty });
+      const addedIng = allIngredients.find((i) => i.ingredient_id === selectedIngId);
+      const unitCost =
+        addedIng && addedIng.yield_factor > 0 && addedIng.purchase_price > 0
+          ? addedIng.purchase_price / addedIng.yield_factor
+          : 0;
+      const lineCost = batchQty * unitCost;
+
       setAddModalOpen(false);
       setSelectedIngId(null);
       setBatchQty(0);
       setAddSearch("");
+      showToast(
+        "Ingredient Added to Recipe",
+        `Successfully added ${batchQty} ${selectedMeasureUnit || addedIng?.recipe_unit || ""} of ${addedIng?.name || "ingredient"} (${fmt(lineCost)}) to formula.`,
+        "success"
+      );
       await load();
+    } catch (err: any) {
+      showToast(
+        "Failed to Add Ingredient",
+        err?.message || "An unexpected error occurred while adding ingredient.",
+        "error"
+      );
     } finally {
       setAddSaving(false);
     }
@@ -199,13 +335,152 @@ export default function RecipeBuilder() {
     window.print();
   };
 
-  const filteredIngredients = allIngredients.filter(
-    (i) =>
-      i.name.toLowerCase().includes(addSearch.toLowerCase()) &&
-      !result?.line_items.some((li) => li.ingredient_id === i.ingredient_id)
-  );
+  const availableIngredients = useMemo(() => {
+    return allIngredients.filter(
+      (i) => !result?.line_items.some((li) => li.ingredient_id === i.ingredient_id)
+    );
+  }, [allIngredients, result]);
+
+  const categoryCounts = useMemo(() => {
+    return {
+      all: availableIngredients.length,
+      sweeteners: availableIngredients.filter((i) => getModalIngredientCategory(i.name) === "sweeteners").length,
+      baking: availableIngredients.filter((i) => getModalIngredientCategory(i.name) === "baking").length,
+      dairy: availableIngredients.filter((i) => getModalIngredientCategory(i.name) === "dairy").length,
+      produce: availableIngredients.filter((i) => getModalIngredientCategory(i.name) === "produce").length,
+    };
+  }, [availableIngredients]);
+
+  const filteredIngredients = useMemo(() => {
+    return availableIngredients.filter((i) => {
+      const matchesSearch = i.name.toLowerCase().includes(addSearch.toLowerCase());
+      if (!matchesSearch) return false;
+      if (addCategory === "all") return true;
+      return getModalIngredientCategory(i.name) === addCategory;
+    });
+  }, [availableIngredients, addSearch, addCategory]);
 
   const selectedIng = allIngredients.find((i) => i.ingredient_id === selectedIngId);
+
+  const handleSelectIngredient = (ing: Ingredient) => {
+    setSelectedIngId(ing.ingredient_id);
+    setSelectedMeasureUnit(ing.recipe_unit);
+    // Pre-populate sensible default batchQty if currently 0
+    if (batchQty <= 0) {
+      if (ing.recipe_unit === "Gram" || ing.recipe_unit === "g") {
+        setBatchQty(250);
+      } else if (ing.recipe_unit === "Cup") {
+        setBatchQty(1);
+      } else if (ing.recipe_unit === "pc" || ing.recipe_unit === "pcs") {
+        setBatchQty(1);
+      } else if (ing.recipe_unit === "ml") {
+        setBatchQty(250);
+      } else {
+        setBatchQty(1);
+      }
+    }
+  };
+
+  const handleStepQty = (direction: -1 | 1) => {
+    if (!selectedIng) return;
+    const unit = (selectedMeasureUnit || selectedIng.recipe_unit || "").toLowerCase();
+    let step = 1;
+    if (unit.includes("gram") || unit === "g" || unit.includes("ml")) {
+      step = 50;
+    } else if (unit.includes("cup") || unit.includes("kg")) {
+      step = 0.25;
+    } else {
+      step = 1;
+    }
+    setBatchQty((prev) => {
+      const next = prev + direction * step;
+      return next <= 0 ? 0 : Number(next.toFixed(2));
+    });
+  };
+
+  const currentPresets = useMemo(() => {
+    if (!selectedIng) return [];
+    const unit = (selectedMeasureUnit || selectedIng.recipe_unit || "").toLowerCase();
+    const name = selectedIng.name.toLowerCase();
+
+    if (unit.includes("gram") || unit === "g") {
+      let cupEquivalent = 120;
+      if (name.includes("sugar")) cupEquivalent = 200;
+      else if (name.includes("butter")) cupEquivalent = 227;
+      else if (name.includes("liquid") || name.includes("milk") || name.includes("water") || name.includes("oil")) cupEquivalent = 240;
+
+      return [
+        { label: "+50g", type: "add" as const, value: 50 },
+        { label: "+100g", type: "add" as const, value: 100 },
+        { label: "250g", type: "set" as const, value: 250 },
+        { label: "1 Cup", type: "set" as const, value: cupEquivalent },
+      ];
+    }
+
+    if (unit.includes("cup")) {
+      return [
+        { label: "+0.25", type: "add" as const, value: 0.25 },
+        { label: "+0.5", type: "add" as const, value: 0.5 },
+        { label: "1 Cup", type: "set" as const, value: 1 },
+        { label: "2 Cups", type: "set" as const, value: 2 },
+      ];
+    }
+
+    if (unit.includes("ml")) {
+      return [
+        { label: "+50ml", type: "add" as const, value: 50 },
+        { label: "+100ml", type: "add" as const, value: 100 },
+        { label: "250ml", type: "set" as const, value: 250 },
+        { label: "1 Cup", type: "set" as const, value: 240 },
+      ];
+    }
+
+    if (unit.includes("pc")) {
+      return [
+        { label: "+1 pc", type: "add" as const, value: 1 },
+        { label: "+2 pcs", type: "add" as const, value: 2 },
+        { label: "6 pcs", type: "set" as const, value: 6 },
+        { label: "12 pcs", type: "set" as const, value: 12 },
+      ];
+    }
+
+    return [
+      { label: "+1", type: "add" as const, value: 1 },
+      { label: "+5", type: "add" as const, value: 5 },
+      { label: "10", type: "set" as const, value: 10 },
+      { label: "25", type: "set" as const, value: 25 },
+    ];
+  }, [selectedIng, selectedMeasureUnit]);
+
+  const handleApplyPreset = (preset: { label: string; type: "add" | "set"; value: number }) => {
+    if (preset.type === "set") {
+      setBatchQty(preset.value);
+    } else {
+      setBatchQty((prev) => Number((prev + preset.value).toFixed(2)));
+    }
+  };
+
+  const isPresetActive = (preset: { label: string; type: "add" | "set"; value: number }) => {
+    if (preset.type === "set") {
+      return Math.abs(batchQty - preset.value) < 0.01;
+    }
+    return false;
+  };
+
+  const masterUnitCost =
+    selectedIng && selectedIng.yield_factor > 0 && selectedIng.purchase_price > 0
+      ? selectedIng.purchase_price / selectedIng.yield_factor
+      : 0;
+
+  const batchLineCost = batchQty * masterUnitCost;
+
+  const categoryPills = [
+    { id: "all", label: "All Pantry", count: availableIngredients.length },
+    { id: "sweeteners", label: "Sweeteners", count: categoryCounts.sweeteners },
+    { id: "baking", label: "Baking & Grains", count: categoryCounts.baking },
+    { id: "dairy", label: "Dairy & Fats", count: categoryCounts.dairy },
+    { id: "produce", label: "Produce", count: categoryCounts.produce },
+  ];
 
   // Sorted items
   const displayItems = useMemo(() => {
@@ -479,6 +754,15 @@ export default function RecipeBuilder() {
 
               <div className="flex items-center gap-2 self-start sm:self-auto print:hidden">
                 <button
+                  onClick={openAddModal}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold
+                    text-white bg-emerald-600 hover:bg-emerald-500 shadow-xs active:scale-95 transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Ingredient</span>
+                </button>
+
+                <button
                   onClick={() =>
                     setIngSortBy((prev) =>
                       prev === "default" ? "cost" : prev === "cost" ? "name" : "default"
@@ -519,7 +803,13 @@ export default function RecipeBuilder() {
                       <td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-500">
                         <Box className="w-8 h-8 mx-auto mb-2 opacity-30" />
                         <p className="font-semibold text-sm">No raw ingredients added yet.</p>
-                        <p className="text-xs mt-1">Click "+ Add Ingredient" above to begin assembling this formula.</p>
+                        <button
+                          onClick={openAddModal}
+                          className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm active:scale-95 transition-all cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add First Ingredient</span>
+                        </button>
                       </td>
                     </tr>
                   ) : (
@@ -534,8 +824,15 @@ export default function RecipeBuilder() {
                             {li.ingredient_name}
                           </div>
                           <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
-                            <span>{li.purchase_unit} • Bulk Dry</span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80" />
+                            <span>
+                              {li.purchase_unit || (li.package_type ? `${li.package_type} (${li.net_quantity} ${li.net_unit})` : "Package")}
+                              {li.net_quantity && li.net_quantity > 0 && li.purchase_price > 0 && (
+                                <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">
+                                  ({fmt(li.purchase_price / li.net_quantity)}/{li.net_unit || "unit"})
+                                </span>
+                              )}
+                            </span>
                           </div>
                         </td>
 
@@ -614,10 +911,7 @@ export default function RecipeBuilder() {
 
               <div className="flex items-center gap-4 flex-wrap">
                 <button
-                  onClick={() => {
-                    setAddSearch("");
-                    setAddModalOpen(true);
-                  }}
+                  onClick={openAddModal}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors print:hidden cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
@@ -1176,124 +1470,355 @@ export default function RecipeBuilder() {
         </div>
       )}
 
-      {/* ── Add Ingredient Modal ── */}
+      {/* ── Add Ingredient to Recipe Modal (Reference Match & Luminous Design) ── */}
       <div
-        className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
+        className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 ${
           addModalOpen ? "block" : "hidden"
         }`}
       >
         <div
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          className="absolute inset-0 bg-slate-950/60 dark:bg-black/75 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setAddModalOpen(false)}
         />
         <div
-          className="relative z-10 w-full max-w-lg rounded-3xl border border-slate-200 dark:border-slate-800
-            bg-white dark:bg-[#0c101a] p-6 shadow-2xl animate-in zoom-in-95 duration-200 space-y-5"
+          className="relative z-10 w-full max-w-2xl rounded-3xl border border-slate-200/90 dark:border-slate-800
+            bg-white dark:bg-[#0c101a] shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh] overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-                Add Ingredient to Recipe
-              </h2>
-              <p className="text-xs text-slate-400">Select an item from your pantry master inventory</p>
+          {/* Header */}
+          <div className="p-5 md:p-6 pb-4 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0c101a] flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-xs">
+                <Plus className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
+                    Add Ingredient to Recipe
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
+                    ₱ PHP
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  Select an item from your pantry master inventory or convert units on the fly.
+                </p>
+              </div>
             </div>
+
             <button
               onClick={() => setAddModalOpen(false)}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="space-y-4 text-xs">
-            <div className="space-y-1">
-              <label className="font-semibold text-slate-700 dark:text-slate-300">Search Pantry Items</label>
-              <input
-                type="text"
-                placeholder="Type ingredient name (e.g. Flour, Sugar, Butter)..."
-                value={addSearch}
-                onChange={(e) => setAddSearch(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#121826] text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 font-medium"
-              />
+          {/* Modal Scrollable Body */}
+          <div className="p-5 md:p-6 space-y-4 overflow-y-auto flex-1 bg-white dark:bg-[#0c101a]">
+            {/* Search & Category Header Row */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px]">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span>SEARCH PANTRY ITEMS</span>
+                </div>
+                <div className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                  {addSearch ? (
+                    <span>
+                      {filteredIngredients.length} {filteredIngredients.length === 1 ? "item" : "items"} matching "{addSearch}"
+                    </span>
+                  ) : (
+                    <span>{filteredIngredients.length} items available</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Search Input */}
+              <div className="relative flex items-center">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Type ingredient name (e.g. Flour, Sugar, Butter)..."
+                  value={addSearch}
+                  onChange={(e) => setAddSearch(e.target.value)}
+                  className="w-full pl-10 pr-20 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#141b2c] text-slate-900 dark:text-white placeholder:text-slate-400 text-xs sm:text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-2xs"
+                />
+                <div className="absolute right-3 flex items-center gap-1.5">
+                  {addSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setAddSearch("")}
+                      className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                      title="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] text-[10px] font-mono font-medium text-slate-400 shadow-2xs">
+                    ⌘K
+                  </kbd>
+                </div>
+              </div>
+
+              {/* Category Filter Pills */}
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                {categoryPills.map((cat) => {
+                  const isActive = addCategory === cat.id;
+                  const showCount = cat.id !== "all" && cat.count > 0;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setAddCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-[#0f766e] dark:bg-emerald-600 text-white font-bold shadow-xs"
+                          : "bg-slate-100/90 dark:bg-[#141b2c] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-200/70 dark:hover:bg-slate-800/80 font-medium"
+                      }`}
+                    >
+                      {cat.label} {showCount ? `(${cat.count})` : ""}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="max-h-52 overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredIngredients.length === 0 ? (
-                <div className="p-8 text-center text-slate-400">
-                  <p className="font-semibold">No matching ingredients</p>
-                  <p className="text-[11px] mt-1">Make sure ingredients are added in the Pantry Master.</p>
+            {/* Inventory List Header */}
+            <div className="flex items-center justify-between px-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <span>INVENTORY ITEM & YIELD SPECIFICATION</span>
+              <span>MASTER UNIT COST</span>
+            </div>
+
+            {/* Scrollable Inventory Items List */}
+            <div className="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+              {addModalLoading ? (
+                /* Shimmer loading skeletons */
+                <div className="space-y-2 animate-pulse">
+                  {[1, 2, 3, 4].map((s) => (
+                    <div
+                      key={s}
+                      className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0f1422] flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                        <div className="space-y-1.5">
+                          <div className="h-4 w-36 rounded bg-slate-200 dark:bg-slate-800" />
+                          <div className="h-3 w-48 rounded bg-slate-100 dark:bg-slate-800/60" />
+                        </div>
+                      </div>
+                      <div className="h-4 w-20 rounded bg-slate-200 dark:bg-slate-800" />
+                    </div>
+                  ))}
+                </div>
+              ) : filteredIngredients.length === 0 ? (
+                <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#121826]/30">
+                  <Box className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                  <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">No matching ingredients</p>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    {addSearch
+                      ? `No items match "${addSearch}". Try a different keyword or category.`
+                      : "All ingredients in your inventory have already been added to this recipe."}
+                  </p>
                 </div>
               ) : (
-                filteredIngredients.map((ing) => (
-                  <button
-                    key={ing.ingredient_id}
-                    onClick={() => {
-                      setSelectedIngId(ing.ingredient_id);
-                      setBatchQty(0);
-                    }}
-                    className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${
-                      selectedIngId === ing.ingredient_id
-                        ? "bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300"
-                        : "hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-800 dark:text-slate-200"
-                    }`}
-                  >
-                    <div>
-                      <div className="font-bold">{ing.name}</div>
-                      <div className="text-[10px] text-slate-400">
-                        Purchased per {ing.purchase_unit} • Yield: {ing.yield_factor} {ing.recipe_unit}s
+                filteredIngredients.map((ing) => {
+                  const isSelected = selectedIngId === ing.ingredient_id;
+                  const unitCost =
+                    ing.purchase_price > 0 && ing.yield_factor > 0
+                      ? ing.purchase_price / ing.yield_factor
+                      : 0;
+
+                  return (
+                    <div
+                      key={ing.ingredient_id}
+                      onClick={() => handleSelectIngredient(ing)}
+                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer ${
+                        isSelected
+                          ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-2 border-emerald-500 shadow-xs shadow-emerald-500/10"
+                          : "bg-white dark:bg-[#0f1422] border-slate-200/90 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {isSelected ? (
+                          <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900 dark:text-white text-sm truncate">
+                              {ing.name}
+                            </span>
+                            {isSelected ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                                Selected
+                              </span>
+                            ) : ing.purchase_price <= 0 ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/50 shrink-0">
+                                Unpriced
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate font-medium">
+                            Pkg: {ing.purchase_unit || (ing.package_type ? `${ing.package_type} (${ing.net_quantity ?? 1} ${ing.net_unit ?? "kg"})` : "Package")} • Yield: {ing.yield_factor} {ing.recipe_unit}s
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 pl-3">
+                        <div
+                          className={`font-bold tabular-nums text-sm ${
+                            isSelected
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : ing.purchase_price <= 0
+                              ? "text-slate-400 dark:text-slate-500 font-semibold"
+                              : "text-slate-900 dark:text-white"
+                          }`}
+                        >
+                          {fmt(unitCost)} / {ing.recipe_unit}
+                        </div>
                       </div>
                     </div>
-                    <span className="font-semibold tabular-nums text-slate-700 dark:text-slate-300">
-                      {fmt(ing.purchase_price > 0 ? ing.purchase_price / ing.yield_factor : 0)}/{ing.recipe_unit}
-                    </span>
-                  </button>
-                ))
+                  );
+                })
               )}
             </div>
 
-            {selectedIngId && selectedIng && (
-              <div className="rounded-2xl p-4 bg-slate-50 dark:bg-[#121826] border border-slate-200 dark:border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900 dark:text-white">{selectedIng.name}</span>
-                  <span className="text-[11px] text-slate-400 font-mono">
-                    Unit Cost: {fmt(selectedIng.purchase_price > 0 ? selectedIng.purchase_price / selectedIng.yield_factor : 0)}/{selectedIng.recipe_unit}
-                  </span>
+            {/* ── Configure Portion Drawer (When Selected) ── */}
+            {selectedIng && (
+              <div className="rounded-2xl p-4 sm:p-4.5 bg-slate-50/80 dark:bg-[#121826]/80 border border-slate-200/90 dark:border-slate-800 space-y-3.5 backdrop-blur-xs animate-in fade-in duration-150">
+                {/* Portion Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2.5 border-b border-slate-200/60 dark:border-slate-800/80">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+                      Configure Portion: {selectedIng.name}
+                    </h3>
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
+                    <span>Master Unit Cost:</span>
+                    <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-[#182032] border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-800 dark:text-slate-200 text-xs shadow-2xs">
+                      {fmt(masterUnitCost)} / {selectedIng.recipe_unit}
+                    </span>
+                    {selectedIng.purchase_price > 0 && (
+                      <span className="text-slate-400 dark:text-slate-500 text-[11px]">
+                        ({fmt(selectedIng.purchase_price)} / {selectedIng.purchase_unit || selectedIng.package_type || "pkg"})
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="flex-1">
-                    <label className="text-[11px] text-slate-400 block mb-1">
-                      Batch Quantity ({selectedIng.recipe_unit}s)
-                    </label>
-                    <input
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={batchQty || ""}
-                      onChange={(e) => setBatchQty(parseFloat(e.target.value) || 0)}
-                      placeholder="e.g. 1.5"
-                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c101a] text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none focus:border-violet-500"
-                    />
+                {/* Input Controls */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* Batch Quantity with Stepper */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Batch Quantity ({selectedMeasureUnit || selectedIng.recipe_unit})
+                      </label>
+                      <span className="text-[10px] text-slate-400">e.g. 250 or 1.5</span>
+                    </div>
+                    <div className="flex rounded-xl overflow-hidden shadow-2xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={batchQty === 0 ? "" : batchQty}
+                        onChange={(e) => setBatchQty(parseFloat(e.target.value) || 0)}
+                        placeholder="250"
+                        className="w-full px-3.5 py-2 text-sm font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none tabular-nums"
+                      />
+                      <div className="flex border-l border-slate-200 dark:border-slate-700 divide-x divide-slate-200 dark:divide-slate-700 bg-slate-50 dark:bg-[#141b2c]">
+                        <button
+                          type="button"
+                          onClick={() => handleStepQty(-1)}
+                          disabled={batchQty <= 0}
+                          className="px-3 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors font-bold text-base flex items-center justify-center cursor-pointer active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Decrease quantity"
+                        >
+                          -
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleStepQty(1)}
+                          className="px-3 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors font-bold text-base flex items-center justify-center cursor-pointer active:scale-90"
+                          title="Increase quantity"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  {batchQty > 0 && selectedIng.purchase_price > 0 && (
-                    <div className="self-end pb-1 text-right">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Line Item Total</span>
-                      <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
-                        {fmt(batchQty * (selectedIng.purchase_price / selectedIng.yield_factor))}
-                      </span>
+                  {/* Measure Unit Dropdown */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Measure Unit
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedMeasureUnit}
+                        onChange={(e) => setSelectedMeasureUnit(e.target.value)}
+                        className="w-full appearance-none px-3.5 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer pr-9 shadow-2xs"
+                      >
+                        <option value={selectedIng.recipe_unit}>
+                          {selectedIng.recipe_unit} ({selectedIng.recipe_unit === "Gram" ? "g" : selectedIng.recipe_unit === "Kilogram" ? "kg" : selectedIng.recipe_unit.toLowerCase()})
+                        </option>
+                        {MODAL_MEASURE_UNITS.filter((u) => u.value !== selectedIng.recipe_unit).map((u) => (
+                          <option key={u.value} value={u.value}>
+                            {u.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
-                  )}
+                  </div>
+                </div>
+
+                {/* Presets and Batch Line Cost Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs text-slate-400 font-semibold mr-1">Presets:</span>
+                    {currentPresets.map((preset) => {
+                      const isActive = isPresetActive(preset);
+                      return (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() => handleApplyPreset(preset)}
+                          className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer active:scale-95 ${
+                            isActive
+                              ? "bg-emerald-100/80 dark:bg-emerald-950/80 border-emerald-400 dark:border-emerald-600 text-emerald-800 dark:text-emerald-300 shadow-2xs"
+                              : "bg-white dark:bg-[#141b2c] border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300"
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 text-xs font-black text-emerald-600 dark:text-emerald-400 tabular-nums shadow-xs flex items-center gap-1.5">
+                      <span className="text-slate-500 dark:text-slate-400 font-medium">Batch Line Cost:</span>
+                      <span>{fmt(batchLineCost)}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end gap-2.5">
+          {/* Modal Footer */}
+          <div className="p-4 md:p-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0c101a] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={() => setAddModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] transition-all cursor-pointer"
             >
               Cancel
             </button>
@@ -1301,13 +1826,70 @@ export default function RecipeBuilder() {
               type="button"
               onClick={handleAddIngredient}
               disabled={!selectedIngId || batchQty <= 0 || addSaving}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 transition-colors shadow-sm disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-[0.98] active:translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              {addSaving ? "Adding..." : "Add to Recipe"}
+              {addSaving ? (
+                <>
+                  <Spinner className="w-3.5 h-3.5 text-white" />
+                  <span>Adding Ingredient...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  <span>Add to Recipe</span>
+                </>
+              )}
             </button>
           </div>
         </div>
       </div>
+
+      {/* ── Toast Notification Banner ── */}
+      {toast?.show && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div
+            className={`flex items-start gap-3 p-4 rounded-2xl shadow-2xl border backdrop-blur-md max-w-sm ${
+              toast.type === "success"
+                ? "bg-white/95 dark:bg-[#0f1422]/95 border-emerald-500/80 shadow-emerald-500/10 text-slate-900 dark:text-white"
+                : toast.type === "error"
+                ? "bg-white/95 dark:bg-[#0f1422]/95 border-rose-500/80 shadow-rose-500/10 text-slate-900 dark:text-white"
+                : "bg-white/95 dark:bg-[#0f1422]/95 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                toast.type === "success"
+                  ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400"
+                  : toast.type === "error"
+                  ? "bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400"
+                  : "bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400"
+              }`}
+            >
+              {toast.type === "success" ? (
+                <CheckCircle2 className="w-5 h-5" />
+              ) : toast.type === "error" ? (
+                <AlertTriangle className="w-5 h-5" />
+              ) : (
+                <Info className="w-5 h-5" />
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0 pr-2">
+              <h4 className="text-sm font-bold tracking-tight">{toast.title}</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                {toast.message}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setToast(null)}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-lg cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

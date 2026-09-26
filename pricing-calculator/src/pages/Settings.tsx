@@ -10,6 +10,8 @@ import {
   AlertBanner,
 } from "@/components/ui";
 import { useApp } from "@/context/AppContext";
+import { Header } from "@/components/Header";
+import { Shield, Coins, Palette, HardDrive, Info } from "lucide-react";
 
 export default function Settings() {
   const { state, setTheme, updateSetting } = useApp();
@@ -33,181 +35,189 @@ export default function Settings() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Settings</h1>
-        <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">
-          Configure application preferences and backup options
-        </p>
-      </div>
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+      <Header />
+      <div className="flex-1 p-6 md:p-8 space-y-6 max-w-4xl">
+        <div className="mb-2">
+          <h1 className="text-3xl font-extrabold tracking-tight text-espresso-900 dark:text-white">
+            Settings &amp; Configuration
+          </h1>
+          <p className="text-sm text-espresso-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
+            Configure application display preferences, active currency symbols, and database backup routines.
+          </p>
+        </div>
 
-      <div className="flex flex-col gap-6 max-w-xl">
-        {/* Appearance */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">Appearance</h2>
-          </CardHeader>
-          <CardBody>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-[hsl(var(--foreground))]">Theme</p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">
-                  Choose between light and dark mode
-                </p>
-              </div>
-              <div className="flex rounded-lg border border-[hsl(var(--border))] overflow-hidden">
-                <button
-                  onClick={() => setTheme("light")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
-                    s.theme === "light"
-                      ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                      : "hover:bg-[hsl(var(--accent))] text-[hsl(var(--muted-foreground))]"
-                  }`}
-                  id="theme-light-btn"
-                >
-                  ☀️ Light
-                </button>
-                <button
-                  onClick={() => setTheme("dark")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors border-l border-[hsl(var(--border))] ${
-                    s.theme === "dark"
-                      ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"
-                      : "hover:bg-[hsl(var(--accent))] text-[hsl(var(--muted-foreground))]"
-                  }`}
-                  id="theme-dark-btn"
-                >
-                  🌙 Dark
-                </button>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Currency */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">
-              Currency Display
-            </h2>
-          </CardHeader>
-          <CardBody>
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <Input
-                  label="Currency Symbol"
-                  value={s.currency_symbol}
-                  onChange={(e) => updateSetting("currency_symbol", e.target.value)}
-                  placeholder="₱"
-                  id="currency-symbol"
-                />
-              </div>
-              <div className="mt-6 rounded-lg border border-[hsl(var(--border))] px-4 py-2.5">
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">Preview</p>
-                <p className="text-lg font-bold text-[hsl(var(--foreground))]">
-                  {s.currency_symbol}1,234.56
-                </p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-
-        {/* Backup */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">
-              Data Backup
-            </h2>
-          </CardHeader>
-          <CardBody>
-            <div className="flex flex-col gap-4">
-              {backupResult && (
-                <AlertBanner
-                  type={backupResult.ok ? "success" : "error"}
-                  title={backupResult.ok ? "Backup successful" : "Backup failed"}
-                  message={backupResult.msg}
-                />
-              )}
-
-              <Input
-                label="Backup Directory Path"
-                value={backupPath}
-                onChange={(e) => setBackupPath(e.target.value)}
-                placeholder="Leave empty for default (%APPDATA%/pricing-calculator/Backups)"
-                id="backup-path"
-              />
-
-              <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-6">
+          {/* Appearance */}
+          <Card>
+            <CardHeader className="flex items-center gap-2.5">
+              <Palette className="w-4 h-4 text-culinary-600 dark:text-emerald-400" />
+              <h2 className="text-sm font-bold text-espresso-900 dark:text-white">Appearance &amp; Theme</h2>
+            </CardHeader>
+            <CardBody>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                    Last backup:{" "}
-                    <span className="font-medium text-[hsl(var(--foreground))]">
-                      {s.last_backup
-                        ? new Date(s.last_backup).toLocaleString()
-                        : "Never"}
-                    </span>
-                  </p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">
-                    Creates a timestamped copy of your SQLite database file
+                  <p className="text-sm font-semibold text-espresso-850 dark:text-slate-200">Interface Theme</p>
+                  <p className="text-xs text-espresso-400 dark:text-slate-400 mt-0.5">
+                    Select between Luminous Light and Nocturne Dark themes
                   </p>
                 </div>
-                <Button
-                  onClick={handleBackup}
-                  isLoading={backingUp}
-                  variant="secondary"
-                  id="run-backup-btn"
-                >
-                  💾 Run Backup Now
-                </Button>
+                <div className="flex rounded-xl border border-artisan-border dark:border-slate-800 overflow-hidden bg-artisan-canvas dark:bg-[#141b2c] p-1 shrink-0">
+                  <button
+                    onClick={() => setTheme("light")}
+                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                      s.theme === "light"
+                        ? "bg-white dark:bg-slate-800 text-espresso-900 dark:text-white shadow-artisan-subtle"
+                        : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-slate-200"
+                    }`}
+                    id="theme-light-btn"
+                  >
+                    ☀️ Light
+                  </button>
+                  <button
+                    onClick={() => setTheme("dark")}
+                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                      s.theme === "dark"
+                        ? "bg-slate-800 text-white shadow-artisan-subtle"
+                        : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-slate-200"
+                    }`}
+                    id="theme-dark-btn"
+                  >
+                    🌙 Dark
+                  </button>
+                </div>
               </div>
+            </CardBody>
+          </Card>
 
-              <div className="rounded-lg bg-[hsl(var(--accent))] px-4 py-3 text-xs
-                text-[hsl(var(--accent-foreground))]">
-                <p className="font-semibold mb-1">💡 Backup tip</p>
-                <p>
-                  Copy the backup file to Google Drive, OneDrive, or a USB drive to protect
-                  against hardware failure. The app also auto-backs up daily on startup.
-                </p>
+          {/* Currency */}
+          <Card>
+            <CardHeader className="flex items-center gap-2.5">
+              <Coins className="w-4 h-4 text-culinary-600 dark:text-emerald-400" />
+              <h2 className="text-sm font-bold text-espresso-900 dark:text-white">
+                Currency Display
+              </h2>
+            </CardHeader>
+            <CardBody>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex-1">
+                  <Input
+                    label="Currency Symbol"
+                    value={s.currency_symbol}
+                    onChange={(e) => updateSetting("currency_symbol", e.target.value)}
+                    placeholder="₱"
+                    id="currency-symbol"
+                  />
+                </div>
+                <div className="sm:mt-5 rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-subtle dark:bg-[#141b2c] px-5 py-2.5 shrink-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-espresso-400 dark:text-slate-400">Preview</p>
+                  <p className="text-xl font-black font-mono text-culinary-600 dark:text-emerald-400 mt-0.5">
+                    {s.currency_symbol}1,234.56
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
 
-        {/* About */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-sm font-semibold text-[hsl(var(--foreground))]">About</h2>
-          </CardHeader>
-          <CardBody>
-            <div className="text-sm flex flex-col gap-1.5 text-[hsl(var(--muted-foreground))]">
-              <div className="flex justify-between">
-                <span>Application</span>
-                <span className="font-medium text-[hsl(var(--foreground))]">
-                  Pricing Calculator
-                </span>
+          {/* Backup */}
+          <Card>
+            <CardHeader className="flex items-center gap-2.5">
+              <HardDrive className="w-4 h-4 text-culinary-600 dark:text-emerald-400" />
+              <h2 className="text-sm font-bold text-espresso-900 dark:text-white">
+                Data Backup &amp; Storage
+              </h2>
+            </CardHeader>
+            <CardBody>
+              <div className="flex flex-col gap-4">
+                {backupResult && (
+                  <AlertBanner
+                    type={backupResult.ok ? "success" : "error"}
+                    title={backupResult.ok ? "Backup successful" : "Backup failed"}
+                    message={backupResult.msg}
+                  />
+                )}
+
+                <Input
+                  label="Backup Directory Path"
+                  value={backupPath}
+                  onChange={(e) => setBackupPath(e.target.value)}
+                  placeholder="Leave empty for default (%APPDATA%/pricing-calculator/Backups)"
+                  id="backup-path"
+                />
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+                  <div>
+                    <p className="text-xs text-espresso-500 dark:text-slate-400">
+                      Last backup:{" "}
+                      <span className="font-semibold text-espresso-900 dark:text-slate-200">
+                        {s.last_backup
+                          ? new Date(s.last_backup).toLocaleString()
+                          : "Never"}
+                      </span>
+                    </p>
+                    <p className="text-[11px] text-espresso-400 dark:text-slate-500 mt-0.5">
+                      Creates a timestamped snapshot of your SQLite database
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleBackup}
+                    isLoading={backingUp}
+                    variant="secondary"
+                    id="run-backup-btn"
+                  >
+                    💾 Run Backup Now
+                  </Button>
+                </div>
+
+                <div className="rounded-xl bg-culinary-50 dark:bg-emerald-950/40 border border-culinary-200/80 dark:border-emerald-800/60 px-4 py-3 text-xs text-culinary-900 dark:text-emerald-300">
+                  <p className="font-bold mb-1">💡 Backup tip</p>
+                  <p className="leading-relaxed">
+                    Copy the backup file to Google Drive, OneDrive, or an external drive to protect
+                    against local hardware failure. The system automatically creates a safety snapshot on startup.
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Version</span>
-                <span className="font-medium text-[hsl(var(--foreground))]">0.1.0</span>
+            </CardBody>
+          </Card>
+
+          {/* About */}
+          <Card>
+            <CardHeader className="flex items-center gap-2.5">
+              <Info className="w-4 h-4 text-culinary-600 dark:text-emerald-400" />
+              <h2 className="text-sm font-bold text-espresso-900 dark:text-white">About BakeIQ Engine</h2>
+            </CardHeader>
+            <CardBody>
+              <div className="text-xs flex flex-col gap-2 text-espresso-600 dark:text-slate-400">
+                <div className="flex justify-between py-1.5 border-b border-artisan-border/60 dark:border-slate-800/60">
+                  <span>Application</span>
+                  <span className="font-bold text-espresso-900 dark:text-white">
+                    BakeIQ Pricing Calculator
+                  </span>
+                </div>
+                <div className="flex justify-between py-1.5 border-b border-artisan-border/60 dark:border-slate-800/60">
+                  <span>Version</span>
+                  <span className="font-mono font-semibold text-espresso-900 dark:text-white">v0.1.0</span>
+                </div>
+                <div className="flex justify-between py-1.5 border-b border-artisan-border/60 dark:border-slate-800/60">
+                  <span>Tech Stack</span>
+                  <span className="font-medium text-espresso-900 dark:text-white">
+                    Tauri v2 + React 19 + TypeScript + SQLite
+                  </span>
+                </div>
+                <div className="flex justify-between py-1.5 border-b border-artisan-border/60 dark:border-slate-800/60">
+                  <span>Architecture</span>
+                  <span className="font-medium text-espresso-900 dark:text-white">Local-First Desktop Engine</span>
+                </div>
+                <div className="flex justify-between py-1.5">
+                  <span>Active Currency</span>
+                  <span className="font-bold text-culinary-600 dark:text-emerald-400">
+                    Philippine Peso ({s.currency_symbol || "₱"})
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Stack</span>
-                <span className="font-medium text-[hsl(var(--foreground))]">
-                  Tauri v2 + React + SQLite
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Architecture</span>
-                <span className="font-medium text-[hsl(var(--foreground))]">Local-first</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Currency</span>
-                <span className="font-medium text-[hsl(var(--foreground))]">
-                  Philippine Peso (₱)
-                </span>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+            </CardBody>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -14,20 +14,21 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 shadow-sm",
+    "bg-culinary-600 hover:bg-culinary-700 text-white font-bold shadow-artisan-glow hover:scale-[1.01] active:scale-[0.99]",
   secondary:
-    "bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] hover:bg-[hsl(var(--muted))]",
-  ghost: "hover:bg-[hsl(var(--accent))] text-[hsl(var(--foreground))]",
+    "bg-artisan-surface dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-800 dark:text-slate-100 border border-artisan-border dark:border-slate-800 shadow-artisan-subtle font-semibold hover:scale-[1.01] active:scale-[0.99]",
+  ghost:
+    "hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-700 dark:text-slate-300 hover:text-espresso-900 dark:hover:text-white font-medium",
   destructive:
-    "bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:opacity-90",
+    "bg-rose-600 text-white hover:bg-rose-700 font-bold shadow-sm active:scale-[0.99]",
   outline:
-    "border border-[hsl(var(--border))] bg-transparent hover:bg-[hsl(var(--accent))] text-[hsl(var(--foreground))]",
+    "border border-artisan-border dark:border-slate-800 bg-transparent hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-800 dark:text-slate-200 font-semibold",
 };
 
 const buttonSizes: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-xs",
-  md: "px-4 py-2 text-sm",
-  lg: "px-5 py-2.5 text-base",
+  sm: "px-3 py-1.5 text-xs rounded-lg",
+  md: "px-4 py-2 text-sm rounded-xl",
+  lg: "px-5 py-2.5 text-base rounded-xl",
 };
 
 export function Button({
@@ -41,9 +42,9 @@ export function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-[var(--radius)] font-medium
+      className={`inline-flex items-center justify-center gap-2 font-medium
         transition-all duration-150 focus-visible:outline-none focus-visible:ring-2
-        focus-visible:ring-[hsl(var(--ring))] disabled:opacity-50 disabled:pointer-events-none
+        focus-visible:ring-culinary-500 disabled:opacity-50 disabled:pointer-events-none cursor-pointer
         ${buttonVariants[variant]} ${buttonSizes[size]} ${className}`}
       disabled={disabled || isLoading}
       {...props}
@@ -73,7 +74,7 @@ export function Input({ label, error, suffix, tooltip, className = "", id, ...pr
     <div className="flex flex-col gap-1">
       {label && (
         <div className="flex items-center gap-1.5">
-          <label htmlFor={inputId} className="text-sm font-medium text-[hsl(var(--foreground))]">
+          <label htmlFor={inputId} className="text-xs font-bold text-espresso-700 dark:text-slate-300 uppercase tracking-wide">
             {label}
           </label>
           {tooltip && <InfoTooltip content={tooltip} ariaLabel={`Information about ${label}`} />}
@@ -82,23 +83,23 @@ export function Input({ label, error, suffix, tooltip, className = "", id, ...pr
       <div className="relative flex items-center">
         <input
           id={inputId}
-          className={`w-full rounded-[var(--radius)] border border-[hsl(var(--input))]
-            bg-[hsl(var(--card))] px-3 py-2 text-sm text-[hsl(var(--foreground))]
-            placeholder:text-[hsl(var(--muted-foreground))]
-            focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]
-            transition-colors disabled:opacity-50
+          className={`w-full rounded-xl border border-artisan-border dark:border-slate-800
+            bg-artisan-surface dark:bg-[#141b2c] px-3.5 py-2 text-sm text-espresso-900 dark:text-white
+            placeholder:text-espresso-400 dark:placeholder:text-slate-500
+            focus:outline-none focus:border-culinary-500 focus:ring-4 focus:ring-culinary-500/10
+            transition-all disabled:opacity-50
             ${suffix ? "pr-10" : ""}
-            ${error ? "border-[hsl(var(--destructive))]" : ""}
+            ${error ? "border-rose-400" : ""}
             ${className}`}
           {...props}
         />
         {suffix && (
-          <span className="absolute right-3 text-xs text-[hsl(var(--muted-foreground))]">
+          <span className="absolute right-3 text-xs font-semibold text-espresso-400 dark:text-slate-400">
             {suffix}
           </span>
         )}
       </div>
-      {error && <p className="text-xs text-[hsl(var(--destructive))]">{error}</p>}
+      {error && <p className="text-xs text-rose-500">{error}</p>}
     </div>
   );
 }
@@ -112,8 +113,8 @@ interface CardProps {
 export function Card({ children, className = "" }: CardProps) {
   return (
     <div
-      className={`rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]
-        text-[hsl(var(--card-foreground))] shadow-sm ${className}`}
+      className={`rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0c101a]
+        text-espresso-900 dark:text-slate-100 shadow-artisan-card ${className}`}
     >
       {children}
     </div>
@@ -121,7 +122,7 @@ export function Card({ children, className = "" }: CardProps) {
 }
 
 export function CardHeader({ children, className = "" }: CardProps) {
-  return <div className={`px-6 py-4 border-b border-[hsl(var(--border))] ${className}`}>{children}</div>;
+  return <div className={`px-6 py-4 border-b border-artisan-border dark:border-slate-800 ${className}`}>{children}</div>;
 }
 
 export function CardBody({ children, className = "" }: CardProps) {
@@ -138,16 +139,16 @@ interface BadgeProps {
 }
 
 const badgeVariants: Record<BadgeVariant, string> = {
-  default: "bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]",
-  success: "bg-[hsl(var(--success)/0.15)] text-[hsl(var(--success))]",
-  warning: "bg-[hsl(var(--warning)/0.15)] text-[hsl(var(--warning))]",
-  destructive: "bg-[hsl(var(--destructive)/0.15)] text-[hsl(var(--destructive))]",
+  default: "bg-artisan-subtle dark:bg-[#141b2c] text-espresso-700 dark:text-slate-300 border border-artisan-border dark:border-slate-800",
+  success: "bg-culinary-50 dark:bg-emerald-950/70 text-culinary-700 dark:text-emerald-300 border border-culinary-200 dark:border-emerald-800/60",
+  warning: "bg-caramel-50 dark:bg-amber-950/70 text-caramel-700 dark:text-amber-300 border border-caramel-200 dark:border-amber-800/60",
+  destructive: "bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60",
 };
 
 export function Badge({ variant = "default", children, className = "" }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
+      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold
         ${badgeVariants[variant]} ${className}`}
     >
       {children}

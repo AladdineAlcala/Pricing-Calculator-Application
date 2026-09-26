@@ -71,19 +71,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Load settings from DB on mount
   useEffect(() => {
-    getSettings().then((rows: AppSetting[]) => {
-      const map = Object.fromEntries(rows.map((r) => [r.setting_key, r.setting_value]));
-      dispatch({
-        type: "SETTINGS_LOADED",
-        payload: {
-          theme: (map.theme as "light" | "dark") || "light",
-          auto_backup_enabled: map.auto_backup_enabled === "true",
-          backup_path: map.backup_path || "",
-          currency_symbol: map.currency_symbol || "₱",
-          last_backup: map.last_backup || "",
-        },
-      });
-    });
+    getSettings()
+      .then((rows: AppSetting[]) => {
+        if (!rows) return;
+        const map = Object.fromEntries(rows.map((r) => [r.setting_key, r.setting_value]));
+        dispatch({
+          type: "SETTINGS_LOADED",
+          payload: {
+            theme: (map.theme as "light" | "dark") || "light",
+            auto_backup_enabled: map.auto_backup_enabled === "true",
+            backup_path: map.backup_path || "",
+            currency_symbol: map.currency_symbol || "₱",
+            last_backup: map.last_backup || "",
+          },
+        });
+      })
+      .catch(() => {});
   }, []);
 
   // Sync theme to <html> class
@@ -97,12 +100,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setTheme = useCallback((theme: "light" | "dark") => {
     dispatch({ type: "SET_THEME", payload: theme });
-    setSetting("theme", theme);
+    setSetting("theme", theme).catch(() => {});
   }, []);
 
   const updateSetting = useCallback((key: keyof AppSettings, value: string) => {
     dispatch({ type: "SET_SETTING", key, value });
-    setSetting(key, value);
+    setSetting(key, value).catch(() => {});
   }, []);
 
   // Currency formatter: half-up rounding to 2dp

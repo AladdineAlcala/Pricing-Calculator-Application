@@ -14,7 +14,8 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
         .prepare(
-            "SELECT ingredient_id, name, purchase_unit, purchase_price, recipe_unit, yield_factor
+            "SELECT ingredient_id, name, purchase_unit, purchase_price, recipe_unit, yield_factor,
+                    COALESCE(package_type, 'Package'), COALESCE(net_quantity, 1.0), COALESCE(net_unit, 'Kilogram')
              FROM ingredients ORDER BY name ASC",
         )
         .map_err(|e| e.to_string())?;
@@ -28,6 +29,9 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
                 purchase_price: row.get(3)?,
                 recipe_unit: row.get(4)?,
                 yield_factor: row.get(5)?,
+                package_type: row.get(6)?,
+                net_quantity: row.get(7)?,
+                net_unit: row.get(8)?,
             })
         })
         .map_err(|e| e.to_string())?
@@ -44,14 +48,17 @@ pub fn create_ingredient(
 ) -> Result<Ingredient, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     conn.execute(
-        "INSERT INTO ingredients (name, purchase_unit, purchase_price, recipe_unit, yield_factor)
-         VALUES (?1, ?2, ?3, ?4, ?5)",
+        "INSERT INTO ingredients (name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
         params![
             input.name,
             input.purchase_unit,
             input.purchase_price,
             input.recipe_unit,
-            input.yield_factor
+            input.yield_factor,
+            input.package_type,
+            input.net_quantity,
+            input.net_unit
         ],
     )
     .map_err(|e| e.to_string())?;
@@ -64,6 +71,9 @@ pub fn create_ingredient(
         purchase_price: input.purchase_price,
         recipe_unit: input.recipe_unit,
         yield_factor: input.yield_factor,
+        package_type: input.package_type,
+        net_quantity: input.net_quantity,
+        net_unit: input.net_unit,
     })
 }
 
@@ -76,14 +86,18 @@ pub fn update_ingredient(
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     conn.execute(
         "UPDATE ingredients SET name=?1, purchase_unit=?2, purchase_price=?3,
-         recipe_unit=?4, yield_factor=?5, updated_at=datetime('now')
-         WHERE ingredient_id=?6",
+         recipe_unit=?4, yield_factor=?5, package_type=?6, net_quantity=?7, net_unit=?8,
+         updated_at=datetime('now')
+         WHERE ingredient_id=?9",
         params![
             input.name,
             input.purchase_unit,
             input.purchase_price,
             input.recipe_unit,
             input.yield_factor,
+            input.package_type,
+            input.net_quantity,
+            input.net_unit,
             ingredient_id
         ],
     )
@@ -255,7 +269,8 @@ pub fn get_recipe_ingredients(
     let mut stmt = conn
         .prepare(
             "SELECT ri.id, ri.recipe_id, ri.ingredient_id, ri.batch_qty,
-                    i.name, i.purchase_unit, i.purchase_price, i.recipe_unit, i.yield_factor
+                    i.name, i.purchase_unit, i.purchase_price, i.recipe_unit, i.yield_factor,
+                    COALESCE(i.package_type, 'Package'), COALESCE(i.net_quantity, 1.0), COALESCE(i.net_unit, 'Kilogram')
              FROM recipe_ingredients ri
              JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
              WHERE ri.recipe_id = ?1
@@ -285,6 +300,9 @@ pub fn get_recipe_ingredients(
                 purchase_price,
                 recipe_unit: row.get(7)?,
                 yield_factor,
+                package_type: row.get(9)?,
+                net_quantity: row.get(10)?,
+                net_unit: row.get(11)?,
                 normalized_unit_cost,
                 line_item_cost,
             })
@@ -362,7 +380,8 @@ pub fn calculate_recipe_cost(
     let mut stmt = conn
         .prepare(
             "SELECT ri.id, ri.recipe_id, ri.ingredient_id, ri.batch_qty,
-                    i.name, i.purchase_unit, i.purchase_price, i.recipe_unit, i.yield_factor
+                    i.name, i.purchase_unit, i.purchase_price, i.recipe_unit, i.yield_factor,
+                    COALESCE(i.package_type, 'Package'), COALESCE(i.net_quantity, 1.0), COALESCE(i.net_unit, 'Kilogram')
              FROM recipe_ingredients ri
              JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
              WHERE ri.recipe_id = ?1",
@@ -390,6 +409,9 @@ pub fn calculate_recipe_cost(
                 purchase_price,
                 recipe_unit: row.get(7)?,
                 yield_factor,
+                package_type: row.get(9)?,
+                net_quantity: row.get(10)?,
+                net_unit: row.get(11)?,
                 normalized_unit_cost,
                 line_item_cost,
             })

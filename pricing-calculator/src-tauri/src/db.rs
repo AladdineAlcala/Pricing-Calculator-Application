@@ -11,7 +11,7 @@ pub fn get_db_path(app_handle: &tauri::AppHandle) -> PathBuf {
         .join("pricing_calculator.db")
 }
 
-pub fn initialize_database(conn: &Connection) -> Result<()> {
+pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Result<()> {
     conn.execute_batch("PRAGMA journal_mode=WAL;")?;
     conn.execute_batch("PRAGMA foreign_keys=ON;")?;
 
@@ -24,10 +24,27 @@ pub fn initialize_database(conn: &Connection) -> Result<()> {
             purchase_price  REAL    NOT NULL DEFAULT 0.0,
             recipe_unit     TEXT    NOT NULL,
             yield_factor    REAL    NOT NULL,
+            package_type    TEXT    NOT NULL DEFAULT 'Package',
+            net_quantity    REAL    NOT NULL DEFAULT 1.0,
+            net_unit        TEXT    NOT NULL DEFAULT 'Kilogram',
             created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
             updated_at      TEXT    NOT NULL DEFAULT (datetime('now'))
         );",
     )?;
+
+    // Safe backward-compatible migrations for existing SQLite databases
+    let _ = conn.execute(
+        "ALTER TABLE ingredients ADD COLUMN package_type TEXT NOT NULL DEFAULT 'Package'",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredients ADD COLUMN net_quantity REAL NOT NULL DEFAULT 1.0",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredients ADD COLUMN net_unit TEXT NOT NULL DEFAULT 'Kilogram'",
+        [],
+    );
 
     // ── 2. recipes ───────────────────────────────────────────────────────────
     conn.execute_batch(
@@ -77,8 +94,65 @@ pub fn initialize_database(conn: &Connection) -> Result<()> {
             ('last_backup', '');",
     )?;
 
+    // ── Check & migrate legacy databases (e.g. from com.pricingcalculator.app) ──
+    check_and_migrate_legacy_db(conn, db_path)?;
+
     // ── Seed UOM ingredients ─────────────────────────────────────────────────
     seed_ingredients(conn)?;
+
+    Ok(())
+}
+
+fn check_and_migrate_legacy_db(conn: &Connection, db_path: &std::path::Path) -> Result<()> {
+    let existing_recipes: i64 = conn
+        .query_row("SELECT COUNT(*) FROM recipes", [], |row| row.get(0))
+        .unwrap_or(0);
+
+    if existing_recipes > 0 {
+        return Ok(());
+    }
+
+    if let Some(parent) = db_path.parent() {
+        if let Some(roaming) = parent.parent() {
+            let legacy_dirs = [
+                roaming.join("com.pricingcalculator.app").join("pricing_calculator.db"),
+                roaming.join("com.pricing-calculator.app").join("pricing_calculator.db"),
+                roaming.join("pricing-calculator").join("pricing_calculator.db"),
+            ];
+
+            for legacy_path in &legacy_dirs {
+                if legacy_path.exists() && legacy_path != db_path {
+                    let escaped_path = legacy_path.to_string_lossy().replace('\'', "''");
+                    let attach_sql = format!("ATTACH DATABASE '{}' AS legacy;", escaped_path);
+                    if conn.execute_batch(&attach_sql).is_ok() {
+                        let legacy_recipes: i64 = conn
+                            .query_row("SELECT COUNT(*) FROM legacy.recipes", [], |row| row.get(0))
+                            .unwrap_or(0);
+
+                        if legacy_recipes > 0 {
+                            let _ = conn.execute_batch(
+                                "INSERT OR REPLACE INTO ingredients (ingredient_id, name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit, created_at, updated_at)
+                                 SELECT ingredient_id, name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit, created_at, updated_at FROM legacy.ingredients;
+
+                                 INSERT OR REPLACE INTO recipes (recipe_id, name, yield_qty, labor_cost, electricity_cost, other_overhead, target_markup_pct, reseller_markup_pct, desired_profit_alert, created_at, updated_at)
+                                 SELECT recipe_id, name, yield_qty, labor_cost, electricity_cost, other_overhead, target_markup_pct, reseller_markup_pct, desired_profit_alert, created_at, updated_at FROM legacy.recipes;
+
+                                 INSERT OR REPLACE INTO recipe_ingredients (id, recipe_id, ingredient_id, batch_qty)
+                                 SELECT id, recipe_id, ingredient_id, batch_qty FROM legacy.recipe_ingredients;
+
+                                 INSERT OR IGNORE INTO app_settings (setting_key, setting_value)
+                                 SELECT setting_key, setting_value FROM legacy.app_settings;"
+                            );
+                        }
+                        let _ = conn.execute_batch("DETACH DATABASE legacy;");
+                        if legacy_recipes > 0 {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     Ok(())
 }
@@ -94,25 +168,25 @@ fn seed_ingredients(conn: &Connection) -> Result<()> {
         return Ok(()); // already seeded
     }
 
-    let seeds: Vec<(&str, &str, f64, &str, f64)> = vec![
-        ("All-Purpose Flour",   "Kilogram",      0.0, "Cup",  8.33),
-        ("Granulated Sugar",    "Kilogram",      0.0, "Cup",  5.00),
-        ("Brown Sugar (Packed)","Kilogram",      0.0, "Cup",  4.69),
-        ("Cocoa Powder",        "Kilogram",      0.0, "Cup", 10.00),
-        ("Unsalted Butter",     "Kilogram",      0.0, "Cup",  4.41),
-        ("Vegetable Oil",       "Liter",         0.0, "Cup",  4.17),
-        ("Whole Milk",          "Liter",         0.0, "Cup",  4.17),
-        ("Baking Powder",       "100g Container",0.0, "tsp", 20.00),
-        ("Baking Soda",         "100g Container",0.0, "tsp", 20.00),
-        ("Vanilla Extract",     "100ml Bottle",  0.0, "tsp", 20.00),
-        ("Large Eggs",          "Dozen",         0.0, "pcs", 12.00),
+    let seeds: Vec<(&str, &str, f64, &str, f64, &str, f64, &str)> = vec![
+        ("All-Purpose Flour",    "Bag (1 kg)",      0.0, "Cup",  8.33,  "Bag",       1.0,   "Kilogram"),
+        ("Granulated Sugar",     "Bag (1 kg)",      0.0, "Cup",  5.00,  "Bag",       1.0,   "Kilogram"),
+        ("Brown Sugar (Packed)", "Bag (1 kg)",      0.0, "Cup",  4.69,  "Bag",       1.0,   "Kilogram"),
+        ("Cocoa Powder",         "Can (1 kg)",      0.0, "Cup", 10.00,  "Can",       1.0,   "Kilogram"),
+        ("Unsalted Butter",      "Box (225 g)",     0.0, "Cup",  0.99,  "Box",     225.0,   "g"),
+        ("Vegetable Oil",        "Bottle (1 L)",    0.0, "Cup",  4.17,  "Bottle",    1.0,   "Liter"),
+        ("Whole Milk",           "Carton (1 L)",    0.0, "Cup",  4.17,  "Carton",    1.0,   "Liter"),
+        ("Baking Powder",        "Container (100g)",0.0, "tsp", 20.00,  "Container", 100.0,  "g"),
+        ("Baking Soda",          "Container (100g)",0.0, "tsp", 20.00,  "Container", 100.0,  "g"),
+        ("Vanilla Extract",      "Bottle (100ml)",  0.0, "tsp", 20.00,  "Bottle",    100.0,  "ml"),
+        ("Large Eggs",           "Tray (12 pcs)",   0.0, "pcs", 12.00,  "Tray",       12.0,  "pcs"),
     ];
 
-    for (name, purchase_unit, purchase_price, recipe_unit, yield_factor) in seeds {
+    for (name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit) in seeds {
         conn.execute(
-            "INSERT INTO ingredients (name, purchase_unit, purchase_price, recipe_unit, yield_factor)
-             VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![name, purchase_unit, purchase_price, recipe_unit, yield_factor],
+            "INSERT INTO ingredients (name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+            params![name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit],
         )?;
     }
 

@@ -24,7 +24,7 @@ pub fn run() {
                 .expect("Failed to open SQLite database");
 
             // Run migrations / seed data
-            initialize_database(&conn)
+            initialize_database(&conn, &db_path)
                 .expect("Failed to initialize database");
 
             // Register the DB connection as managed state
