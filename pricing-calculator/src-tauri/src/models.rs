@@ -11,6 +11,21 @@ fn default_net_unit() -> String {
     "Kilogram".to_string()
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct IngredientConversion {
+    pub conversion_id: i64,
+    pub ingredient_id: i64,
+    pub recipe_unit: String,
+    pub yield_factor: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct IngredientConversionInput {
+    pub conversion_id: Option<i64>,
+    pub recipe_unit: String,
+    pub yield_factor: f64,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Ingredient {
     pub ingredient_id: i64,
@@ -25,6 +40,8 @@ pub struct Ingredient {
     pub net_quantity: f64,
     #[serde(default = "default_net_unit")]
     pub net_unit: String,
+    #[serde(default)]
+    pub conversions: Vec<IngredientConversion>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -40,6 +57,8 @@ pub struct IngredientInput {
     pub net_quantity: f64,
     #[serde(default = "default_net_unit")]
     pub net_unit: String,
+    #[serde(default)]
+    pub conversions: Vec<IngredientConversionInput>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -76,8 +95,10 @@ pub struct RecipeIngredient {
     pub id: i64,
     pub recipe_id: i64,
     pub ingredient_id: i64,
+    #[serde(default)]
+    pub conversion_id: Option<i64>,
     pub batch_qty: f64,
-    // Joined fields from ingredients
+    // Joined fields from ingredients / conversions
     pub ingredient_name: String,
     pub purchase_unit: String,
     pub purchase_price: f64,
@@ -89,6 +110,8 @@ pub struct RecipeIngredient {
     pub net_quantity: f64,
     #[serde(default = "default_net_unit")]
     pub net_unit: String,
+    #[serde(default)]
+    pub is_orphaned_conversion: bool,
     // Computed fields (precision preserved from Rust)
     pub normalized_unit_cost: f64,
     pub line_item_cost: f64,
@@ -96,7 +119,11 @@ pub struct RecipeIngredient {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RecipeIngredientInput {
+    #[serde(default)]
+    pub id: Option<i64>,
     pub ingredient_id: i64,
+    #[serde(default)]
+    pub conversion_id: Option<i64>,
     pub batch_qty: f64,
 }
 
@@ -189,5 +216,62 @@ mod tests {
         assert_eq!(parsed.package_type, "Package");
         assert_eq!(parsed.net_quantity, 1.0);
         assert_eq!(parsed.net_unit, "Kilogram");
+        assert!(parsed.conversions.is_empty());
+    }
+
+    #[test]
+    fn test_sugar_multi_unit_conversion_architecture() {
+        // Business test case from ApplicationDesignDocument.md:
+        // Parent: Sugar (1 kg) @ ₱80.00
+        let purchase_price = 80.0f64;
+
+        // Conversion 1: cup (yield = 5.0)
+        let cup_yield = 5.0f64;
+        let cup_unit_cost = purchase_price / cup_yield; // ₱16.00 per cup
+        assert_eq!(cup_unit_cost, 16.0f64);
+
+        // Conversion 2: grams (yield = 1000.0)
+        let gram_yield = 1000.0f64;
+        let gram_unit_cost = purchase_price / gram_yield; // ₱0.08 per gram
+        assert_eq!(gram_unit_cost, 0.08f64);
+
+        // Conversion 3: tbs (yield = 80.0)
+        let tbs_yield = 80.0f64;
+        let tbs_unit_cost = purchase_price / tbs_yield; // ₱1.00 per tbs
+        assert_eq!(tbs_unit_cost, 1.00f64);
+
+        // Formula line item 1: 50.0 grams of sugar
+        let batch_qty_grams = 50.0f64;
+        let line_item_cost_grams = batch_qty_grams * gram_unit_cost;
+        assert_eq!(line_item_cost_grams, 4.00f64);
+
+        // Formula line item 2: 0.25 cups of sugar
+        let batch_qty_cups = 0.25f64;
+        let line_item_cost_cups = batch_qty_cups * cup_unit_cost;
+        assert_eq!(line_item_cost_cups, 4.00f64);
+    }
+
+    #[test]
+    fn test_multi_occurrence_multi_unit_recipe_costing() {
+        // Business test case: Sugar (1 kg @ ₱80.00) added twice in the same recipe:
+        // Occurrence 1: 2.0 cups (yield = 5 cups/kg, cost = ₱16.00/cup) -> ₱32.00
+        // Occurrence 2: 50.0 grams (yield = 1000 g/kg, cost = ₱0.08/g) -> ₱4.00
+        let purchase_price = 80.0f64;
+
+        let cup_yield = 5.0f64;
+        let cup_unit_cost = purchase_price / cup_yield;
+        let occ1_qty = 2.0f64;
+        let occ1_cost = occ1_qty * cup_unit_cost;
+        assert_eq!(occ1_cost, 32.00f64);
+
+        let gram_yield = 1000.0f64;
+        let gram_unit_cost = purchase_price / gram_yield;
+        let occ2_qty = 50.0f64;
+        let occ2_cost = occ2_qty * gram_unit_cost;
+        assert_eq!(occ2_cost, 4.00f64);
+
+        // Combined Sugar cost in this recipe
+        let total_sugar_cost = occ1_cost + occ2_cost;
+        assert_eq!(total_sugar_cost, 36.00f64);
     }
 }

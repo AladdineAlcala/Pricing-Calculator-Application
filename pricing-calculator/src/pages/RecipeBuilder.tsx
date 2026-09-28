@@ -127,6 +127,7 @@ export default function RecipeBuilder() {
   // Add ingredient modal state
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [selectedIngId, setSelectedIngId] = useState<number | null>(null);
+  const [selectedConversionId, setSelectedConversionId] = useState<number | null>(null);
   const [selectedMeasureUnit, setSelectedMeasureUnit] = useState<string>("");
   const [batchQty, setBatchQty] = useState<number>(0);
   const [addSearch, setAddSearch] = useState("");
@@ -177,6 +178,8 @@ export default function RecipeBuilder() {
     setAddSearch("");
     setAddCategory("all");
     setSelectedIngId(null);
+    setSelectedConversionId(null);
+    setSelectedMeasureUnit("");
     setBatchQty(0);
     setAddModalLoading(true);
     setAddModalOpen(true);
@@ -280,21 +283,23 @@ export default function RecipeBuilder() {
     if (!selectedIngId || batchQty <= 0 || addSaving) return;
     setAddSaving(true);
     try {
-      await upsertRecipeIngredient(recipeId, { ingredient_id: selectedIngId, batch_qty: batchQty });
+      await upsertRecipeIngredient(recipeId, {
+        ingredient_id: selectedIngId,
+        conversion_id: selectedConversionId ?? undefined,
+        batch_qty: batchQty,
+      });
       const addedIng = allIngredients.find((i) => i.ingredient_id === selectedIngId);
-      const unitCost =
-        addedIng && addedIng.yield_factor > 0 && addedIng.purchase_price > 0
-          ? addedIng.purchase_price / addedIng.yield_factor
-          : 0;
-      const lineCost = batchQty * unitCost;
+      const lineCost = batchLineCost;
 
       setAddModalOpen(false);
       setSelectedIngId(null);
+      setSelectedConversionId(null);
+      setSelectedMeasureUnit("");
       setBatchQty(0);
       setAddSearch("");
       showToast(
         "Ingredient Added to Recipe",
-        `Successfully added ${batchQty} ${selectedMeasureUnit || addedIng?.recipe_unit || ""} of ${addedIng?.name || "ingredient"} (${fmt(lineCost)}) to formula.`,
+        `Successfully added ${batchQty} ${activeRecipeUnit} of ${addedIng?.name || "ingredient"} (${fmt(lineCost)}) to formula.`,
         "success"
       );
       await load();
@@ -314,10 +319,30 @@ export default function RecipeBuilder() {
     await load();
   };
 
-  const handleUpdateQty = async (id: number, ingredient_id: number, qty: number) => {
+  const handleUpdateQty = async (id: number, ingredient_id: number, qty: number, conversion_id?: number | null) => {
     if (qty <= 0) return;
-    await upsertRecipeIngredient(recipeId, { ingredient_id, batch_qty: qty });
+    await upsertRecipeIngredient(recipeId, {
+      id,
+      ingredient_id,
+      conversion_id: conversion_id ?? undefined,
+      batch_qty: qty,
+    });
     await load();
+  };
+
+  const handleUpdateConversion = async (id: number, ingredient_id: number, conversion_id: number, qty: number) => {
+    try {
+      await upsertRecipeIngredient(recipeId, {
+        id,
+        ingredient_id,
+        conversion_id,
+        batch_qty: qty,
+      });
+      await load();
+      showToast("Conversion Updated", "Recipe unit conversion updated successfully.", "success");
+    } catch (err: any) {
+      showToast("Update Failed", err?.message || "Could not update conversion unit.", "error");
+    }
   };
 
   const handleExportCsv = async () => {
@@ -336,9 +361,20 @@ export default function RecipeBuilder() {
   };
 
   const availableIngredients = useMemo(() => {
-    return allIngredients.filter(
-      (i) => !result?.line_items.some((li) => li.ingredient_id === i.ingredient_id)
-    );
+    if (!result) return allIngredients;
+    return allIngredients.filter((i) => {
+      const lineItemsForIng = result.line_items.filter((li) => li.ingredient_id === i.ingredient_id);
+      // If not yet in recipe, it's always available
+      if (lineItemsForIng.length === 0) return true;
+      // Single Kitchen Recipe Unit: strictly not allowed to have multiple occurrences
+      const conversions = i.conversions && i.conversions.length > 0 ? i.conversions : [];
+      if (conversions.length <= 1) return false;
+      // Multiple conversion units: allow if there is at least one conversion not yet added to this recipe
+      const usedConversionIds = new Set(
+        lineItemsForIng.map((li) => li.conversion_id).filter((cid): cid is number => cid != null)
+      );
+      return conversions.some((c) => c.conversion_id != null && !usedConversionIds.has(c.conversion_id));
+    });
   }, [allIngredients, result]);
 
   const categoryCounts = useMemo(() => {
@@ -364,31 +400,80 @@ export default function RecipeBuilder() {
 
   const handleSelectIngredient = (ing: Ingredient) => {
     setSelectedIngId(ing.ingredient_id);
-    setSelectedMeasureUnit(ing.recipe_unit);
+
+    // Identify which conversions are already used in this recipe
+    const lineItemsForIng = result?.line_items.filter((li) => li.ingredient_id === ing.ingredient_id) || [];
+    const usedConversionIds = new Set(
+      lineItemsForIng.map((li) => li.conversion_id).filter((cid): cid is number => cid != null)
+    );
+
+    // Pick first unused conversion, or fallback to first conversion
+    const availableConvs = ing.conversions?.filter((c) => c.conversion_id != null && !usedConversionIds.has(c.conversion_id)) || [];
+    const chosenConv = availableConvs[0] || (ing.conversions && ing.conversions[0]) || null;
+
+    if (chosenConv) {
+      setSelectedConversionId(chosenConv.conversion_id);
+      setSelectedMeasureUnit(chosenConv.recipe_unit);
+    } else {
+      setSelectedConversionId(null);
+      setSelectedMeasureUnit(ing.recipe_unit);
+    }
+
     // Pre-populate sensible default batchQty if currently 0
     if (batchQty <= 0) {
-      if (ing.recipe_unit === "Gram" || ing.recipe_unit === "g") {
+      const unit = (chosenConv?.recipe_unit || ing.recipe_unit || "").toLowerCase();
+      if (unit.includes("gram") || unit === "g") {
         setBatchQty(250);
-      } else if (ing.recipe_unit === "Cup") {
+      } else if (unit.includes("cup")) {
         setBatchQty(1);
-      } else if (ing.recipe_unit === "pc" || ing.recipe_unit === "pcs") {
+      } else if (unit.includes("pc")) {
         setBatchQty(1);
-      } else if (ing.recipe_unit === "ml") {
+      } else if (unit.includes("ml")) {
         setBatchQty(250);
+      } else if (unit.includes("tbsp") || unit.includes("tablespoon")) {
+        setBatchQty(2);
+      } else if (unit.includes("tsp") || unit.includes("teaspoon")) {
+        setBatchQty(1);
       } else {
         setBatchQty(1);
       }
     }
   };
 
+  const activeConversion = useMemo(() => {
+    if (!selectedIng) return null;
+    if (selectedConversionId && selectedIng.conversions) {
+      return (
+        selectedIng.conversions.find((c) => c.conversion_id === selectedConversionId) ??
+        selectedIng.conversions[0] ??
+        null
+      );
+    }
+    return selectedIng.conversions?.[0] ?? null;
+  }, [selectedIng, selectedConversionId]);
+
+  const activeYieldFactor =
+    activeConversion?.yield_factor ?? selectedIng?.yield_factor ?? 1;
+  const activeRecipeUnit =
+    activeConversion?.recipe_unit ?? selectedMeasureUnit ?? selectedIng?.recipe_unit ?? "unit";
+
+  const activeUnitCost =
+    selectedIng && activeYieldFactor > 0 && selectedIng.purchase_price > 0
+      ? selectedIng.purchase_price / activeYieldFactor
+      : 0;
+
+  const batchLineCost = batchQty * activeUnitCost;
+
   const handleStepQty = (direction: -1 | 1) => {
     if (!selectedIng) return;
-    const unit = (selectedMeasureUnit || selectedIng.recipe_unit || "").toLowerCase();
+    const unit = activeRecipeUnit.toLowerCase();
     let step = 1;
     if (unit.includes("gram") || unit === "g" || unit.includes("ml")) {
       step = 50;
     } else if (unit.includes("cup") || unit.includes("kg")) {
       step = 0.25;
+    } else if (unit.includes("tbsp") || unit.includes("tsp")) {
+      step = 0.5;
     } else {
       step = 1;
     }
@@ -400,7 +485,7 @@ export default function RecipeBuilder() {
 
   const currentPresets = useMemo(() => {
     if (!selectedIng) return [];
-    const unit = (selectedMeasureUnit || selectedIng.recipe_unit || "").toLowerCase();
+    const unit = activeRecipeUnit.toLowerCase();
     const name = selectedIng.name.toLowerCase();
 
     if (unit.includes("gram") || unit === "g") {
@@ -423,6 +508,24 @@ export default function RecipeBuilder() {
         { label: "+0.5", type: "add" as const, value: 0.5 },
         { label: "1 Cup", type: "set" as const, value: 1 },
         { label: "2 Cups", type: "set" as const, value: 2 },
+      ];
+    }
+
+    if (unit.includes("tbsp") || unit.includes("tablespoon")) {
+      return [
+        { label: "+1 tbsp", type: "add" as const, value: 1 },
+        { label: "+2 tbsp", type: "add" as const, value: 2 },
+        { label: "4 tbsp", type: "set" as const, value: 4 },
+        { label: "8 tbsp", type: "set" as const, value: 8 },
+      ];
+    }
+
+    if (unit.includes("tsp") || unit.includes("teaspoon")) {
+      return [
+        { label: "+0.5 tsp", type: "add" as const, value: 0.5 },
+        { label: "+1 tsp", type: "add" as const, value: 1 },
+        { label: "3 tsp", type: "set" as const, value: 3 },
+        { label: "6 tsp", type: "set" as const, value: 6 },
       ];
     }
 
@@ -450,7 +553,7 @@ export default function RecipeBuilder() {
       { label: "10", type: "set" as const, value: 10 },
       { label: "25", type: "set" as const, value: 25 },
     ];
-  }, [selectedIng, selectedMeasureUnit]);
+  }, [selectedIng, activeRecipeUnit]);
 
   const handleApplyPreset = (preset: { label: string; type: "add" | "set"; value: number }) => {
     if (preset.type === "set") {
@@ -466,13 +569,6 @@ export default function RecipeBuilder() {
     }
     return false;
   };
-
-  const masterUnitCost =
-    selectedIng && selectedIng.yield_factor > 0 && selectedIng.purchase_price > 0
-      ? selectedIng.purchase_price / selectedIng.yield_factor
-      : 0;
-
-  const batchLineCost = batchQty * masterUnitCost;
 
   const categoryPills = [
     { id: "all", label: "All Pantry", count: availableIngredients.length },
@@ -820,8 +916,15 @@ export default function RecipeBuilder() {
                       >
                         {/* Ingredient Name & Source category */}
                         <td className="py-3.5 pr-4">
-                          <div className="font-bold text-slate-900 dark:text-white text-sm">
-                            {li.ingredient_name}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-slate-900 dark:text-white text-sm">
+                              {li.ingredient_name}
+                            </span>
+                            {li.is_orphaned_conversion && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 animate-pulse">
+                                ⚠️ Unit configuration missing. Please reselect.
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80" />
@@ -856,14 +959,18 @@ export default function RecipeBuilder() {
 
                         {/* Recipe Qty (Inline Input) */}
                         <td className="py-3.5 px-3 text-center">
-                          <div className="inline-flex items-center rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] overflow-hidden focus-within:border-emerald-500">
+                          <div className={`inline-flex items-center rounded-xl border overflow-hidden transition-all ${
+                            li.is_orphaned_conversion
+                              ? "border-amber-400 dark:border-amber-600 bg-amber-50/20 dark:bg-amber-950/20"
+                              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] focus-within:border-emerald-500"
+                          }`}>
                             <input
                               type="number"
                               min="0.01"
                               step="0.01"
                               defaultValue={li.batch_qty}
                               onBlur={(e) =>
-                                handleUpdateQty(li.id, li.ingredient_id, parseFloat(e.target.value) || 0)
+                                handleUpdateQty(li.id, li.ingredient_id, parseFloat(e.target.value) || 0, li.conversion_id)
                               }
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -873,9 +980,51 @@ export default function RecipeBuilder() {
                               className="w-16 px-2.5 py-1 text-xs text-center bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none tabular-nums"
                               id={`batch-qty-${li.id}`}
                             />
-                            <span className="px-2 py-1 text-[11px] font-semibold text-slate-400 bg-slate-50 dark:bg-[#182030] border-l border-slate-200 dark:border-slate-800">
-                              {li.recipe_unit}
-                            </span>
+                            {(() => {
+                              const parent = allIngredients.find((i) => i.ingredient_id === li.ingredient_id);
+                              const availableConvs = parent?.conversions || [];
+                              if (availableConvs.length > 1 || li.is_orphaned_conversion) {
+                                return (
+                                  <div className="relative border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#182030]">
+                                    <select
+                                      value={li.conversion_id ?? ""}
+                                      onChange={(e) => {
+                                        const newCid = parseInt(e.target.value, 10);
+                                        if (newCid) {
+                                          handleUpdateConversion(li.id, li.ingredient_id, newCid, li.batch_qty);
+                                        }
+                                      }}
+                                      title="Change formula recipe unit"
+                                      className={`px-2 py-1 pr-6 text-[11px] font-semibold bg-transparent appearance-none focus:outline-none cursor-pointer ${
+                                        li.is_orphaned_conversion
+                                          ? "text-amber-700 dark:text-amber-400 font-bold"
+                                          : "text-slate-600 dark:text-slate-300"
+                                      }`}
+                                    >
+                                      {li.is_orphaned_conversion && (
+                                        <option value="" disabled>⚠️ Reselect</option>
+                                      )}
+                                      {availableConvs.map((c) => {
+                                        const isUsedByOtherRow = result?.line_items.some(
+                                          (otherLi) => otherLi.id !== li.id && otherLi.ingredient_id === li.ingredient_id && otherLi.conversion_id === c.conversion_id
+                                        );
+                                        return (
+                                          <option key={c.conversion_id} value={c.conversion_id} disabled={isUsedByOtherRow} className="text-slate-900 dark:text-white bg-white dark:bg-[#121826]">
+                                            {c.recipe_unit} {isUsedByOtherRow ? "(in use)" : ""}
+                                          </option>
+                                        );
+                                      })}
+                                    </select>
+                                    <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                  </div>
+                                );
+                              }
+                              return (
+                                <span className="px-2 py-1 text-[11px] font-semibold text-slate-400 bg-slate-50 dark:bg-[#182030] border-l border-slate-200 dark:border-slate-800">
+                                  {li.recipe_unit}
+                                </span>
+                              );
+                            })()}
                           </div>
                         </td>
 
@@ -1657,14 +1806,27 @@ export default function RecipeBuilder() {
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
                                 Selected
                               </span>
-                            ) : ing.purchase_price <= 0 ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/50 shrink-0">
-                                Unpriced
-                              </span>
-                            ) : null}
+                            ) : (() => {
+                              const alreadyAddedCount = result?.line_items.filter((li) => li.ingredient_id === ing.ingredient_id).length || 0;
+                              if (alreadyAddedCount > 0) {
+                                return (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/50 shrink-0">
+                                    Multi-unit ({alreadyAddedCount} in recipe)
+                                  </span>
+                                );
+                              }
+                              if (ing.purchase_price <= 0) {
+                                return (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/50 shrink-0">
+                                    Unpriced
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                           <div className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate font-medium">
-                            Pkg: {ing.purchase_unit || (ing.package_type ? `${ing.package_type} (${ing.net_quantity ?? 1} ${ing.net_unit ?? "kg"})` : "Package")} • Yield: {ing.yield_factor} {ing.recipe_unit}s
+                            Pkg: {ing.purchase_unit || (ing.package_type ? `${ing.package_type} (${ing.net_quantity ?? 1} ${ing.net_unit ?? "kg"})` : "Package")} • {ing.conversions && ing.conversions.length > 1 ? `${ing.conversions.length} Unit Types (${ing.conversions.map((c) => c.recipe_unit).join(", ")})` : `Yield: ${ing.yield_factor} ${ing.recipe_unit}s`}
                           </div>
                         </div>
                       </div>
@@ -1700,9 +1862,9 @@ export default function RecipeBuilder() {
                     </h3>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
-                    <span>Master Unit Cost:</span>
+                    <span>Active Unit Cost:</span>
                     <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-[#182032] border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-800 dark:text-slate-200 text-xs shadow-2xs">
-                      {fmt(masterUnitCost)} / {selectedIng.recipe_unit}
+                      {fmt(activeUnitCost)} / {activeRecipeUnit}
                     </span>
                     {selectedIng.purchase_price > 0 && (
                       <span className="text-slate-400 dark:text-slate-500 text-[11px]">
@@ -1718,7 +1880,7 @@ export default function RecipeBuilder() {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        Batch Quantity ({selectedMeasureUnit || selectedIng.recipe_unit})
+                        Batch Quantity ({activeRecipeUnit})
                       </label>
                       <span className="text-[10px] text-slate-400">e.g. 250 or 1.5</span>
                     </div>
@@ -1756,24 +1918,55 @@ export default function RecipeBuilder() {
 
                   {/* Measure Unit Dropdown */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Measure Unit
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                        Recipe Measure Unit
+                      </label>
+                      {selectedIng.conversions && selectedIng.conversions.length > 1 && (
+                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                          {selectedIng.conversions.length} conversions
+                        </span>
+                      )}
+                    </div>
                     <div className="relative">
-                      <select
-                        value={selectedMeasureUnit}
-                        onChange={(e) => setSelectedMeasureUnit(e.target.value)}
-                        className="w-full appearance-none px-3.5 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer pr-9 shadow-2xs"
-                      >
-                        <option value={selectedIng.recipe_unit}>
-                          {selectedIng.recipe_unit} ({selectedIng.recipe_unit === "Gram" ? "g" : selectedIng.recipe_unit === "Kilogram" ? "kg" : selectedIng.recipe_unit.toLowerCase()})
-                        </option>
-                        {MODAL_MEASURE_UNITS.filter((u) => u.value !== selectedIng.recipe_unit).map((u) => (
-                          <option key={u.value} value={u.value}>
-                            {u.label}
+                      {selectedIng.conversions && selectedIng.conversions.length > 0 ? (
+                        <select
+                          value={selectedConversionId ?? selectedIng.conversions[0].conversion_id}
+                          onChange={(e) => {
+                            const cid = parseInt(e.target.value, 10);
+                            setSelectedConversionId(cid);
+                            const found = selectedIng.conversions?.find((c) => c.conversion_id === cid);
+                            if (found) setSelectedMeasureUnit(found.recipe_unit);
+                          }}
+                          className="w-full appearance-none px-3.5 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer pr-9 shadow-2xs"
+                        >
+                          {selectedIng.conversions.map((conv) => {
+                            const isAlreadyUsed = result?.line_items.some(
+                              (li) => li.ingredient_id === selectedIng.ingredient_id && li.conversion_id === conv.conversion_id
+                            );
+                            return (
+                              <option key={conv.conversion_id} value={conv.conversion_id} disabled={isAlreadyUsed}>
+                                {conv.recipe_unit} {isAlreadyUsed ? "(Already in recipe)" : `— ${conv.yield_factor.toLocaleString()} ${conv.recipe_unit}s / bulk (${fmt(selectedIng.purchase_price / conv.yield_factor)}/${conv.recipe_unit})`}
+                              </option>
+                            );
+                          })}
+                        </select>
+                      ) : (
+                        <select
+                          value={selectedMeasureUnit}
+                          onChange={(e) => setSelectedMeasureUnit(e.target.value)}
+                          className="w-full appearance-none px-3.5 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer pr-9 shadow-2xs"
+                        >
+                          <option value={selectedIng.recipe_unit}>
+                            {selectedIng.recipe_unit} (Default)
                           </option>
-                        ))}
-                      </select>
+                          {MODAL_MEASURE_UNITS.filter((u) => u.value !== selectedIng.recipe_unit).map((u) => (
+                            <option key={u.value} value={u.value}>
+                              {u.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
                   </div>

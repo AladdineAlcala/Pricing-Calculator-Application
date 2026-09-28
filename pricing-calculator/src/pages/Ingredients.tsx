@@ -33,6 +33,7 @@ import {
   deleteIngredient,
   type Ingredient,
   type IngredientInput,
+  type IngredientConversionInput,
 } from "@/lib/api";
 import { Spinner, Tooltip } from "@/components/ui";
 import { useApp } from "@/context/AppContext";
@@ -216,6 +217,7 @@ interface FormState {
   purchasePrice: number;
   recipeUnit: string;
   yieldFactor: number;
+  conversions: IngredientConversionInput[];
 }
 
 const DEFAULT_FORM: FormState = {
@@ -224,13 +226,18 @@ const DEFAULT_FORM: FormState = {
   supplier: "",
   sku: "",
   packageType: "Box",
-  netQuantity: 10,
-  netUnit: "g",
+  netQuantity: 1,
+  netUnit: "Kilogram",
   packageQty: 1,
-  purchaseUnit: "Box (10 g)",
+  purchaseUnit: "Box (1 Kilogram)",
   purchasePrice: 0,
   recipeUnit: "Cup",
-  yieldFactor: 0.9912,
+  yieldFactor: 5.0,
+  conversions: [
+    { recipe_unit: "Cup", yield_factor: 5.0 },
+    { recipe_unit: "Gram", yield_factor: 1000.0 },
+    { recipe_unit: "Tablespoon", yield_factor: 80.0 },
+  ],
 };
 
 // Category badge color mapper
@@ -446,6 +453,17 @@ export default function Ingredients() {
     const pkgType = ing.package_type || "Package";
     const netQty = ing.net_quantity ?? 1;
     const netU = ing.net_unit || "kg";
+    const conversions: IngredientConversionInput[] =
+      ing.conversions && ing.conversions.length > 0
+        ? ing.conversions.map((c) => ({
+            conversion_id: c.conversion_id,
+            recipe_unit: c.recipe_unit,
+            yield_factor: c.yield_factor,
+          }))
+        : [
+            { recipe_unit: ing.recipe_unit, yield_factor: ing.yield_factor },
+          ];
+
     setForm({
       name: ing.name,
       category: inferCategory(ing.name),
@@ -457,12 +475,86 @@ export default function Ingredients() {
       packageQty: 1,
       purchaseUnit: ing.purchase_unit || `${pkgType} (${netQty} ${netU})`,
       purchasePrice: ing.purchase_price,
-      recipeUnit: ing.recipe_unit,
-      yieldFactor: ing.yield_factor,
+      recipeUnit: conversions[0]?.recipe_unit || ing.recipe_unit,
+      yieldFactor: conversions[0]?.yield_factor || ing.yield_factor,
+      conversions,
     });
     setErrors({});
     setShowPresets(false);
     setModalOpen(true);
+  };
+
+  // Multi-unit conversion rule handlers
+  const handleAddConversionRule = () => {
+    setForm((prev) => ({
+      ...prev,
+      conversions: [
+        ...prev.conversions,
+        { recipe_unit: "Gram", yield_factor: 100 },
+      ],
+    }));
+  };
+
+  const handleUpdateConversionRule = (
+    index: number,
+    field: "recipe_unit" | "yield_factor",
+    value: string | number
+  ) => {
+    setForm((prev) => {
+      const updated = [...prev.conversions];
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+      const primaryUnit = updated[0]?.recipe_unit || prev.recipeUnit;
+      const primaryYield = updated[0]?.yield_factor || prev.yieldFactor;
+      return {
+        ...prev,
+        recipeUnit: primaryUnit,
+        yieldFactor: primaryYield,
+        conversions: updated,
+      };
+    });
+  };
+
+  const handleDeleteConversionRule = (index: number) => {
+    if (form.conversions.length <= 1) return;
+    setForm((prev) => {
+      const updated = prev.conversions.filter((_, i) => i !== index);
+      const primaryUnit = updated[0]?.recipe_unit || prev.recipeUnit;
+      const primaryYield = updated[0]?.yield_factor || prev.yieldFactor;
+      return {
+        ...prev,
+        recipeUnit: primaryUnit,
+        yieldFactor: primaryYield,
+        conversions: updated,
+      };
+    });
+  };
+
+  const handleAutoPopulateConversions = () => {
+    const netQty = form.netQuantity;
+    const netU = form.netUnit;
+    const ingName = form.name;
+
+    const cupFactor = calculateAutoYield(netQty, netU, "Cup", ingName);
+    const gramFactor = calculateAutoYield(netQty, netU, "Gram", ingName);
+    const tbspFactor = calculateAutoYield(netQty, netU, "Tablespoon", ingName);
+    const tspFactor = calculateAutoYield(netQty, netU, "tsp", ingName);
+
+    const rules: IngredientConversionInput[] = [
+      { recipe_unit: "Cup", yield_factor: cupFactor },
+      { recipe_unit: "Gram", yield_factor: gramFactor },
+      { recipe_unit: "Tablespoon", yield_factor: tbspFactor },
+      { recipe_unit: "tsp", yield_factor: tspFactor },
+    ];
+
+    setForm((prev) => ({
+      ...prev,
+      recipeUnit: "Cup",
+      yieldFactor: cupFactor,
+      conversions: rules,
+    }));
   };
 
   const validate = (): boolean => {
@@ -471,9 +563,18 @@ export default function Ingredients() {
     if (!form.packageType.trim()) errs.packageType = "Package container is required";
     if (form.netQuantity <= 0) errs.netQuantity = "Net content quantity must be > 0";
     if (!form.netUnit.trim()) errs.netUnit = "Net unit is required";
-    if (!form.recipeUnit.trim()) errs.recipeUnit = "Recipe unit is required";
-    if (form.yieldFactor <= 0) errs.yieldFactor = "Yield factor must be > 0";
     if (form.purchasePrice < 0) errs.purchasePrice = "Price cannot be negative";
+
+    if (form.conversions.length === 0) {
+      errs.conversions = "At least one recipe unit conversion rule is required";
+    }
+    for (let i = 0; i < form.conversions.length; i++) {
+      if (form.conversions[i].yield_factor <= 0) {
+        errs.conversions = `Yield factor for conversion #${i + 1} (${form.conversions[i].recipe_unit}) must be > 0`;
+        break;
+      }
+    }
+
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -484,29 +585,31 @@ export default function Ingredients() {
     const ingredientName = form.name.trim();
     try {
       const formattedPurchaseUnit = `${form.packageType} (${form.netQuantity} ${form.netUnit})`;
+      const primaryConv = form.conversions[0] || { recipe_unit: form.recipeUnit, yield_factor: form.yieldFactor };
       const payload: IngredientInput = {
         name: ingredientName,
         purchase_unit: formattedPurchaseUnit,
         purchase_price: form.purchasePrice,
-        recipe_unit: form.recipeUnit.trim(),
-        yield_factor: form.yieldFactor,
+        recipe_unit: primaryConv.recipe_unit,
+        yield_factor: primaryConv.yield_factor,
         package_type: form.packageType,
         net_quantity: form.netQuantity,
         net_unit: form.netUnit,
+        conversions: form.conversions,
       };
 
       if (editTarget) {
         await updateIngredient(editTarget.ingredient_id, payload);
         showToast(
           "Ingredient Updated Successfully",
-          `"${ingredientName}" (${formattedPurchaseUnit}) has been saved and synchronized with the costing engine.`,
+          `"${ingredientName}" (${formattedPurchaseUnit}, ${form.conversions.length} unit conversion rules) has been saved and synchronized with the costing engine.`,
           "success"
         );
       } else {
         await createIngredient(payload);
         showToast(
           "Ingredient Saved Successfully",
-          `"${ingredientName}" (${formattedPurchaseUnit}) has been added to your Pantry Master.`,
+          `"${ingredientName}" (${formattedPurchaseUnit}, ${form.conversions.length} unit conversion rules) has been added to your Pantry Master.`,
           "success"
         );
       }
@@ -1162,9 +1265,19 @@ export default function Ingredients() {
 
                       {/* Recipe Unit */}
                       <td className="py-3.5 px-3 text-center">
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">
-                          {ing.recipe_unit}
-                        </span>
+                        <div className="flex flex-col items-center gap-0.5">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            {ing.recipe_unit}
+                          </span>
+                          {ing.conversions && ing.conversions.length > 1 && (
+                            <span
+                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 cursor-help"
+                              title={`Mapped units: ${ing.conversions.map((c) => `${c.recipe_unit} (${c.yield_factor})`).join(", ")}`}
+                            >
+                              +{ing.conversions.length - 1} units
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Yield Factor */}
@@ -1558,95 +1671,150 @@ export default function Ingredients() {
                 </div>
               </div>
 
-              {/* Section 2: RECIPE USAGE & YIELD CONVERSION */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                    <Scale className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>RECIPE USAGE & YIELD CONVERSION</span>
+              {/* Section 2: RECIPE USAGE & MULTI-UNIT CONVERSIONS (Master-Detail Inline Sub-Grid) */}
+              <div className="pt-2 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                      <Scale className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>RECIPE USAGE &amp; MULTI-UNIT CONVERSIONS</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Map this bulk item to infinite recipe unit variations (e.g., cup, grams, tablespoons).
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const autoFactor = calculateAutoYield(
-                        form.netQuantity,
-                        form.netUnit,
-                        form.recipeUnit,
-                        form.name
-                      );
-                      setForm({ ...form, yieldFactor: autoFactor });
-                    }}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer"
-                    title="Auto-calculate yield factor based on net content and recipe unit"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>Auto-Sync Yield</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
-                  {/* Primary Recipe Unit */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      PRIMARY RECIPE UNIT
-                    </label>
-                    <select
-                      value={form.recipeUnit}
-                      onChange={(e) => {
-                        const newRecipeUnit = e.target.value;
-                        const autoFactor = calculateAutoYield(
-                          form.netQuantity,
-                          form.netUnit,
-                          newRecipeUnit,
-                          form.name
-                        );
-                        setForm({ ...form, recipeUnit: newRecipeUnit, yieldFactor: autoFactor });
-                      }}
-                      id="recipe-unit"
-                      className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={handleAutoPopulateConversions}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer shadow-2xs"
+                      title="Auto-calculate common conversions (Cup, Gram, Tablespoon) based on net content"
                     >
-                      {RECIPE_UNITS.map((u) => (
-                        <option key={u.value} value={u.value}>
-                          {u.label}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-[11px] text-slate-400">Unit called in formula (Cup, tsp, Gram, etc.)</p>
-                  </div>
-
-                  {/* Yield Factor */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                        YIELD FACTOR ({form.recipeUnit}s per {form.packageType})
-                      </label>
-                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                        {form.yieldFactor === 1 ? "1:1 Exact" : `${form.yieldFactor} ${form.recipeUnit}s`}
-                      </span>
-                    </div>
-                    <div className="flex rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c]">
-                      <input
-                        type="number"
-                        min="0.0001"
-                        step="any"
-                        value={form.yieldFactor}
-                        onChange={(e) => setForm({ ...form, yieldFactor: parseFloat(e.target.value) || 1 })}
-                        id="yield-factor"
-                        className="flex-1 px-3.5 py-2.5 text-sm bg-transparent text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none"
-                      />
-                      <span className="px-3 py-2.5 text-xs text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-800 font-semibold">
-                        {form.recipeUnit}s
-                      </span>
-                    </div>
-                    {errors.yieldFactor && <p className="text-xs text-rose-500">{errors.yieldFactor}</p>}
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Auto-Generate Conversions</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddConversionRule}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-600 transition-all cursor-pointer shadow-2xs active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>+ Add Conversion Rule</span>
+                    </button>
                   </div>
                 </div>
+
+                {/* Sub-grid: Inline Editable Conversion Rules Table */}
+                <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-[#182033] border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <th className="py-2.5 px-3.5 text-left">Kitchen Recipe Unit</th>
+                        <th className="py-2.5 px-3 text-left">Yield Factor (Units / {form.packageType})</th>
+                        <th className="py-2.5 px-3 text-right">Normalized Micro-Cost</th>
+                        <th className="py-2.5 px-2 text-center w-12">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                      {form.conversions.map((conv, idx) => {
+                        const microCost =
+                          conv.yield_factor > 0 && form.purchasePrice > 0
+                            ? form.purchasePrice / conv.yield_factor
+                            : 0;
+                        return (
+                          <tr
+                            key={idx}
+                            className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                          >
+                            {/* Recipe Unit */}
+                            <td className="py-2.5 px-3.5">
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={conv.recipe_unit}
+                                  onChange={(e) =>
+                                    handleUpdateConversionRule(idx, "recipe_unit", e.target.value)
+                                  }
+                                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs cursor-pointer"
+                                >
+                                  {RECIPE_UNITS.map((u) => (
+                                    <option key={u.value} value={u.value}>
+                                      {u.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                {idx === 0 && (
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                                    Primary
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Yield Factor */}
+                            <td className="py-2.5 px-3">
+                              <div className="flex items-center gap-1.5 max-w-[200px]">
+                                <input
+                                  type="number"
+                                  min="0.0001"
+                                  step="any"
+                                  value={conv.yield_factor}
+                                  onChange={(e) =>
+                                    handleUpdateConversionRule(
+                                      idx,
+                                      "yield_factor",
+                                      parseFloat(e.target.value) || 0
+                                    )
+                                  }
+                                  className="w-24 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-bold text-slate-900 dark:text-white tabular-nums text-xs focus:outline-none focus:border-emerald-500"
+                                />
+                                <span className="text-slate-400 text-[11px] font-medium">
+                                  {conv.recipe_unit}s
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Normalized Micro-Cost */}
+                            <td className="py-2.5 px-3 text-right">
+                              <div className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                                {fmt(microCost)}
+                                <span className="text-[11px] text-slate-400 font-normal">
+                                  {" "}
+                                  / {conv.recipe_unit}
+                                </span>
+                              </div>
+                            </td>
+
+                            {/* Action: Delete Rule */}
+                            <td className="py-2.5 px-2 text-center">
+                              <button
+                                type="button"
+                                disabled={form.conversions.length <= 1}
+                                onClick={() => handleDeleteConversionRule(idx)}
+                                className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                                title={
+                                  form.conversions.length <= 1
+                                    ? "At least one conversion rule is required"
+                                    : "Delete conversion rule"
+                                }
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {errors.conversions && (
+                  <p className="text-xs text-rose-500 font-medium">{errors.conversions}</p>
+                )}
 
                 {/* Quick Presets */}
-                <div className="mt-3">
+                <div className="pt-1">
                   <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
                     <span className="font-bold text-slate-700 dark:text-slate-300">
-                      ⚡ Quick Package & Culinary Conversion Presets:
+                      ⚡ Quick Package &amp; Culinary Conversion Presets:
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -1654,7 +1822,10 @@ export default function Ingredients() {
                       <button
                         key={p.label}
                         type="button"
-                        onClick={() =>
+                        onClick={() => {
+                          const autoCup = calculateAutoYield(p.netQuantity, p.netUnit, "Cup", p.label);
+                          const autoGram = calculateAutoYield(p.netQuantity, p.netUnit, "Gram", p.label);
+                          const autoTbsp = calculateAutoYield(p.netQuantity, p.netUnit, "Tablespoon", p.label);
                           setForm({
                             ...form,
                             packageType: p.packageType,
@@ -1664,8 +1835,13 @@ export default function Ingredients() {
                             yieldFactor: p.yieldFactor,
                             purchaseUnit: `${p.packageType} (${p.netQuantity} ${p.netUnit})`,
                             category: p.category || form.category,
-                          })
-                        }
+                            conversions: [
+                              { recipe_unit: p.recipeUnit, yield_factor: p.yieldFactor },
+                              { recipe_unit: "Gram", yield_factor: autoGram },
+                              { recipe_unit: "Tablespoon", yield_factor: autoTbsp },
+                            ],
+                          });
+                        }}
                         className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 dark:bg-[#141b2c] dark:hover:bg-emerald-950/70 dark:text-slate-300 dark:hover:text-emerald-300 transition-colors border border-slate-200 dark:border-slate-800 cursor-pointer"
                         title={p.hint}
                       >
@@ -1687,7 +1863,7 @@ export default function Ingredients() {
                       Calculated Recipe Cost
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Automatically applied across all linked recipe cards
+                      {form.conversions.length} active conversion rule(s) mapped to recipe builders
                     </p>
                   </div>
                 </div>
@@ -1700,7 +1876,9 @@ export default function Ingredients() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                    {form.yieldFactor > 0 ? `1 ${form.packageType} (${form.netQuantity} ${form.netUnit}) = ${form.yieldFactor} ${form.recipeUnit}s` : ""}
+                    {form.yieldFactor > 0
+                      ? `Primary: 1 ${form.packageType} (${form.netQuantity} ${form.netUnit}) = ${form.yieldFactor} ${form.recipeUnit}s`
+                      : ""}
                   </p>
                 </div>
               </div>

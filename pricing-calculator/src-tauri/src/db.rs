@@ -46,7 +46,19 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
         [],
     );
 
-    // ── 2. recipes ───────────────────────────────────────────────────────────
+    // ── 2. ingredient_conversions (Multi-Unit Architecture) ─────────────────
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS ingredient_conversions (
+            conversion_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+            ingredient_id   INTEGER NOT NULL REFERENCES ingredients(ingredient_id) ON DELETE CASCADE,
+            recipe_unit     TEXT    NOT NULL,
+            yield_factor    REAL    NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_ingredient_conversions_ing
+            ON ingredient_conversions(ingredient_id);",
+    )?;
+
+    // ── 3. recipes ───────────────────────────────────────────────────────────
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS recipes (
             recipe_id           INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,20 +75,76 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
         );",
     )?;
 
-    // ── 3. recipe_ingredients ────────────────────────────────────────────────
+    // ── 4. recipe_ingredients ────────────────────────────────────────────────
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS recipe_ingredients (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             recipe_id       INTEGER NOT NULL REFERENCES recipes(recipe_id) ON DELETE CASCADE,
             ingredient_id   INTEGER NOT NULL REFERENCES ingredients(ingredient_id) ON DELETE CASCADE,
+            conversion_id   INTEGER REFERENCES ingredient_conversions(conversion_id) ON DELETE SET NULL,
             batch_qty       REAL    NOT NULL DEFAULT 0.0,
-            UNIQUE(recipe_id, ingredient_id)
+            UNIQUE(recipe_id, ingredient_id, conversion_id)
         );
-        CREATE UNIQUE INDEX IF NOT EXISTS idx_recipe_ingredients_unique
-            ON recipe_ingredients(recipe_id, ingredient_id);",
+        DROP INDEX IF EXISTS idx_recipe_ingredients_unique;
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_recipe_ingredients_multi_unit
+            ON recipe_ingredients(recipe_id, ingredient_id, conversion_id);",
     )?;
 
-    // ── 4. app_settings ──────────────────────────────────────────────────────
+    // Safe migration: rebuild recipe_ingredients table if it has the old UNIQUE(recipe_id, ingredient_id) constraint
+    let needs_rebuild: bool = conn
+        .query_row(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='recipe_ingredients'",
+            [],
+            |row| row.get::<_, String>(0),
+        )
+        .map(|sql| sql.contains("UNIQUE(recipe_id, ingredient_id)") && !sql.contains("UNIQUE(recipe_id, ingredient_id, conversion_id)"))
+        .unwrap_or(false);
+
+    if needs_rebuild {
+        let _ = conn.execute_batch(
+            "DROP INDEX IF EXISTS idx_recipe_ingredients_unique;
+             CREATE TABLE IF NOT EXISTS recipe_ingredients_v2 (
+                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                 recipe_id       INTEGER NOT NULL REFERENCES recipes(recipe_id) ON DELETE CASCADE,
+                 ingredient_id   INTEGER NOT NULL REFERENCES ingredients(ingredient_id) ON DELETE CASCADE,
+                 conversion_id   INTEGER REFERENCES ingredient_conversions(conversion_id) ON DELETE SET NULL,
+                 batch_qty       REAL    NOT NULL DEFAULT 0.0,
+                 UNIQUE(recipe_id, ingredient_id, conversion_id)
+             );
+             INSERT OR IGNORE INTO recipe_ingredients_v2 (id, recipe_id, ingredient_id, conversion_id, batch_qty)
+                 SELECT id, recipe_id, ingredient_id, conversion_id, batch_qty FROM recipe_ingredients;
+             DROP TABLE recipe_ingredients;
+             ALTER TABLE recipe_ingredients_v2 RENAME TO recipe_ingredients;
+             CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_recipe ON recipe_ingredients(recipe_id);
+             CREATE UNIQUE INDEX IF NOT EXISTS idx_recipe_ingredients_multi_unit ON recipe_ingredients(recipe_id, ingredient_id, conversion_id);"
+        );
+    }
+
+    // Safe migration: add conversion_id column if table already existed without it
+    let _ = conn.execute(
+        "ALTER TABLE recipe_ingredients ADD COLUMN conversion_id INTEGER REFERENCES ingredient_conversions(conversion_id) ON DELETE SET NULL",
+        [],
+    );
+
+    // Auto-populate default conversion for any ingredient without conversions
+    let _ = conn.execute_batch(
+        "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor)
+         SELECT ingredient_id, recipe_unit, yield_factor
+         FROM ingredients i
+         WHERE NOT EXISTS (
+             SELECT 1 FROM ingredient_conversions ic WHERE ic.ingredient_id = i.ingredient_id
+         );
+
+         UPDATE recipe_ingredients
+         SET conversion_id = (
+             SELECT conversion_id FROM ingredient_conversions ic
+             WHERE ic.ingredient_id = recipe_ingredients.ingredient_id
+             LIMIT 1
+         )
+         WHERE conversion_id IS NULL;",
+    );
+
+    // ── 5. app_settings ──────────────────────────────────────────────────────
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS app_settings (
             setting_key     TEXT PRIMARY KEY,
@@ -188,6 +256,36 @@ fn seed_ingredients(conn: &Connection) -> Result<()> {
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
             params![name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit],
         )?;
+        let ing_id = conn.last_insert_rowid();
+
+        // Primary conversion rule
+        let _ = conn.execute(
+            "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor) VALUES (?1, ?2, ?3)",
+            params![ing_id, recipe_unit, yield_factor],
+        );
+
+        // Culinary multi-unit variations matching ApplicationDesignDocument
+        if name.contains("Sugar") {
+            let _ = conn.execute(
+                "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor) VALUES (?1, 'Gram', 1000.0), (?1, 'Tablespoon', 80.0)",
+                params![ing_id],
+            );
+        } else if name.contains("Flour") {
+            let _ = conn.execute(
+                "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor) VALUES (?1, 'Gram', 1000.0), (?1, 'Tablespoon', 125.0)",
+                params![ing_id],
+            );
+        } else if name.contains("Butter") {
+            let _ = conn.execute(
+                "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor) VALUES (?1, 'Gram', 225.0), (?1, 'Stick', 2.0)",
+                params![ing_id],
+            );
+        } else if name.contains("Milk") {
+            let _ = conn.execute(
+                "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor) VALUES (?1, 'ml', 1000.0), (?1, 'Tablespoon', 66.67)",
+                params![ing_id],
+            );
+        }
     }
 
     Ok(())

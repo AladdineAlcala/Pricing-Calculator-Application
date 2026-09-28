@@ -1,6 +1,19 @@
 // Tauri IPC bridge — typed wrappers around invoke()
 import { invoke } from "@tauri-apps/api/core";
 
+export interface IngredientConversion {
+  conversion_id: number;
+  ingredient_id: number;
+  recipe_unit: string;
+  yield_factor: number;
+}
+
+export interface IngredientConversionInput {
+  conversion_id?: number;
+  recipe_unit: string;
+  yield_factor: number;
+}
+
 export interface Ingredient {
   ingredient_id: number;
   name: string;
@@ -11,6 +24,7 @@ export interface Ingredient {
   package_type?: string;
   net_quantity?: number;
   net_unit?: string;
+  conversions?: IngredientConversion[];
 }
 
 export interface IngredientInput {
@@ -22,6 +36,7 @@ export interface IngredientInput {
   package_type: string;
   net_quantity: number;
   net_unit: string;
+  conversions?: IngredientConversionInput[];
 }
 
 export interface Recipe {
@@ -53,6 +68,7 @@ export interface RecipeIngredient {
   id: number;
   recipe_id: number;
   ingredient_id: number;
+  conversion_id?: number | null;
   batch_qty: number;
   ingredient_name: string;
   purchase_unit: string;
@@ -62,6 +78,7 @@ export interface RecipeIngredient {
   package_type?: string;
   net_quantity?: number;
   net_unit?: string;
+  is_orphaned_conversion?: boolean;
   normalized_unit_cost: number;
   line_item_cost: number;
 }
@@ -108,11 +125,18 @@ export const deleteRecipe = (recipe_id: number) =>
   invoke<void>("delete_recipe", { recipeId: recipe_id });
 
 // ── Recipe Ingredients ────────────────────────────────────────────────────────
+export interface RecipeIngredientInput {
+  id?: number;
+  ingredient_id: number;
+  conversion_id?: number | null;
+  batch_qty: number;
+}
+
 export const getRecipeIngredients = (recipe_id: number) =>
   invoke<RecipeIngredient[]>("get_recipe_ingredients", { recipeId: recipe_id });
 export const upsertRecipeIngredient = (
   recipe_id: number,
-  input: { ingredient_id: number; batch_qty: number }
+  input: RecipeIngredientInput
 ) => invoke<void>("upsert_recipe_ingredient", { recipeId: recipe_id, input });
 export const removeRecipeIngredient = (id: number) =>
   invoke<void>("remove_recipe_ingredient", { id });

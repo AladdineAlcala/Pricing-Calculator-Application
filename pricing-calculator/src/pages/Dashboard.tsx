@@ -22,7 +22,6 @@ import {
 } from "@/lib/api";
 import { useApp } from "@/context/AppContext";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 
 // Sample Manila artisan bakery supplier costs for 1-click seeding
 const MANILA_MARKET_PRICES: Record<string, { price: number; packageType?: string; netQty?: number; netUnit?: string }> = {
@@ -189,7 +188,6 @@ export default function Dashboard() {
           {/* Skeleton Hero */}
           <div className="h-80 rounded-2xl bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 p-8" />
         </main>
-        <Footer />
       </div>
     );
   }
@@ -938,9 +936,6 @@ export default function Dashboard() {
           </section>
         )}
       </main>
-
-      {/* ── SystemFooter ── */}
-      <Footer />
     </div>
   );
 }

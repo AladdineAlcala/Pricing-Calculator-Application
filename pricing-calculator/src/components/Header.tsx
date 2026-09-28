@@ -99,10 +99,10 @@ export function Header({ unpricedCount = 0, onOpenNewRecipe }: HeaderProps) {
         {/* User & Branch Profile Pill */}
         <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-artisan-border dark:border-slate-800">
           <div className="w-8 h-8 rounded-full bg-espresso-800 dark:bg-slate-800 text-amber-100 flex items-center justify-center font-bold text-xs shadow-sm">
-            AB
+            GB
           </div>
           <div className="flex flex-col text-left leading-tight">
-            <span className="text-xs font-bold text-espresso-900 dark:text-white">Artisan Bakeshop</span>
+            <span className="text-xs font-bold text-espresso-900 dark:text-white">Glenz Bakeshop</span>
             <span className="text-[10px] text-espresso-400 dark:text-slate-400">Metro Kitchen #1</span>
           </div>
         </div>
