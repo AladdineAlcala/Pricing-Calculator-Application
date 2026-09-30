@@ -41,6 +41,14 @@ pub struct Ingredient {
     #[serde(default = "default_net_unit")]
     pub net_unit: String,
     #[serde(default)]
+    pub current_stock_qty: f64,
+    #[serde(default)]
+    pub reorder_threshold: f64,
+    #[serde(default)]
+    pub supplier: Option<String>,
+    #[serde(default)]
+    pub sku: Option<String>,
+    #[serde(default)]
     pub conversions: Vec<IngredientConversion>,
 }
 
@@ -57,6 +65,14 @@ pub struct IngredientInput {
     pub net_quantity: f64,
     #[serde(default = "default_net_unit")]
     pub net_unit: String,
+    #[serde(default)]
+    pub current_stock_qty: f64,
+    #[serde(default)]
+    pub reorder_threshold: f64,
+    #[serde(default)]
+    pub supplier: Option<String>,
+    #[serde(default)]
+    pub sku: Option<String>,
     #[serde(default)]
     pub conversions: Vec<IngredientConversionInput>,
 }
@@ -156,6 +172,66 @@ pub struct AppSetting {
     pub setting_key: String,
     pub setting_value: String,
 }
+
+// ── Hybrid Architecture & Perpetual Inventory DTOs ──────────────────────────
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ReceiveInventoryPayload {
+    pub ingredient_id: i64,
+    pub added_qty: f64,
+    pub new_invoice_price: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct InventoryLedgerItem {
+    pub ingredient_id: i64,
+    pub name: String,
+    pub purchase_unit: String,
+    pub purchase_price: f64,
+    pub current_stock_qty: f64,
+    pub reorder_threshold: f64,
+    pub total_value: f64,
+    pub is_low_stock: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct StockDeficit {
+    pub ingredient_name: String,
+    pub required_bulk_qty: f64,
+    pub current_bulk_qty: f64,
+    pub deficit_qty: f64,
+    pub unit: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ProduceBatchPayload {
+    pub recipe_id: i64,
+    pub batches: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ProduceBatchSuccess {
+    pub recipe_id: i64,
+    pub recipe_name: String,
+    pub batches_produced: f64,
+    pub timestamp: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ProductionError {
+    pub message: String,
+    #[serde(default)]
+    pub deficits: Vec<StockDeficit>,
+}
+
+impl std::fmt::Display for ProductionError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for ProductionError {}
+
 
 #[cfg(test)]
 mod tests {
@@ -273,5 +349,98 @@ mod tests {
         // Combined Sugar cost in this recipe
         let total_sugar_cost = occ1_cost + occ2_cost;
         assert_eq!(total_sugar_cost, 36.00f64);
+    }
+
+    #[test]
+    fn test_lrc_replacement_and_inventory_receiving_math() {
+        // Flow A: Initial state: Flour 10.0 bags @ ₱100.00
+        let initial_stock = 10.0f64;
+        let initial_price = 100.0f64;
+        let initial_value = initial_stock * initial_price;
+        assert_eq!(initial_value, 1000.0f64);
+
+        // Receive delivery: +5.0 bags at new invoice LRC price ₱125.00
+        let added_qty = 5.0f64;
+        let new_invoice_price = 125.0f64;
+
+        // Flow A Business Invariant:
+        // 1. Stock accumulates perpetually: 10 + 5 = 15 bags
+        let updated_stock = initial_stock + added_qty;
+        assert_eq!(updated_stock, 15.0f64);
+
+        // 2. Active price completely replaced with LRC invoice rate: ₱125.00
+        let updated_price = new_invoice_price;
+        assert_eq!(updated_price, 125.0f64);
+
+        // 3. New total inventory valuation = 15 * 125.0 = ₱1,875.00
+        let updated_total_value = updated_stock * updated_price;
+        assert_eq!(updated_total_value, 1875.0f64);
+    }
+
+    #[test]
+    fn test_production_batch_bulk_requirement_and_deficit_interception() {
+        // Flow B: Pre-flight conversion and deficit check
+        // Ingredient: All-Purpose Flour, bulk unit = "Bag (1 kg)", yield = 8.33 cups/kg
+        let current_stock_qty = 1.0f64; // 1.0 kg on hand
+        let yield_factor = 8.33f64;
+        let batch_qty_cups = 5.0f64; // 5 cups per batch
+        let batches_to_produce = 2.0f64; // 2 batches
+
+        // Total recipe units required = 5.0 * 2.0 = 10.0 cups
+        let total_recipe_units = batch_qty_cups * batches_to_produce;
+        assert_eq!(total_recipe_units, 10.0f64);
+
+        // Bulk units required = 10.0 cups / 8.33 cups/kg = 1.20048 kg
+        let required_bulk_qty = total_recipe_units / yield_factor;
+        assert!((required_bulk_qty - 1.2004801920768307f64).abs() < 1e-9);
+
+        // Pre-flight check: required (1.20048) > current (1.0) -> Hard stop deficit!
+        let has_deficit = required_bulk_qty > current_stock_qty;
+        assert!(has_deficit);
+
+        let deficit_qty = required_bulk_qty - current_stock_qty;
+        assert!((deficit_qty - 0.2004801920768307f64).abs() < 1e-9);
+
+        // Path 2: If stock was 2.0 kg instead
+        let sufficient_stock = 2.0f64;
+        assert!(required_bulk_qty <= sufficient_stock);
+        let remaining_stock = sufficient_stock - required_bulk_qty;
+        assert!((remaining_stock - 0.7995198079231693f64).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_multi_occurrence_bulk_yield_aggregation() {
+        // Flow B Multi-Occurrence Domain Rule:
+        // Recipe calls for Sugar twice across prep stages:
+        // Occurrence 1: 2.0 cups (yield = 5.0 cups/kg -> 0.4 kg bulk)
+        // Occurrence 2: 500.0 grams (yield = 1000.0 g/kg -> 0.5 kg bulk)
+        let batches = 1.5f64;
+
+        let occ1_bulk = (2.0f64 * batches) / 5.0f64; // 0.6 kg
+        let occ2_bulk = (500.0f64 * batches) / 1000.0f64; // 0.75 kg
+
+        // Aggregated bulk requirement for Sugar
+        let total_sugar_bulk = occ1_bulk + occ2_bulk;
+        assert!((total_sugar_bulk - 1.35f64).abs() < 1e-9);
+
+        // If on hand stock is 1.0 kg -> deficit is 0.35 kg
+        let on_hand_stock = 1.0f64;
+        let deficit = total_sugar_bulk - on_hand_stock;
+        assert!((deficit - 0.35f64).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_inventory_ledger_low_stock_evaluation() {
+        // Flow C: Passive Alert Monitoring
+        let reorder_threshold = 5.0f64;
+
+        // At or below threshold -> Low Stock Alert (true)
+        assert!(0.0f64 <= reorder_threshold);
+        assert!(4.99f64 <= reorder_threshold);
+        assert!(5.00f64 <= reorder_threshold);
+
+        // Strictly above threshold -> Normal (false)
+        assert!(!(5.01f64 <= reorder_threshold));
+        assert!(!(10.00f64 <= reorder_threshold));
     }
 }

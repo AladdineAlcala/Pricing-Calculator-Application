@@ -34,16 +34,15 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
         })
         .map_err(|e| e.to_string())?;
 
-    for c in conv_rows {
-        if let Ok(conv) = c {
-            conv_map.entry(conv.ingredient_id).or_default().push(conv);
-        }
+    for conv in conv_rows.flatten() {
+        conv_map.entry(conv.ingredient_id).or_default().push(conv);
     }
 
     let mut stmt = conn
         .prepare(
             "SELECT ingredient_id, name, purchase_unit, purchase_price, recipe_unit, yield_factor,
-                    COALESCE(package_type, 'Package'), COALESCE(net_quantity, 1.0), COALESCE(net_unit, 'Kilogram')
+                    COALESCE(package_type, 'Package'), COALESCE(net_quantity, 1.0), COALESCE(net_unit, 'Kilogram'),
+                    COALESCE(current_stock_qty, 0.0), COALESCE(reorder_threshold, 0.0), supplier, sku
              FROM ingredients ORDER BY name ASC",
         )
         .map_err(|e| e.to_string())?;
@@ -59,6 +58,10 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
             let package_type: String = row.get(6)?;
             let net_quantity: f64 = row.get(7)?;
             let net_unit: String = row.get(8)?;
+            let current_stock_qty: f64 = row.get(9)?;
+            let reorder_threshold: f64 = row.get(10)?;
+            let supplier: Option<String> = row.get(11)?;
+            let sku: Option<String> = row.get(12)?;
 
             let conversions = conv_map.remove(&ingredient_id).unwrap_or_else(|| {
                 vec![IngredientConversion {
@@ -79,6 +82,10 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
                 package_type,
                 net_quantity,
                 net_unit,
+                current_stock_qty,
+                reorder_threshold,
+                supplier,
+                sku,
                 conversions,
             })
         })
@@ -96,8 +103,8 @@ pub fn create_ingredient(
 ) -> Result<Ingredient, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     conn.execute(
-        "INSERT INTO ingredients (name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        "INSERT INTO ingredients (name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit, current_stock_qty, reorder_threshold, supplier, sku)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
         params![
             input.name,
             input.purchase_unit,
@@ -106,7 +113,11 @@ pub fn create_ingredient(
             input.yield_factor,
             input.package_type,
             input.net_quantity,
-            input.net_unit
+            input.net_unit,
+            input.current_stock_qty,
+            input.reorder_threshold,
+            input.supplier,
+            input.sku
         ],
     )
     .map_err(|e| e.to_string())?;
@@ -154,6 +165,10 @@ pub fn create_ingredient(
         package_type: input.package_type,
         net_quantity: input.net_quantity,
         net_unit: input.net_unit,
+        current_stock_qty: input.current_stock_qty,
+        reorder_threshold: input.reorder_threshold,
+        supplier: input.supplier,
+        sku: input.sku,
         conversions: created_conversions,
     })
 }
@@ -181,8 +196,9 @@ pub fn update_ingredient(
     conn.execute(
         "UPDATE ingredients SET name=?1, purchase_unit=?2, purchase_price=?3,
          recipe_unit=?4, yield_factor=?5, package_type=?6, net_quantity=?7, net_unit=?8,
+         current_stock_qty=?9, reorder_threshold=?10, supplier=?11, sku=?12,
          updated_at=datetime('now')
-         WHERE ingredient_id=?9",
+         WHERE ingredient_id=?13",
         params![
             input.name,
             input.purchase_unit,
@@ -192,6 +208,10 @@ pub fn update_ingredient(
             input.package_type,
             input.net_quantity,
             input.net_unit,
+            input.current_stock_qty,
+            input.reorder_threshold,
+            input.supplier,
+            input.sku,
             ingredient_id
         ],
     )
@@ -850,7 +870,7 @@ pub fn backup_database(
     let dest_dir = if backup_path.is_empty() {
         source
             .parent()
-            .unwrap()
+            .ok_or_else(|| "Failed to determine database parent directory".to_string())?
             .join("Backups")
     } else {
         std::path::PathBuf::from(&backup_path)
@@ -873,4 +893,268 @@ pub fn backup_database(
     }
 
     Ok(dest.to_string_lossy().to_string())
+}
+
+// ── Perpetual Inventory & LRC Commands ────────────────────────────────────────
+
+#[tauri::command]
+pub fn receive_inventory(
+    state: State<DbState>,
+    payload: ReceiveInventoryPayload,
+) -> Result<InventoryLedgerItem, String> {
+    if payload.added_qty <= 0.0 {
+        return Err("Added quantity must be strictly greater than zero".to_string());
+    }
+    if payload.new_invoice_price < 0.0 {
+        return Err("New invoice price cannot be negative".to_string());
+    }
+
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    let rows_affected = conn
+        .execute(
+            "UPDATE ingredients
+             SET current_stock_qty = current_stock_qty + ?1,
+                 purchase_price = ?2,
+                 updated_at = datetime('now')
+             WHERE ingredient_id = ?3",
+            params![payload.added_qty, payload.new_invoice_price, payload.ingredient_id],
+        )
+        .map_err(|e| e.to_string())?;
+
+    if rows_affected == 0 {
+        return Err(format!("Ingredient with ID {} not found", payload.ingredient_id));
+    }
+
+    let item = conn
+        .query_row(
+            "SELECT ingredient_id, name, purchase_unit, purchase_price, current_stock_qty, reorder_threshold
+             FROM ingredients WHERE ingredient_id = ?1",
+            params![payload.ingredient_id],
+            |row| {
+                let ingredient_id: i64 = row.get(0)?;
+                let name: String = row.get(1)?;
+                let purchase_unit: String = row.get(2)?;
+                let purchase_price: f64 = row.get(3)?;
+                let current_stock_qty: f64 = row.get(4)?;
+                let reorder_threshold: f64 = row.get(5)?;
+                let total_value = current_stock_qty * purchase_price;
+                let is_low_stock = current_stock_qty <= reorder_threshold;
+                Ok(InventoryLedgerItem {
+                    ingredient_id,
+                    name,
+                    purchase_unit,
+                    purchase_price,
+                    current_stock_qty,
+                    reorder_threshold,
+                    total_value,
+                    is_low_stock,
+                })
+            },
+        )
+        .map_err(|e| e.to_string())?;
+
+    Ok(item)
+}
+
+#[tauri::command]
+pub fn get_inventory_ledger(
+    state: State<DbState>,
+) -> Result<Vec<InventoryLedgerItem>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT ingredient_id, name, purchase_unit, purchase_price, current_stock_qty, reorder_threshold
+             FROM ingredients
+             ORDER BY (CASE WHEN current_stock_qty <= reorder_threshold THEN 0 ELSE 1 END) ASC, name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map([], |row| {
+            let ingredient_id: i64 = row.get(0)?;
+            let name: String = row.get(1)?;
+            let purchase_unit: String = row.get(2)?;
+            let purchase_price: f64 = row.get(3)?;
+            let current_stock_qty: f64 = row.get(4)?;
+            let reorder_threshold: f64 = row.get(5)?;
+            let total_value = current_stock_qty * purchase_price;
+            let is_low_stock = current_stock_qty <= reorder_threshold;
+            Ok(InventoryLedgerItem {
+                ingredient_id,
+                name,
+                purchase_unit,
+                purchase_price,
+                current_stock_qty,
+                reorder_threshold,
+                total_value,
+                is_low_stock,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+struct RequirementAgg {
+    ingredient_id: i64,
+    ingredient_name: String,
+    purchase_unit: String,
+    current_stock_qty: f64,
+    total_bulk_required: f64,
+}
+
+#[tauri::command]
+pub fn produce_batch_with_validation(
+    state: State<DbState>,
+    payload: ProduceBatchPayload,
+) -> Result<ProduceBatchSuccess, ProductionError> {
+    if payload.batches <= 0.0 {
+        return Err(ProductionError {
+            message: "Batches to produce must be greater than zero".to_string(),
+            deficits: vec![],
+        });
+    }
+
+    let mut conn = state.0.lock().map_err(|e| ProductionError {
+        message: e.to_string(),
+        deficits: vec![],
+    })?;
+
+    let recipe_name: String = conn
+        .query_row(
+            "SELECT name FROM recipes WHERE recipe_id = ?1",
+            params![payload.recipe_id],
+            |row| row.get(0),
+        )
+        .map_err(|_| ProductionError {
+            message: format!("Recipe with ID {} not found", payload.recipe_id),
+            deficits: vec![],
+        })?;
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT ri.ingredient_id, ri.batch_qty,
+                    COALESCE(ic.yield_factor, i.yield_factor) AS yield_factor,
+                    i.name, i.purchase_unit, i.current_stock_qty
+             FROM recipe_ingredients ri
+             JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
+             LEFT JOIN ingredient_conversions ic ON ic.conversion_id = ri.conversion_id
+             WHERE ri.recipe_id = ?1",
+        )
+        .map_err(|e| ProductionError {
+            message: e.to_string(),
+            deficits: vec![],
+        })?;
+
+    let rows = stmt
+        .query_map(params![payload.recipe_id], |row| {
+            let ingredient_id: i64 = row.get(0)?;
+            let batch_qty: f64 = row.get(1)?;
+            let yield_factor: f64 = row.get(2)?;
+            let name: String = row.get(3)?;
+            let purchase_unit: String = row.get(4)?;
+            let current_stock_qty: f64 = row.get(5)?;
+            Ok((ingredient_id, batch_qty, yield_factor, name, purchase_unit, current_stock_qty))
+        })
+        .map_err(|e| ProductionError {
+            message: e.to_string(),
+            deficits: vec![],
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(|e| ProductionError {
+            message: e.to_string(),
+            deficits: vec![],
+        })?;
+
+    drop(stmt);
+
+    if rows.is_empty() {
+        return Err(ProductionError {
+            message: format!("Recipe '{}' has no ingredients configured", recipe_name),
+            deficits: vec![],
+        });
+    }
+
+    // Pre-flight conversion & multi-occurrence aggregation
+    let mut req_map: std::collections::BTreeMap<i64, RequirementAgg> = std::collections::BTreeMap::new();
+    for (ingredient_id, batch_qty, yield_factor, name, purchase_unit, current_stock_qty) in rows {
+        let bulk_needed = if yield_factor > 0.0 {
+            (batch_qty * payload.batches) / yield_factor
+        } else {
+            0.0
+        };
+
+        let entry = req_map.entry(ingredient_id).or_insert_with(|| RequirementAgg {
+            ingredient_id,
+            ingredient_name: name,
+            purchase_unit,
+            current_stock_qty,
+            total_bulk_required: 0.0,
+        });
+        entry.total_bulk_required += bulk_needed;
+    }
+
+    // Validation Check (Hard Stop)
+    let mut deficits: Vec<StockDeficit> = Vec::new();
+    for agg in req_map.values() {
+        if agg.total_bulk_required > agg.current_stock_qty {
+            let deficit_qty = agg.total_bulk_required - agg.current_stock_qty;
+            deficits.push(StockDeficit {
+                ingredient_name: agg.ingredient_name.clone(),
+                required_bulk_qty: agg.total_bulk_required,
+                current_bulk_qty: agg.current_stock_qty,
+                deficit_qty,
+                unit: agg.purchase_unit.clone(),
+            });
+        }
+    }
+
+    if !deficits.is_empty() {
+        // Path 1 (Deficit): Transaction aborts without any modification
+        return Err(ProductionError {
+            message: format!(
+                "Insufficient stock to produce {} batch(es) of '{}'. {} ingredient(s) in deficit.",
+                payload.batches,
+                recipe_name,
+                deficits.len()
+            ),
+            deficits,
+        });
+    }
+
+    // Path 2 (Sufficient): Execute deduction in atomic transaction
+    let tx = conn.transaction().map_err(|e| ProductionError {
+        message: e.to_string(),
+        deficits: vec![],
+    })?;
+
+    for agg in req_map.values() {
+        tx.execute(
+            "UPDATE ingredients
+             SET current_stock_qty = current_stock_qty - ?1,
+                 updated_at = datetime('now')
+             WHERE ingredient_id = ?2",
+            params![agg.total_bulk_required, agg.ingredient_id],
+        )
+        .map_err(|e| ProductionError {
+            message: e.to_string(),
+            deficits: vec![],
+        })?;
+    }
+
+    tx.commit().map_err(|e| ProductionError {
+        message: e.to_string(),
+        deficits: vec![],
+    })?;
+
+    Ok(ProduceBatchSuccess {
+        recipe_id: payload.recipe_id,
+        recipe_name,
+        batches_produced: payload.batches,
+        timestamp: chrono::Local::now().to_rfc3339(),
+    })
 }

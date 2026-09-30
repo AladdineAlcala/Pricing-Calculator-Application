@@ -27,6 +27,10 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
             package_type    TEXT    NOT NULL DEFAULT 'Package',
             net_quantity    REAL    NOT NULL DEFAULT 1.0,
             net_unit        TEXT    NOT NULL DEFAULT 'Kilogram',
+            current_stock_qty REAL  NOT NULL DEFAULT 0.0,
+            reorder_threshold REAL  NOT NULL DEFAULT 0.0,
+            supplier        TEXT,
+            sku             TEXT,
             created_at      TEXT    NOT NULL DEFAULT (datetime('now')),
             updated_at      TEXT    NOT NULL DEFAULT (datetime('now'))
         );",
@@ -43,6 +47,22 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
     );
     let _ = conn.execute(
         "ALTER TABLE ingredients ADD COLUMN net_unit TEXT NOT NULL DEFAULT 'Kilogram'",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredients ADD COLUMN current_stock_qty REAL NOT NULL DEFAULT 0.0",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredients ADD COLUMN reorder_threshold REAL NOT NULL DEFAULT 0.0",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredients ADD COLUMN supplier TEXT",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredients ADD COLUMN sku TEXT",
         [],
     );
 
@@ -225,6 +245,7 @@ fn check_and_migrate_legacy_db(conn: &Connection, db_path: &std::path::Path) -> 
     Ok(())
 }
 
+#[allow(clippy::type_complexity)]
 fn seed_ingredients(conn: &Connection) -> Result<()> {
     let existing: i64 = conn.query_row(
         "SELECT COUNT(*) FROM ingredients",

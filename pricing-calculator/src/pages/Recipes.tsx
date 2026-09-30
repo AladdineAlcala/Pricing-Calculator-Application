@@ -274,6 +274,19 @@ export default function Recipes() {
     return filteredRecipes.slice(start, start + itemsPerPage);
   }, [filteredRecipes, currentPage]);
 
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (currentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (currentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+  }, [totalPages, currentPage]);
+
   if (loading) {
     return (
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14]">
@@ -855,44 +868,88 @@ export default function Recipes() {
         )}
 
         {/* ── Bottom Bar: Auto-sync & Pagination ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Auto-sync enabled • All calculations calibrated to standard metric & Peso exchange</span>
-          </div>
+        {filteredRecipes.length > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400">
+            {/* Left: Recipe Counter & Active Page Info */}
+            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+              <span>
+                Showing{" "}
+                <strong className="text-slate-900 dark:text-white font-semibold">
+                  {(currentPage - 1) * itemsPerPage + 1}
+                </strong>{" "}
+                to{" "}
+                <strong className="text-slate-900 dark:text-white font-semibold">
+                  {Math.min(currentPage * itemsPerPage, filteredRecipes.length)}
+                </strong>{" "}
+                of{" "}
+                <strong className="text-slate-900 dark:text-white font-semibold">
+                  {filteredRecipes.length}
+                </strong>{" "}
+                recipes
+              </span>
+              {totalPages > 1 && (
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                  • Page {currentPage} of {totalPages}
+                </span>
+              )}
+            </div>
 
-          {/* Pagination Controls */}
-          <div className="flex items-center gap-1.5 self-end sm:self-auto">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121624] text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-medium"
+            {/* Right: Pagination Controls firmly on the lower right side */}
+            <div
+              className="flex items-center gap-1.5 self-end sm:self-auto sm:ml-auto"
+              data-purpose="recipe-pagination"
+              aria-label="Pagination Navigation"
             >
-              Previous
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${currentPage === page
-                  ? "bg-emerald-600 text-white shadow-xs"
-                  : "bg-white dark:bg-[#121624] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                  }`}
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                aria-label="Previous Page"
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121624] text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-medium flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed shadow-2xs"
               >
-                {page}
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Previous</span>
               </button>
-            ))}
 
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121624] text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-medium"
-            >
-              Next
-            </button>
+              {pageNumbers.map((page, idx) =>
+                page === "..." ? (
+                  <span
+                    key={`ellipsis-${idx}`}
+                    className="w-8 h-8 flex items-center justify-center text-xs text-slate-400 dark:text-slate-500 select-none"
+                  >
+                    •••
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    key={`page-${page}`}
+                    onClick={() => setCurrentPage(page as number)}
+                    aria-label={`Page ${page}`}
+                    aria-current={currentPage === page ? "page" : undefined}
+                    className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      currentPage === page
+                        ? "bg-emerald-600 text-white shadow-xs"
+                        : "bg-white dark:bg-[#121624] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                aria-label="Next Page"
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121624] text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors font-medium flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed shadow-2xs"
+              >
+                <span>Next</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Modern "New Recipe" Modal (Exact Match to Uploaded Reference) ── */}
         {modalOpen && (
