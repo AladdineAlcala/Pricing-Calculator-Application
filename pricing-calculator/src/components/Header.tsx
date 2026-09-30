@@ -16,7 +16,7 @@ export function Header({ unpricedCount = 0, onOpenNewRecipe }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-20 bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur border-b border-artisan-border dark:border-slate-800 px-6 py-3.5 flex items-center justify-between gap-4"
+      className="sticky top-0 z-20 print:hidden bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur border-b border-artisan-border dark:border-slate-800 px-6 py-3.5 flex items-center justify-between gap-4"
       data-purpose="top-navigation"
     >
       {/* Left: Breadcrumb & Operational Mode Indicators */}

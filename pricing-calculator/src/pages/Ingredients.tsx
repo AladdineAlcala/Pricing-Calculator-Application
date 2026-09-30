@@ -25,6 +25,7 @@ import {
   ArrowUpDown,
   FileSpreadsheet,
   Package,
+  ChevronDown,
 } from "lucide-react";
 import {
   getIngredients,
@@ -427,11 +428,15 @@ export default function Ingredients() {
     }
   }, [notification]);
 
-  const load = useCallback(() => {
-    getIngredients().then((data) => {
+  const load = useCallback(async () => {
+    try {
+      const data = await getIngredients();
       setItems(data);
       setLoading(false);
-    });
+      return data;
+    } catch {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -456,19 +461,19 @@ export default function Ingredients() {
     const conversions: IngredientConversionInput[] =
       ing.conversions && ing.conversions.length > 0
         ? ing.conversions.map((c) => ({
-            conversion_id: c.conversion_id,
-            recipe_unit: c.recipe_unit,
-            yield_factor: c.yield_factor,
-          }))
+          conversion_id: c.conversion_id,
+          recipe_unit: c.recipe_unit,
+          yield_factor: c.yield_factor,
+        }))
         : [
-            { recipe_unit: ing.recipe_unit, yield_factor: ing.yield_factor },
-          ];
+          { recipe_unit: ing.recipe_unit, yield_factor: ing.yield_factor },
+        ];
 
     setForm({
       name: ing.name,
       category: inferCategory(ing.name),
-      supplier: "",
-      sku: generateSku(ing.name, ing.ingredient_id),
+      supplier: ing.supplier || "",
+      sku: ing.sku || "",
       packageType: pkgType,
       netQuantity: netQty,
       netUnit: netU,
@@ -595,6 +600,8 @@ export default function Ingredients() {
         package_type: form.packageType,
         net_quantity: form.netQuantity,
         net_unit: form.netUnit,
+        supplier: form.supplier.trim() || undefined,
+        sku: form.sku.trim() || undefined,
         conversions: form.conversions,
       };
 
@@ -662,6 +669,11 @@ export default function Ingredients() {
             package_type: item.package_type || "Package",
             net_quantity: item.net_quantity ?? 1,
             net_unit: item.net_unit || "Kilogram",
+            supplier: item.supplier,
+            sku: item.sku,
+            current_stock_qty: item.current_stock_qty,
+            reorder_threshold: item.reorder_threshold,
+            conversions: item.conversions,
           });
         }
       }
@@ -700,7 +712,7 @@ export default function Ingredients() {
     const rows = items.map((i) => [
       i.ingredient_id,
       `"${i.name.replace(/"/g, '""')}"`,
-      generateSku(i.name, i.ingredient_id),
+      `"${(i.sku || generateSku(i.name, i.ingredient_id)).replace(/"/g, '""')}"`,
       `"${inferCategory(i.name)}"`,
       `"${i.purchase_unit}"`,
       i.purchase_price.toFixed(2),
@@ -735,11 +747,14 @@ export default function Ingredients() {
   const filtered = useMemo(() => {
     return items
       .filter((i) => {
+        const skuStr = i.sku || generateSku(i.name, i.ingredient_id);
+        const supplierStr = i.supplier || "";
         const matchesQuery =
           i.name.toLowerCase().includes(search.toLowerCase()) ||
           i.purchase_unit.toLowerCase().includes(search.toLowerCase()) ||
           i.recipe_unit.toLowerCase().includes(search.toLowerCase()) ||
-          generateSku(i.name, i.ingredient_id).toLowerCase().includes(search.toLowerCase());
+          skuStr.toLowerCase().includes(search.toLowerCase()) ||
+          supplierStr.toLowerCase().includes(search.toLowerCase());
 
         if (!matchesQuery) return false;
 
@@ -810,1252 +825,1267 @@ export default function Ingredients() {
     <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
       <Header unpricedCount={unpricedCount} />
       <div className="flex-1 p-6 md:p-8 space-y-6">
-      {/* ── Toast Notification Banner ── */}
-      {notification && notification.show && (
-        <div
-          className={`fixed top-6 right-6 z-50 flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-[#0c101a] border shadow-xl backdrop-blur-md animate-in slide-in-from-top-4 fade-in duration-200 max-w-sm ${notification.type === "error"
-            ? "border-rose-500/40 text-rose-900 dark:text-rose-100 shadow-rose-950/10"
-            : notification.type === "info"
-              ? "border-sky-500/40 text-sky-900 dark:text-sky-100 shadow-sky-950/10"
-              : "border-emerald-500/40 text-emerald-950 dark:text-emerald-100 shadow-emerald-950/10"
-            }`}
-        >
+        {/* ── Toast Notification Banner ── */}
+        {notification && notification.show && (
           <div
-            className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${notification.type === "error"
-              ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+            className={`fixed top-6 right-6 z-50 flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-[#0c101a] border shadow-xl backdrop-blur-md animate-in slide-in-from-top-4 fade-in duration-200 max-w-sm ${notification.type === "error"
+              ? "border-rose-500/40 text-rose-900 dark:text-rose-100 shadow-rose-950/10"
               : notification.type === "info"
-                ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
-                : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                ? "border-sky-500/40 text-sky-900 dark:text-sky-100 shadow-sky-950/10"
+                : "border-emerald-500/40 text-emerald-950 dark:text-emerald-100 shadow-emerald-950/10"
               }`}
           >
-            {notification.type === "error" ? (
-              <AlertTriangle className="w-4 h-4" />
-            ) : notification.type === "info" ? (
-              <Info className="w-4 h-4" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4" />
-            )}
+            <div
+              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${notification.type === "error"
+                ? "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                : notification.type === "info"
+                  ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                  : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                }`}
+            >
+              {notification.type === "error" ? (
+                <AlertTriangle className="w-4 h-4" />
+              ) : notification.type === "info" ? (
+                <Info className="w-4 h-4" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0 pr-1">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
+                {notification.title}
+              </h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                {notification.message}
+              </p>
+            </div>
+            <button
+              onClick={() => setNotification((prev) => (prev ? { ...prev, show: false } : null))}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="flex-1 min-w-0 pr-1">
-            <h4 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
-              {notification.title}
-            </h4>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-              {notification.message}
+        )}
+
+        {/* ── Top Header & Action Row ── */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            {/* Top Badges */}
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-[#0c1f1a] text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Raw Ingredients & Yield Master</span>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-[#121624] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                <span>{items.length} Registered</span>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-[#0c1f1a] text-emerald-700 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-800/50 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>{pricedCount} Priced</span>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-[#201a14] text-amber-700 dark:text-amber-400 border border-amber-200/70 dark:border-amber-800/50 shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span>{unpricedCount} Needs Price</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500 mb-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Real-time FIFO Inventory Sync Connected</span>
+            </div>
+
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              Ingredients & UOM Conversion
+            </h1>
+            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-4xl leading-relaxed">
+              Maintain accurate supplier purchase prices, packaging unit definitions, and culinary recipe yield conversion factors for automated batch recipe costing.
             </p>
           </div>
-          <button
-            onClick={() => setNotification((prev) => (prev ? { ...prev, show: false } : null))}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
 
-      {/* ── Top Header & Action Row ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          {/* Top Badges */}
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-[#0c1f1a] text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
-              <ShoppingBag className="w-3.5 h-3.5" />
-              <span>Raw Ingredients & Yield Master</span>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-[#121624] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-              <span>{items.length} Registered</span>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-[#0c1f1a] text-emerald-700 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-800/50 shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>{pricedCount} Priced</span>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-[#201a14] text-amber-700 dark:text-amber-400 border border-amber-200/70 dark:border-amber-800/50 shadow-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              <span>{unpricedCount} Needs Price</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500 mb-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Real-time FIFO Inventory Sync Connected</span>
-          </div>
-
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Ingredients & UOM Conversion
-          </h1>
-          <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-4xl leading-relaxed">
-            Maintain accurate supplier purchase prices, packaging unit definitions, and culinary recipe yield conversion factors for automated batch recipe costing.
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={handleExportCsv}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
               bg-white dark:bg-[#121826] text-slate-700 dark:text-slate-200
               border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#182033]
               shadow-2xs hover:shadow-xs transition-all active:scale-[0.98] active:translate-y-0.5 cursor-pointer"
-          >
-            <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-            <span>Export CSV / PDF</span>
-          </button>
+            >
+              <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <span>Export CSV / PDF</span>
+            </button>
 
-          <button
-            onClick={() => {
-              if (selectedIds.length === 0) {
-                // If nothing selected, select all priced
-                setSelectedIds(pricedItems.map((i) => i.ingredient_id));
-              }
-              setBulkModalOpen(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
+            <button
+              onClick={() => {
+                if (selectedIds.length === 0) {
+                  // If nothing selected, select all priced
+                  setSelectedIds(pricedItems.map((i) => i.ingredient_id));
+                }
+                setBulkModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
               bg-white dark:bg-[#121826] text-slate-700 dark:text-slate-200
               border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#182033]
               shadow-2xs hover:shadow-xs transition-all active:scale-[0.98] active:translate-y-0.5 cursor-pointer"
-          >
-            <SlidersHorizontal className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Bulk Price Update</span>
-          </button>
+            >
+              <SlidersHorizontal className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Bulk Price Update</span>
+            </button>
 
-          <button
-            onClick={openCreate}
-            id="add-ingredient-btn"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white
+            <button
+              onClick={openCreate}
+              id="add-ingredient-btn"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white
               bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg shadow-emerald-600/25 active:shadow-xs
               transition-all active:scale-[0.98] active:translate-y-0.5 cursor-pointer tracking-wide"
-          >
-            <Plus className="w-4 h-4" />
-            <span>+ Add Ingredient</span>
-          </button>
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Add Ingredient</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* ── 4 Executive KPI Cards (Luminous Light Edition) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {/* KPI 1: TOTAL INGREDIENTS */}
-        <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              TOTAL INGREDIENTS
-            </span>
-            <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
-              <Box className="w-3.5 h-3.5" />
+        {/* ── 4 Executive KPI Cards (Luminous Light Edition) ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* KPI 1: TOTAL INGREDIENTS */}
+          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                TOTAL INGREDIENTS
+              </span>
+              <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+                <Box className="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">
+                {items.length}
+              </span>
+              <span className="text-xs font-semibold text-slate-400">Active pantry items</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 pt-1 font-medium">
+              <Check className="w-3.5 h-3.5" />
+              <span>All categories mapped to recipe formulas</span>
             </div>
           </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">
-              {items.length}
-            </span>
-            <span className="text-xs font-semibold text-slate-400">Active pantry items</span>
+          {/* KPI 2: FULLY COSTED */}
+          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                FULLY COSTED
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50">
+                {readyPct}% Ready
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {pricedCount} items
+              </span>
+              <span className="text-xs font-semibold text-slate-400">with verified supplier rates</span>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="pt-1">
+              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  style={{ width: `${readyPct}%` }}
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 pt-1 font-medium">
-            <Check className="w-3.5 h-3.5" />
-            <span>All categories mapped to recipe formulas</span>
-          </div>
-        </div>
+          {/* KPI 3: NEEDS SUPPLIER PRICING */}
+          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                NEEDS SUPPLIER PRICING
+              </span>
+              <div className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <AlertTriangle className="w-3.5 h-3.5" />
+              </div>
+            </div>
 
-        {/* KPI 2: FULLY COSTED */}
-        <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              FULLY COSTED
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50">
-              {readyPct}% Ready
-            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold tracking-tight text-amber-600 dark:text-amber-400 tabular-nums">
+                {unpricedCount} items
+              </span>
+              <span className="text-xs font-semibold text-slate-400">Pending purchase invoices</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 pt-1 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <span>Action required for precise batch margins</span>
+            </div>
           </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums">
-              {pricedCount} items
-            </span>
-            <span className="text-xs font-semibold text-slate-400">with verified supplier rates</span>
-          </div>
+          {/* KPI 4: BENCHMARK NORMALIZED COST */}
+          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                BENCHMARK NORMALIZED COST
+              </span>
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                ₱
+              </div>
+            </div>
 
-          {/* Progress Bar */}
-          <div className="pt-1">
-            <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-              <div
-                style={{ width: `${readyPct}%` }}
-                className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-              />
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">
+                {fmt(avgNormalizedCost)}
+              </span>
+              <span className="text-xs font-semibold text-slate-400">avg normalized recipe unit</span>
+            </div>
+
+            <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+              <span>Based on {pricedCount} priced raw materials</span>
             </div>
           </div>
         </div>
 
-        {/* KPI 3: NEEDS SUPPLIER PRICING */}
-        <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              NEEDS SUPPLIER PRICING
+        {/* ── Search, Filter Pills & Sort Controls Row ── */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#0d121c] p-3 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 shadow-xs">
+          {/* Search with ⌘K Badge */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search by name, purchase unit, SKU, or..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              id="ingredient-search"
+              className="w-full pl-10 pr-12 py-2 text-xs rounded-xl bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700">
+              ⌘K
             </span>
-            <div className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <AlertTriangle className="w-3.5 h-3.5" />
-            </div>
           </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold tracking-tight text-amber-600 dark:text-amber-400 tabular-nums">
-              {unpricedCount} items
-            </span>
-            <span className="text-xs font-semibold text-slate-400">Pending purchase invoices</span>
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => setSelectedFilter("all")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "all"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                }`}
+            >
+              All ({items.length})
+            </button>
+
+            <button
+              onClick={() => setSelectedFilter("priced")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "priced"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                }`}
+            >
+              Fully Priced ({pricedCount})
+            </button>
+
+            <button
+              onClick={() => setSelectedFilter("unpriced")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "unpriced"
+                ? "bg-amber-600 text-white shadow-xs"
+                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                }`}
+            >
+              Needs Price ({unpricedCount})
+            </button>
+
+            <button
+              onClick={() => setSelectedFilter("dry")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "dry"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                }`}
+            >
+              Dry Goods ({items.filter((i) => inferCategory(i.name) === "Bulk Dry Goods").length})
+            </button>
+
+            <button
+              onClick={() => setSelectedFilter("refrigerated")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "refrigerated"
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                }`}
+            >
+              Refrigerated ({items.filter((i) => inferCategory(i.name) === "Refrigerated Dairy").length})
+            </button>
           </div>
 
-          <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 pt-1 font-medium">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            <span>Action required for precise batch margins</span>
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-2">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-semibold focus:outline-none focus:border-emerald-500 cursor-pointer"
+            >
+              <option value="name">Sort by: Name (A-Z)</option>
+              <option value="price-desc">Sort by: Price (High-Low)</option>
+              <option value="price-asc">Sort by: Price (Low-High)</option>
+              <option value="yield">Sort by: Yield Factor</option>
+            </select>
           </div>
         </div>
 
-        {/* KPI 4: BENCHMARK NORMALIZED COST */}
-        <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              BENCHMARK NORMALIZED COST
-            </span>
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
-              ₱
-            </div>
-          </div>
-
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">
-              {fmt(avgNormalizedCost)}
-            </span>
-            <span className="text-xs font-semibold text-slate-400">avg normalized recipe unit</span>
-          </div>
-
-          <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">
-            <span>Based on {pricedCount} priced raw materials</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Search, Filter Pills & Sort Controls Row ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#0d121c] p-3 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 shadow-xs">
-        {/* Search with ⌘K Badge */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by name, purchase unit, SKU, or..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            id="ingredient-search"
-            className="w-full pl-10 pr-12 py-2 text-xs rounded-xl bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-          />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700">
-            ⌘K
-          </span>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <button
-            onClick={() => setSelectedFilter("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "all"
-              ? "bg-emerald-600 text-white shadow-xs"
-              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-              }`}
-          >
-            All ({items.length})
-          </button>
-
-          <button
-            onClick={() => setSelectedFilter("priced")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "priced"
-              ? "bg-emerald-600 text-white shadow-xs"
-              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-              }`}
-          >
-            Fully Priced ({pricedCount})
-          </button>
-
-          <button
-            onClick={() => setSelectedFilter("unpriced")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "unpriced"
-              ? "bg-amber-600 text-white shadow-xs"
-              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-              }`}
-          >
-            Needs Price ({unpricedCount})
-          </button>
-
-          <button
-            onClick={() => setSelectedFilter("dry")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "dry"
-              ? "bg-emerald-600 text-white shadow-xs"
-              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-              }`}
-          >
-            Dry Goods ({items.filter((i) => inferCategory(i.name) === "Bulk Dry Goods").length})
-          </button>
-
-          <button
-            onClick={() => setSelectedFilter("refrigerated")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "refrigerated"
-              ? "bg-emerald-600 text-white shadow-xs"
-              : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-              }`}
-          >
-            Refrigerated ({items.filter((i) => inferCategory(i.name) === "Refrigerated Dairy").length})
-          </button>
-        </div>
-
-        {/* Sort Dropdown */}
-        <div className="flex items-center gap-2">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-semibold focus:outline-none focus:border-emerald-500 cursor-pointer"
-          >
-            <option value="name">Sort by: Name (A-Z)</option>
-            <option value="price-desc">Sort by: Price (High-Low)</option>
-            <option value="price-asc">Sort by: Price (Low-High)</option>
-            <option value="yield">Sort by: Yield Factor</option>
-          </select>
-        </div>
-      </div>
-
-      {/* ── Main Data Table Card ── */}
-      <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-[#0c101a] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-[#101626]/50 text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                <th className="w-10 py-3.5 px-4 text-center">
-                  <button
-                    type="button"
-                    onClick={handleSelectAll}
-                    className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
-                  >
-                    {selectedIds.length > 0 && selectedIds.length === paginatedItems.length ? (
-                      <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    ) : (
-                      <Square className="w-4 h-4" />
-                    )}
-                  </button>
-                </th>
-                <th className="text-left py-3.5 pr-4">INGREDIENT NAME & SKU</th>
-                <th className="text-left py-3.5 px-3">CATEGORY / STORAGE</th>
-                <th className="text-left py-3.5 px-3">PURCHASE PACKAGING</th>
-                <th className="text-right py-3.5 px-3">SUPPLIER PRICE (₱)</th>
-                <th className="text-center py-3.5 px-3">RECIPE UNIT</th>
-                <th className="text-right py-3.5 px-3">
-                  <div className="inline-flex items-center gap-1 cursor-help justify-end">
-                    <span>YIELD FACTOR</span>
-                    <Tooltip content="Ratio of purchase unit to recipe yield unit" position="top">
-                      <Info className="w-3 h-3 text-slate-400" />
-                    </Tooltip>
-                  </div>
-                </th>
-                <th className="text-right py-3.5 px-4">NORMALIZED COST</th>
-                <th className="text-center py-3.5 pr-4">ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {paginatedItems.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-16 text-center text-slate-400 dark:text-slate-500">
-                    <Box className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                    <p className="font-bold text-sm">No raw ingredients matched your criteria.</p>
-                    <p className="text-xs mt-1">Try clearing your search query or reset category filter.</p>
-                  </td>
-                </tr>
-              ) : (
-                paginatedItems.map((ing) => {
-                  const isPriced = ing.purchase_price > 0;
-                  const normalized = ing.yield_factor > 0 && isPriced ? ing.purchase_price / ing.yield_factor : 0;
-                  const category = inferCategory(ing.name);
-                  const sku = generateSku(ing.name, ing.ingredient_id);
-                  const isChecked = selectedIds.includes(ing.ingredient_id);
-
-                  // Extract first letter for avatar badge
-                  const initial = ing.name.charAt(0).toUpperCase();
-
-                  return (
-                    <tr
-                      key={ing.ingredient_id}
-                      className={`group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors ${isChecked ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""
-                        }`}
+        {/* ── Main Data Table Card ── */}
+        <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-[#0c101a] shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-[#101626]/50 text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                  <th className="w-10 py-3.5 px-4 text-center">
+                    <button
+                      type="button"
+                      onClick={handleSelectAll}
+                      className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
                     >
-                      {/* Checkbox */}
-                      <td className="py-3.5 px-4 text-center">
-                        <button
-                          type="button"
-                          onClick={() => toggleSelectOne(ing.ingredient_id)}
-                          className="text-slate-300 dark:text-slate-600 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
-                        >
-                          {isChecked ? (
-                            <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      {selectedIds.length > 0 && selectedIds.length === paginatedItems.length ? (
+                        <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
+                    </button>
+                  </th>
+                  <th className="text-left py-3.5 pr-4">INGREDIENT NAME & SKU</th>
+                  <th className="text-left py-3.5 px-3">CATEGORY / STORAGE</th>
+                  <th className="text-left py-3.5 px-3">PURCHASE PACKAGING</th>
+                  <th className="text-right py-3.5 px-3">SUPPLIER PRICE (₱)</th>
+                  <th className="text-center py-3.5 px-3">RECIPE UNIT</th>
+                  <th className="text-right py-3.5 px-3">
+                    <div className="inline-flex items-center gap-1 cursor-help justify-end">
+                      <span>YIELD FACTOR</span>
+                      <Tooltip content="Ratio of purchase unit to recipe yield unit" position="top">
+                        <Info className="w-3 h-3 text-slate-400" />
+                      </Tooltip>
+                    </div>
+                  </th>
+                  <th className="text-right py-3.5 px-4">NORMALIZED COST</th>
+                  <th className="text-center py-3.5 pr-4">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                {paginatedItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-16 text-center text-slate-400 dark:text-slate-500">
+                      <Box className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                      <p className="font-bold text-sm">No raw ingredients matched your criteria.</p>
+                      <p className="text-xs mt-1">Try clearing your search query or reset category filter.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedItems.map((ing) => {
+                    const isPriced = ing.purchase_price > 0;
+                    const normalized = ing.yield_factor > 0 && isPriced ? ing.purchase_price / ing.yield_factor : 0;
+                    const category = inferCategory(ing.name);
+                    const sku = ing.sku || generateSku(ing.name, ing.ingredient_id);
+                    const isChecked = selectedIds.includes(ing.ingredient_id);
+
+                    // Extract first letter for avatar badge
+                    const initial = ing.name.charAt(0).toUpperCase();
+
+                    return (
+                      <tr
+                        key={ing.ingredient_id}
+                        className={`group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors ${isChecked ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""
+                          }`}
+                      >
+                        {/* Checkbox */}
+                        <td className="py-3.5 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => toggleSelectOne(ing.ingredient_id)}
+                            className="text-slate-300 dark:text-slate-600 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
+                          >
+                            {isChecked ? (
+                              <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            ) : (
+                              <Square className="w-4 h-4" />
+                            )}
+                          </button>
+                        </td>
+
+                        {/* Ingredient Name & SKU */}
+                        <td className="py-3.5 pr-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
+                              {initial}
+                            </div>
+                            <div>
+                              <span className="font-bold text-slate-900 dark:text-white text-sm block">
+                                {ing.name}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-mono">
+                                ID #{ing.ingredient_id} • SKU: {sku}{ing.supplier ? ` • ${ing.supplier}` : ""}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Category / Storage */}
+                        <td className="py-3.5 px-3">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold border ${getCategoryBadgeClass(
+                              category
+                            )}`}
+                          >
+                            {category}
+                          </span>
+                        </td>
+
+                        {/* Purchase Packaging */}
+                        <td className="py-3.5 px-3">
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                                <Package className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                {ing.package_type || "Package"}
+                              </span>
+                            </div>
+                            <span className="text-[11px] text-slate-400 dark:text-slate-400 font-medium mt-0.5">
+                              Net: <strong className="text-slate-700 dark:text-slate-200 font-semibold">{ing.net_quantity ?? 1} {ing.net_unit ?? "kg"}</strong>
+                              {isPriced && (ing.net_quantity ?? 0) > 0 && (
+                                <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">
+                                  ({fmt(ing.purchase_price / (ing.net_quantity ?? 1))}/{ing.net_unit ?? "kg"})
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Supplier Price (₱) */}
+                        <td className="py-3.5 px-3 text-right">
+                          {isPriced ? (
+                            <span className="font-extrabold text-sm text-slate-900 dark:text-white tabular-nums tracking-tight">
+                              {fmt(ing.purchase_price)}
+                            </span>
                           ) : (
-                            <Square className="w-4 h-4" />
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>Not Set</span>
+                            </span>
                           )}
-                        </button>
-                      </td>
+                        </td>
 
-                      {/* Ingredient Name & SKU */}
-                      <td className="py-3.5 pr-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
-                            {initial}
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 dark:text-white text-sm block">
-                              {ing.name}
+                        {/* Recipe Unit */}
+                        <td className="py-3.5 px-3 text-center">
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                              {ing.recipe_unit}
                             </span>
-                            <span className="text-[11px] text-slate-400 font-mono">
-                              ID #{ing.ingredient_id} • SKU: {sku}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Category / Storage */}
-                      <td className="py-3.5 px-3">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-semibold border ${getCategoryBadgeClass(
-                            category
-                          )}`}
-                        >
-                          {category}
-                        </span>
-                      </td>
-
-                      {/* Purchase Packaging */}
-                      <td className="py-3.5 px-3">
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
-                              <Package className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                              {ing.package_type || "Package"}
-                            </span>
-                          </div>
-                          <span className="text-[11px] text-slate-400 dark:text-slate-400 font-medium mt-0.5">
-                            Net: <strong className="text-slate-700 dark:text-slate-200 font-semibold">{ing.net_quantity ?? 1} {ing.net_unit ?? "kg"}</strong>
-                            {isPriced && (ing.net_quantity ?? 0) > 0 && (
-                              <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">
-                                ({fmt(ing.purchase_price / (ing.net_quantity ?? 1))}/{ing.net_unit ?? "kg"})
+                            {ing.conversions && ing.conversions.length > 1 && (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 cursor-help"
+                                title={`Mapped units: ${ing.conversions.map((c) => `${c.recipe_unit} (${c.yield_factor})`).join(", ")}`}
+                              >
+                                +{ing.conversions.length - 1} units
                               </span>
                             )}
-                          </span>
-                        </div>
-                      </td>
+                          </div>
+                        </td>
 
-                      {/* Supplier Price (₱) */}
-                      <td className="py-3.5 px-3 text-right">
-                        {isPriced ? (
-                          <span className="font-extrabold text-sm text-slate-900 dark:text-white tabular-nums tracking-tight">
-                            {fmt(ing.purchase_price)}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/40">
-                            <AlertTriangle className="w-3 h-3" />
-                            <span>Not Set</span>
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Recipe Unit */}
-                      <td className="py-3.5 px-3 text-center">
-                        <div className="flex flex-col items-center gap-0.5">
-                          <span className="font-semibold text-slate-800 dark:text-slate-200">
-                            {ing.recipe_unit}
-                          </span>
-                          {ing.conversions && ing.conversions.length > 1 && (
-                            <span
-                              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 cursor-help"
-                              title={`Mapped units: ${ing.conversions.map((c) => `${c.recipe_unit} (${c.yield_factor})`).join(", ")}`}
-                            >
-                              +{ing.conversions.length - 1} units
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Yield Factor */}
-                      <td className="py-3.5 px-3 text-right tabular-nums">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {ing.yield_factor.toFixed(2)}{" "}
-                          <span className="text-[11px] text-slate-400 font-normal">
-                            {ing.recipe_unit}s/{ing.package_type || "pack"}
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-slate-400 block font-normal">
-                          1 {ing.package_type || "pack"} yields {ing.yield_factor.toFixed(2)} {ing.recipe_unit}s
-                        </span>
-                      </td>
-
-                      {/* Normalized Cost */}
-                      <td className="py-3.5 px-4 text-right tabular-nums">
-                        {isPriced ? (
-                          <div>
-                            <span className="font-black text-sm text-emerald-700 dark:text-emerald-400">
-                              {fmt(normalized)}
-                            </span>
-                            <span className="text-[11px] text-slate-400 font-medium">
-                              {" "}
-                              / {ing.recipe_unit}
+                        {/* Yield Factor */}
+                        <td className="py-3.5 px-3 text-right tabular-nums">
+                          <div className="font-bold text-slate-900 dark:text-white">
+                            {ing.yield_factor.toFixed(2)}{" "}
+                            <span className="text-[11px] text-slate-400 font-normal">
+                              {ing.recipe_unit}s/{ing.package_type || "pack"}
                             </span>
                           </div>
-                        ) : (
-                          <span className="text-slate-400 text-sm font-bold">—</span>
-                        )}
-                      </td>
+                          <span className="text-[10px] text-slate-400 block font-normal">
+                            1 {ing.package_type || "pack"} yields {ing.yield_factor.toFixed(2)} {ing.recipe_unit}s
+                          </span>
+                        </td>
 
-                      {/* Actions */}
-                      <td className="py-3.5 pr-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => openEdit(ing)}
-                            id={`edit-ingredient-${ing.ingredient_id}`}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:scale-110 active:scale-90 transition-all cursor-pointer"
-                            title="Edit Ingredient"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteTarget(ing)}
-                            id={`delete-ingredient-${ing.ingredient_id}`}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:scale-110 active:scale-90 transition-all cursor-pointer"
-                            title="Delete Ingredient"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                        {/* Normalized Cost */}
+                        <td className="py-3.5 px-4 text-right tabular-nums">
+                          {isPriced ? (
+                            <div>
+                              <span className="font-black text-sm text-emerald-700 dark:text-emerald-400">
+                                {fmt(normalized)}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-medium">
+                                {" "}
+                                / {ing.recipe_unit}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 text-sm font-bold">—</span>
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3.5 pr-4 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => openEdit(ing)}
+                              id={`edit-ingredient-${ing.ingredient_id}`}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:scale-110 active:scale-90 transition-all cursor-pointer"
+                              title="Edit Ingredient"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget(ing)}
+                              id={`delete-ingredient-${ing.ingredient_id}`}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:scale-110 active:scale-90 transition-all cursor-pointer"
+                              title="Delete Ingredient"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Table Footer & Selection Actions ── */}
+          <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0e1320] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 flex-wrap">
+              <span>
+                Showing <strong className="text-slate-900 dark:text-white">{Math.min(1, filtered.length)} to {Math.min(currentPage * itemsPerPage, filtered.length)}</strong> of <strong className="text-slate-900 dark:text-white">{filtered.length}</strong> ingredients
+              </span>
+
+              {selectedIds.length > 0 && (
+                <>
+                  <span>|</span>
+                  <span className="font-semibold text-violet-600 dark:text-violet-400">
+                    {selectedIds.length} Selected
+                  </span>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    onClick={() => setBulkModalOpen(true)}
+                    className="font-bold text-slate-700 dark:text-slate-200 hover:text-violet-600 transition-colors cursor-pointer"
+                  >
+                    Bulk Price Update
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedIds([])}
+                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    Clear Selection
+                  </button>
+                </>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
 
-        {/* ── Table Footer & Selection Actions ── */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0e1320] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
-          <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 flex-wrap">
-            <span>
-              Showing <strong className="text-slate-900 dark:text-white">{Math.min(1, filtered.length)} to {Math.min(currentPage * itemsPerPage, filtered.length)}</strong> of <strong className="text-slate-900 dark:text-white">{filtered.length}</strong> ingredients
-            </span>
-
-            {selectedIds.length > 0 && (
-              <>
-                <span>|</span>
-                <span className="font-semibold text-violet-600 dark:text-violet-400">
-                  {selectedIds.length} Selected
-                </span>
-                <span>•</span>
-                <button
-                  type="button"
-                  onClick={() => setBulkModalOpen(true)}
-                  className="font-bold text-slate-700 dark:text-slate-200 hover:text-violet-600 transition-colors cursor-pointer"
-                >
-                  Bulk Price Update
-                </button>
-                <span>•</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedIds([])}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                >
-                  Clear Selection
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Pagination Controls */}
-          <div className="flex items-center gap-1.5 self-end sm:self-auto">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-white dark:hover:bg-slate-800 transition-colors font-semibold"
-            >
-              Previous
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {/* Pagination Controls */}
+            <div className="flex items-center gap-1.5 self-end sm:self-auto">
               <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${currentPage === page
-                  ? "bg-emerald-600 text-white shadow-xs"
-                  : "border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
-                  }`}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-white dark:hover:bg-slate-800 transition-colors font-semibold"
               >
-                {page}
+                Previous
               </button>
-            ))}
 
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-white dark:hover:bg-slate-800 transition-colors font-semibold"
-            >
-              Next
-            </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${currentPage === page
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
+                    }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-white dark:hover:bg-slate-800 transition-colors font-semibold"
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Bottom Status Bar ── */}
-      <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-400 print:hidden">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Auto-synced with Philippine Peso (₱) Cost Engine • FIFO Valuation Enabled</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span>Yield Conversion Documentation</span>
-          <span>•</span>
-          <span>API Integration Status</span>
-          <span>•</span>
-          <span>Build v2.4.9</span>
-        </div>
-      </div>
-
-      {/* ── Add / Edit Ingredient Modal (Luminous Light Edition) ── */}
-      {modalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setModalOpen(false)}
-        >
+        {/* ── Add / Edit Ingredient Modal (Luminous Light Edition) ── */}
+        {modalOpen && (
           <div
-            className="relative z-10 w-full max-w-2xl rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setModalOpen(false)}
           >
-            {/* Modal Header */}
-            <div className="p-6 md:p-8 pb-4 border-b border-slate-100 dark:border-slate-800/80">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
-                    <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>Inventory & Costing</span>
-                  </span>
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    PHP (₱) Active
-                  </span>
+            <div
+              className="relative z-10 w-full max-w-3xl rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="p-6 md:p-8 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span>Inventory & Costing</span>
+                    </span>
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      PHP (₱) Active
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setModalOpen(false)}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                  {editTarget ? "Edit Ingredient" : "Add New Ingredient"}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Configure purchase volume, pricing, and yield factor to determine exact recipe portion costs.
+                </p>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1">
+                {/* Row 1: Name and Category */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1">
+                      <span>INGREDIENT NAME</span> <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="e.g., All-Purpose Flour"
+                      id="ingredient-name"
+                      className={`w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border ${errors.name ? "border-rose-400" : "border-slate-200 dark:border-slate-800"
+                        } text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium`}
+                    />
+                    {errors.name && <p className="text-xs text-rose-500">{errors.name}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                      CATEGORY
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={form.category}
+                        onChange={(e) => setForm({ ...form, category: e.target.value })}
+                        className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer font-medium"
+                      >
+                        {STANDARD_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Supplier and SKU (Harmonized Optional Fields) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        SUPPLIER / BRAND
+                      </label>
+                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-[#182033] px-2 py-0.5 rounded-full">
+                        Optional
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={form.supplier}
+                      onChange={(e) => setForm({ ...form, supplier: e.target.value })}
+                      placeholder="e.g., San Miguel Mills / Metro Mart"
+                      className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        SKU / STORAGE LOCATION
+                      </label>
+                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-[#182033] px-2 py-0.5 rounded-full">
+                        Optional
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={form.sku}
+                      onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                      placeholder="e.g., DRY-BIN-04"
+                      className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
+                    />
+                  </div>
+                </div>
+
+                {/* Section 1: PURCHASE PACKAGING & NET CONTENT */}
+                <div className="pt-2">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                      <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>PURCHASE PACKAGING &amp; NET USABLE CONTENT</span>
+                    </div>
+                    <span className="text-xs text-slate-400">Decouples commercial packaging from net physical mass/volume</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 mt-3.5">
+                    {/* Container Type */}
+                    <div className="sm:col-span-4 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
+                          <span>PACKAGE CONTAINER</span> <span className="text-rose-500">*</span>
+                        </label>
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold">Bulk Type</span>
+                      </div>
+                      <div className="relative">
+                        <select
+                          value={form.packageType}
+                          onChange={(e) => {
+                            const newType = e.target.value;
+                            const formatted = `${newType} (${form.netQuantity} ${form.netUnit})`;
+                            setForm({ ...form, packageType: newType, purchaseUnit: formatted });
+                          }}
+                          id="package-type"
+                          className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
+                        >
+                          {PACKAGE_CONTAINERS.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
+                      </div>
+                      <p className="text-[11px] text-slate-400">e.g. Box, Sack, Tub, Carton</p>
+                    </div>
+
+                    {/* Net Quantity */}
+                    <div className="sm:col-span-4 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
+                          <span>NET QUANTITY</span> <span className="text-rose-500">*</span>
+                        </label>
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Net Mass/Vol</span>
+                      </div>
+                      <input
+                        type="number"
+                        min="0.001"
+                        step="any"
+                        value={form.netQuantity || ""}
+                        placeholder="e.g., 10"
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          const formatted = `${form.packageType} (${val} ${form.netUnit})`;
+                          setForm({ ...form, netQuantity: val, purchaseUnit: formatted });
+                        }}
+                        id="net-quantity"
+                        className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
+                      />
+                      <p className="text-[11px] text-slate-400">e.g., 10 (grams) or 25 (kg)</p>
+                    </div>
+
+                    {/* Net Unit (Secondary UOM) */}
+                    <div className="sm:col-span-4 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
+                          <span>CONTENT UNIT (UOM)</span> <span className="text-rose-500">*</span>
+                        </label>
+                        <span className="text-[10px] text-slate-400 uppercase font-semibold">Standard Unit</span>
+                      </div>
+                      <div className="relative">
+                        <select
+                          value={form.netUnit}
+                          onChange={(e) => {
+                            const newUnit = e.target.value;
+                            const formatted = `${form.packageType} (${form.netQuantity} ${newUnit})`;
+                            setForm({ ...form, netUnit: newUnit, purchaseUnit: formatted });
+                          }}
+                          id="net-unit"
+                          className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
+                        >
+                          {NET_CONTENT_UNITS.map((u) => (
+                            <option key={u.value} value={u.value}>
+                              {u.label}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
+                      </div>
+                      <p className="text-[11px] text-slate-400">Physical measurement</p>
+                    </div>
+                  </div>
+
+                  {/* Purchase Price Row & Live Cost per Net Unit Ribbon */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3.5">
+                    {/* Container Purchase Price */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                          <span>CONTAINER PURCHASE PRICE (₱)</span> <span className="text-rose-500">*</span>
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-medium">Per {form.packageType}</span>
+                      </div>
+                      <div className="flex h-[42px] items-center rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c]">
+                        <span className="h-full px-3 flex items-center justify-center text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-[#182033] border-r border-slate-200 dark:border-slate-800 shrink-0 select-none">
+                          ₱
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={form.purchasePrice || ""}
+                          placeholder="0.00"
+                          onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0 })}
+                          id="purchase-price"
+                          className="min-w-0 flex-1 h-full px-3 text-sm bg-transparent text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span
+                          className="h-full px-3 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-800 shrink-0 whitespace-nowrap"
+                          title={`Cost in Philippine Pesos per ${form.packageType}`}
+                        >
+                          PHP / {form.packageType}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400">Total invoice/purchase price for 1 {form.packageType}</p>
+                    </div>
+
+                    {/* Real-time Net Unit Metric Card (Harmonized & Aligned) */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                          CALCULATED NET UNIT COST
+                        </label>
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Live Rate</span>
+                      </div>
+                      <div className="flex h-[42px] items-center justify-between px-3.5 rounded-xl bg-slate-50/90 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800">
+                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                          Effective Cost:
+                        </span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-base font-black text-emerald-700 dark:text-emerald-400 tabular-nums">
+                            {fmt(calculatedCostPerNetUnit)}
+                          </span>
+                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                            / {form.netUnit}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        Billed packaging: <strong>1 {form.packageType} = {form.netQuantity} {form.netUnit}</strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: RECIPE USAGE & MULTI-UNIT CONVERSIONS (Master-Detail Inline Sub-Grid) */}
+                <div className="pt-2 space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        <Scale className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <span>RECIPE USAGE &amp; MULTI-UNIT CONVERSIONS</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Map this bulk item to infinite recipe unit variations (e.g., cup, grams, tablespoons).
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={handleAutoPopulateConversions}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer shadow-2xs"
+                        title="Auto-calculate common conversions (Cup, Gram, Tablespoon) based on net content"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>Auto-Generate Conversions</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleAddConversionRule}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-600 transition-all cursor-pointer shadow-2xs active:scale-95"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>+ Add Conversion Rule</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sub-grid: Inline Editable Conversion Rules Table */}
+                  <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-[#182033] border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          <th className="py-2.5 px-3.5 text-left">Kitchen Recipe Unit</th>
+                          <th className="py-2.5 px-3 text-left">Yield Factor (Units / {form.packageType})</th>
+                          <th className="py-2.5 px-3 text-right">Normalized Micro-Cost</th>
+                          <th className="py-2.5 px-2 text-center w-12">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                        {form.conversions.map((conv, idx) => {
+                          const microCost =
+                            conv.yield_factor > 0 && form.purchasePrice > 0
+                              ? form.purchasePrice / conv.yield_factor
+                              : 0;
+                          return (
+                            <tr
+                              key={idx}
+                              className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                            >
+                              {/* Recipe Unit */}
+                              <td className="py-2.5 px-3.5">
+                                <div className="flex items-center gap-2">
+                                  <div className="relative">
+                                    <select
+                                      value={conv.recipe_unit}
+                                      onChange={(e) =>
+                                        handleUpdateConversionRule(idx, "recipe_unit", e.target.value)
+                                      }
+                                      className="appearance-none pl-3 pr-8 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs cursor-pointer"
+                                    >
+                                      {RECIPE_UNITS.map((u) => (
+                                        <option key={u.value} value={u.value}>
+                                          {u.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                                  </div>
+                                  {idx === 0 && (
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                                      Primary
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+
+                              {/* Yield Factor */}
+                              <td className="py-2.5 px-3">
+                                <div className="flex items-center gap-1.5 max-w-[200px]">
+                                  <input
+                                    type="number"
+                                    min="0.0001"
+                                    step="any"
+                                    value={conv.yield_factor}
+                                    onChange={(e) =>
+                                      handleUpdateConversionRule(
+                                        idx,
+                                        "yield_factor",
+                                        parseFloat(e.target.value) || 0
+                                      )
+                                    }
+                                    className="w-24 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-bold text-slate-900 dark:text-white tabular-nums text-xs focus:outline-none focus:border-emerald-500"
+                                  />
+                                  <span className="text-slate-400 text-[11px] font-medium">
+                                    {conv.recipe_unit}s
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Normalized Micro-Cost */}
+                              <td className="py-2.5 px-3 text-right">
+                                <div className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                                  {fmt(microCost)}
+                                  <span className="text-[11px] text-slate-400 font-normal">
+                                    {" "}
+                                    / {conv.recipe_unit}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Action: Delete Rule */}
+                              <td className="py-2.5 px-2 text-center">
+                                <button
+                                  type="button"
+                                  disabled={form.conversions.length <= 1}
+                                  onClick={() => handleDeleteConversionRule(idx)}
+                                  className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                                  title={
+                                    form.conversions.length <= 1
+                                      ? "At least one conversion rule is required"
+                                      : "Delete conversion rule"
+                                  }
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {errors.conversions && (
+                    <p className="text-xs text-rose-500 font-medium">{errors.conversions}</p>
+                  )}
+
+                  {/* Quick Presets */}
+                  <div className="pt-1">
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                        ⚡ Quick Package &amp; Culinary Conversion Presets:
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PACKAGE_CONTENT_PRESETS.map((p) => (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() => {
+                            const autoCup = calculateAutoYield(p.netQuantity, p.netUnit, "Cup", p.label);
+                            const autoGram = calculateAutoYield(p.netQuantity, p.netUnit, "Gram", p.label);
+                            const autoTbsp = calculateAutoYield(p.netQuantity, p.netUnit, "Tablespoon", p.label);
+                            setForm({
+                              ...form,
+                              packageType: p.packageType,
+                              netQuantity: p.netQuantity,
+                              netUnit: p.netUnit,
+                              recipeUnit: p.recipeUnit,
+                              yieldFactor: p.yieldFactor,
+                              purchaseUnit: `${p.packageType} (${p.netQuantity} ${p.netUnit})`,
+                              category: p.category || form.category,
+                              conversions: [
+                                { recipe_unit: p.recipeUnit, yield_factor: p.yieldFactor },
+                                { recipe_unit: "Gram", yield_factor: autoGram },
+                                { recipe_unit: "Tablespoon", yield_factor: autoTbsp },
+                              ],
+                            });
+                          }}
+                          className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 dark:bg-[#141b2c] dark:hover:bg-emerald-950/70 dark:text-slate-300 dark:hover:text-emerald-300 transition-colors border border-slate-200 dark:border-slate-800 cursor-pointer"
+                          title={p.hint}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Calculated Recipe Cost Box */}
+                <div className="rounded-2xl p-4.5 bg-slate-50 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black text-sm flex items-center justify-center shadow-md shadow-emerald-600/20">
+                      ₱
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+                        Calculated Recipe Cost
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {form.conversions.length} active conversion rule(s) mapped to recipe builders
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-left sm:text-right">
+                    <div className="text-2xl font-black tracking-tight text-emerald-700 dark:text-emerald-400 tabular-nums">
+                      {fmt(calculatedModalCost)}
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-1">
+                        / {form.recipeUnit || "unit"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                      {form.yieldFactor > 0
+                        ? `Primary: 1 ${form.packageType} (${form.netQuantity} ${form.netUnit}) = ${form.yieldFactor} ${form.recipeUnit}s`
+                        : ""}
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Modal Actions Footer */}
+              <div className="p-6 md:p-8 pt-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-[#0e1320] flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  disabled={saving}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 active:scale-[0.98] transition-all shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+
+                {!editTarget && (
+                  <button
+                    type="button"
+                    onClick={() => handleSave(true)}
+                    disabled={saving}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 active:scale-[0.98] active:translate-y-0.5 transition-all shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {saving && <Spinner className="w-3.5 h-3.5 text-emerald-600 animate-spin" />}
+                    <span>{saving ? "Saving..." : "Save & Add Another"}</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => handleSave(false)}
+                  disabled={saving}
+                  id="save-ingredient-btn"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] active:translate-y-0.5 shadow-md hover:shadow-lg shadow-emerald-600/25 active:shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {saving ? (
+                    <>
+                      <Spinner className="w-4 h-4 text-white animate-spin" />
+                      <span>{editTarget ? "Updating..." : "Adding Ingredient..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4" />
+                      <span>{editTarget ? "Save Changes" : "+ Add Ingredient"}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Bulk Price Update Modal ── */}
+        {bulkModalOpen && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setBulkModalOpen(false)}
+          >
+            <div
+              className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-[#0c1f1a] text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Bulk Price Adjustment
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Apply percentage change across {selectedIds.length > 0 ? selectedIds.length : pricedCount} items
+                    </p>
+                  </div>
                 </div>
                 <button
-                  onClick={() => setModalOpen(false)}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  onClick={() => setBulkModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                {editTarget ? "Edit Ingredient" : "Add New Ingredient"}
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Configure purchase volume, pricing, and yield factor to determine exact recipe portion costs.
-              </p>
-            </div>
+              <div className="space-y-4 text-xs">
+                <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Adjust supplier purchase prices to simulate inflation, supplier contract updates, or currency exchange variations:
+                </p>
 
-            {/* Modal Scrollable Form Body */}
-            <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1 bg-white dark:bg-[#0c101a]">
-              {/* Row 1: Name and Category */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2 space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1">
-                    <span>INGREDIENT NAME</span> <span className="text-rose-500">*</span>
-                  </label>
+                <div className="flex items-center gap-3">
                   <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="e.g., All-Purpose Flour"
-                    id="ingredient-name"
-                    className={`w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border ${errors.name ? "border-rose-400" : "border-slate-200 dark:border-slate-800"
-                      } text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium`}
+                    type="number"
+                    step="0.5"
+                    value={bulkAdjustmentPct}
+                    onChange={(e) => setBulkAdjustmentPct(parseFloat(e.target.value) || 0)}
+                    className="w-24 px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-center tabular-nums"
                   />
-                  {errors.name && <p className="text-xs text-rose-500">{errors.name}</p>}
+                  <span className="font-bold text-slate-700 dark:text-slate-300">% Adjustment</span>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                    CATEGORY
-                  </label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer font-medium"
-                  >
-                    {STANDARD_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Row 2: Supplier and SKU */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                    Supplier / Brand (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={form.supplier}
-                    onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-                    placeholder="e.g., San Miguel Mills / Metro Mart"
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                    SKU / Storage Location (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={form.sku}
-                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                    placeholder="e.g., DRY-BIN-04"
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Section 1: PURCHASE PACKAGING & NET CONTENT */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                    <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span>PURCHASE PACKAGING & NET USABLE CONTENT</span>
-                  </div>
-                  <span className="text-xs text-slate-400">Decouples commercial packaging from net physical mass/volume</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 mt-3.5">
-                  {/* Container Type */}
-                  <div className="sm:col-span-4 space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                      <span>PACKAGE CONTAINER</span> <span className="text-rose-500">*</span>
-                    </label>
-                    <select
-                      value={form.packageType}
-                      onChange={(e) => {
-                        const newType = e.target.value;
-                        const formatted = `${newType} (${form.netQuantity} ${form.netUnit})`;
-                        setForm({ ...form, packageType: newType, purchaseUnit: formatted });
-                      }}
-                      id="package-type"
-                      className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
-                    >
-                      {PACKAGE_CONTAINERS.map((c) => (
-                        <option key={c} value={c}>
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-[11px] text-slate-400">e.g. Box, Sack, Tub, Carton</p>
-                  </div>
-
-                  {/* Net Quantity */}
-                  <div className="sm:col-span-4 space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                      <span>NET QUANTITY <span className="text-rose-500">*</span></span>
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Net Mass/Vol</span>
-                    </label>
-                    <input
-                      type="number"
-                      min="0.001"
-                      step="any"
-                      value={form.netQuantity || ""}
-                      placeholder="e.g., 10"
-                      onChange={(e) => {
-                        const val = parseFloat(e.target.value) || 0;
-                        const formatted = `${form.packageType} (${val} ${form.netUnit})`;
-                        setForm({ ...form, netQuantity: val, purchaseUnit: formatted });
-                      }}
-                      id="net-quantity"
-                      className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
-                    />
-                    <p className="text-[11px] text-slate-400">e.g., 10 (grams) or 25 (kg)</p>
-                  </div>
-
-                  {/* Net Unit (Secondary UOM) */}
-                  <div className="sm:col-span-4 space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                      <span>CONTENT UNIT (UOM)</span> <span className="text-rose-500">*</span>
-                    </label>
-                    <select
-                      value={form.netUnit}
-                      onChange={(e) => {
-                        const newUnit = e.target.value;
-                        const formatted = `${form.packageType} (${form.netQuantity} ${newUnit})`;
-                        setForm({ ...form, netUnit: newUnit, purchaseUnit: formatted });
-                      }}
-                      id="net-unit"
-                      className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
-                    >
-                      {NET_CONTENT_UNITS.map((u) => (
-                        <option key={u.value} value={u.value}>
-                          {u.label}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-[11px] text-slate-400">Physical measurement</p>
-                  </div>
-                </div>
-
-                {/* Purchase Price Row & Live Cost per Net Unit Ribbon */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3.5">
-                  {/* Container Purchase Price */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
-                        <span>CONTAINER PURCHASE PRICE (₱)</span> <span className="text-rose-500">*</span>
-                      </label>
-                      <span className="text-[10px] text-slate-400 font-medium">Per {form.packageType}</span>
-                    </div>
-                    <div className="flex h-[42px] items-center rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c]">
-                      <span className="h-full px-3 flex items-center justify-center text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-[#182033] border-r border-slate-200 dark:border-slate-800 shrink-0 select-none">
-                        ₱
-                      </span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={form.purchasePrice || ""}
-                        placeholder="0.00"
-                        onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0 })}
-                        id="purchase-price"
-                        className="min-w-0 flex-1 h-full px-3 text-sm bg-transparent text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <span
-                        className="h-full px-3 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-800 shrink-0 whitespace-nowrap"
-                        title={`Cost in Philippine Pesos per ${form.packageType}`}
-                      >
-                        PHP / {form.packageType}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">Total invoice/purchase price for 1 {form.packageType}</p>
-                  </div>
-
-                  {/* Real-time Net Unit Metric Card (Harmonized & Aligned) */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                        CALCULATED NET UNIT COST
-                      </label>
-                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Live Rate</span>
-                    </div>
-                    <div className="flex h-[42px] items-center justify-between px-3.5 rounded-xl bg-slate-50/90 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800">
-                      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                        Effective Cost:
-                      </span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-base font-black text-emerald-700 dark:text-emerald-400 tabular-nums">
-                          {fmt(calculatedCostPerNetUnit)}
-                        </span>
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                          / {form.netUnit}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                      Billed packaging: <strong>1 {form.packageType} = {form.netQuantity} {form.netUnit}</strong>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 2: RECIPE USAGE & MULTI-UNIT CONVERSIONS (Master-Detail Inline Sub-Grid) */}
-              <div className="pt-2 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
-                  <div>
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                      <Scale className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      <span>RECIPE USAGE &amp; MULTI-UNIT CONVERSIONS</span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Map this bulk item to infinite recipe unit variations (e.g., cup, grams, tablespoons).
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {[2, 5, 8, 10, -5].map((pct) => (
                     <button
+                      key={pct}
                       type="button"
-                      onClick={handleAutoPopulateConversions}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer shadow-2xs"
-                      title="Auto-calculate common conversions (Cup, Gram, Tablespoon) based on net content"
+                      onClick={() => setBulkAdjustmentPct(pct)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#182033] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:border-violet-400 transition-colors"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>Auto-Generate Conversions</span>
+                      {pct > 0 ? `+${pct}%` : `${pct}%`}
                     </button>
-                    <button
-                      type="button"
-                      onClick={handleAddConversionRule}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-600 transition-all cursor-pointer shadow-2xs active:scale-95"
-                    >
-                      <Plus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>+ Add Conversion Rule</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Sub-grid: Inline Editable Conversion Rules Table */}
-                <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="bg-slate-50 dark:bg-[#182033] border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        <th className="py-2.5 px-3.5 text-left">Kitchen Recipe Unit</th>
-                        <th className="py-2.5 px-3 text-left">Yield Factor (Units / {form.packageType})</th>
-                        <th className="py-2.5 px-3 text-right">Normalized Micro-Cost</th>
-                        <th className="py-2.5 px-2 text-center w-12">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                      {form.conversions.map((conv, idx) => {
-                        const microCost =
-                          conv.yield_factor > 0 && form.purchasePrice > 0
-                            ? form.purchasePrice / conv.yield_factor
-                            : 0;
-                        return (
-                          <tr
-                            key={idx}
-                            className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
-                          >
-                            {/* Recipe Unit */}
-                            <td className="py-2.5 px-3.5">
-                              <div className="flex items-center gap-2">
-                                <select
-                                  value={conv.recipe_unit}
-                                  onChange={(e) =>
-                                    handleUpdateConversionRule(idx, "recipe_unit", e.target.value)
-                                  }
-                                  className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs cursor-pointer"
-                                >
-                                  {RECIPE_UNITS.map((u) => (
-                                    <option key={u.value} value={u.value}>
-                                      {u.label}
-                                    </option>
-                                  ))}
-                                </select>
-                                {idx === 0 && (
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                                    Primary
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-
-                            {/* Yield Factor */}
-                            <td className="py-2.5 px-3">
-                              <div className="flex items-center gap-1.5 max-w-[200px]">
-                                <input
-                                  type="number"
-                                  min="0.0001"
-                                  step="any"
-                                  value={conv.yield_factor}
-                                  onChange={(e) =>
-                                    handleUpdateConversionRule(
-                                      idx,
-                                      "yield_factor",
-                                      parseFloat(e.target.value) || 0
-                                    )
-                                  }
-                                  className="w-24 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-bold text-slate-900 dark:text-white tabular-nums text-xs focus:outline-none focus:border-emerald-500"
-                                />
-                                <span className="text-slate-400 text-[11px] font-medium">
-                                  {conv.recipe_unit}s
-                                </span>
-                              </div>
-                            </td>
-
-                            {/* Normalized Micro-Cost */}
-                            <td className="py-2.5 px-3 text-right">
-                              <div className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                                {fmt(microCost)}
-                                <span className="text-[11px] text-slate-400 font-normal">
-                                  {" "}
-                                  / {conv.recipe_unit}
-                                </span>
-                              </div>
-                            </td>
-
-                            {/* Action: Delete Rule */}
-                            <td className="py-2.5 px-2 text-center">
-                              <button
-                                type="button"
-                                disabled={form.conversions.length <= 1}
-                                onClick={() => handleDeleteConversionRule(idx)}
-                                className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
-                                title={
-                                  form.conversions.length <= 1
-                                    ? "At least one conversion rule is required"
-                                    : "Delete conversion rule"
-                                }
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                {errors.conversions && (
-                  <p className="text-xs text-rose-500 font-medium">{errors.conversions}</p>
-                )}
-
-                {/* Quick Presets */}
-                <div className="pt-1">
-                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
-                    <span className="font-bold text-slate-700 dark:text-slate-300">
-                      ⚡ Quick Package &amp; Culinary Conversion Presets:
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {PACKAGE_CONTENT_PRESETS.map((p) => (
-                      <button
-                        key={p.label}
-                        type="button"
-                        onClick={() => {
-                          const autoCup = calculateAutoYield(p.netQuantity, p.netUnit, "Cup", p.label);
-                          const autoGram = calculateAutoYield(p.netQuantity, p.netUnit, "Gram", p.label);
-                          const autoTbsp = calculateAutoYield(p.netQuantity, p.netUnit, "Tablespoon", p.label);
-                          setForm({
-                            ...form,
-                            packageType: p.packageType,
-                            netQuantity: p.netQuantity,
-                            netUnit: p.netUnit,
-                            recipeUnit: p.recipeUnit,
-                            yieldFactor: p.yieldFactor,
-                            purchaseUnit: `${p.packageType} (${p.netQuantity} ${p.netUnit})`,
-                            category: p.category || form.category,
-                            conversions: [
-                              { recipe_unit: p.recipeUnit, yield_factor: p.yieldFactor },
-                              { recipe_unit: "Gram", yield_factor: autoGram },
-                              { recipe_unit: "Tablespoon", yield_factor: autoTbsp },
-                            ],
-                          });
-                        }}
-                        className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 dark:bg-[#141b2c] dark:hover:bg-emerald-950/70 dark:text-slate-300 dark:hover:text-emerald-300 transition-colors border border-slate-200 dark:border-slate-800 cursor-pointer"
-                        title={p.hint}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Calculated Recipe Cost Box */}
-              <div className="rounded-2xl p-4.5 bg-slate-50 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black text-sm flex items-center justify-center shadow-md shadow-emerald-600/20">
-                    ₱
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">
-                      Calculated Recipe Cost
-                    </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      {form.conversions.length} active conversion rule(s) mapped to recipe builders
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-left sm:text-right">
-                  <div className="text-2xl font-black tracking-tight text-emerald-700 dark:text-emerald-400 tabular-nums">
-                    {fmt(calculatedModalCost)}
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-1">
-                      / {form.recipeUnit || "unit"}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                    {form.yieldFactor > 0
-                      ? `Primary: 1 ${form.packageType} (${form.netQuantity} ${form.netUnit}) = ${form.yieldFactor} ${form.recipeUnit}s`
-                      : ""}
-                  </p>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Modal Actions Footer */}
-            <div className="p-6 md:p-8 pt-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-[#0e1320] flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                disabled={saving}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 active:scale-[0.98] transition-all shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-
-              {!editTarget && (
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => handleSave(true)}
-                  disabled={saving}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 active:scale-[0.98] active:translate-y-0.5 transition-all shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setBulkModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
                 >
-                  {saving && <Spinner className="w-3.5 h-3.5 text-emerald-600 animate-spin" />}
-                  <span>{saving ? "Saving..." : "Save & Add Another"}</span>
+                  Cancel
                 </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => handleSave(false)}
-                disabled={saving}
-                id="save-ingredient-btn"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] active:translate-y-0.5 shadow-md hover:shadow-lg shadow-emerald-600/25 active:shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {saving ? (
-                  <>
-                    <Spinner className="w-4 h-4 text-white animate-spin" />
-                    <span>{editTarget ? "Updating..." : "Adding Ingredient..."}</span>
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4" />
-                    <span>{editTarget ? "Save Changes" : "+ Add Ingredient"}</span>
-                  </>
-                )}
-              </button>
+                <button
+                  type="button"
+                  onClick={handleBulkUpdate}
+                  disabled={saving}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                >
+                  Apply Updates
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── Bulk Price Update Modal ── */}
-      {bulkModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setBulkModalOpen(false)}
-        >
+        {/* ── Delete Confirmation Modal ── */}
+        {deleteTarget && (
           <div
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={() => setDeleteTarget(null)}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-[#0c1f1a] text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                  <SlidersHorizontal className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Bulk Price Adjustment
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Apply percentage change across {selectedIds.length > 0 ? selectedIds.length : pricedCount} items
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setBulkModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                Adjust supplier purchase prices to simulate inflation, supplier contract updates, or currency exchange variations:
-              </p>
-
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  step="0.5"
-                  value={bulkAdjustmentPct}
-                  onChange={(e) => setBulkAdjustmentPct(parseFloat(e.target.value) || 0)}
-                  className="w-24 px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-center tabular-nums"
-                />
-                <span className="font-bold text-slate-700 dark:text-slate-300">% Adjustment</span>
+            <div
+              className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                <Trash2 className="w-6 h-6" />
               </div>
 
-              <div className="flex flex-wrap gap-2 pt-1">
-                {[2, 5, 8, 10, -5].map((pct) => (
-                  <button
-                    key={pct}
-                    type="button"
-                    onClick={() => setBulkAdjustmentPct(pct)}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#182033] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:border-violet-400 transition-colors"
-                  >
-                    {pct > 0 ? `+${pct}%` : `${pct}%`}
-                  </button>
-                ))}
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Delete Ingredient
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                  Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{deleteTarget.name}</strong>? This will remove it from any recipe formulas currently referencing it.
+                </p>
               </div>
-            </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setBulkModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleBulkUpdate}
-                disabled={saving}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
-              >
-                Apply Updates
-              </button>
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  id="confirm-delete-btn"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 shadow-sm transition-colors cursor-pointer"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ── Delete Confirmation Modal ── */}
-      {deleteTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setDeleteTarget(null)}
-        >
-          <div
-            className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-              <Trash2 className="w-6 h-6" />
-            </div>
-
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                Delete Ingredient
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{deleteTarget.name}</strong>? This will remove it from any recipe formulas currently referencing it.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                id="confirm-delete-btn"
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 shadow-sm transition-colors cursor-pointer"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

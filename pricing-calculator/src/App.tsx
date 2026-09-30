@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Footer } from "@/components/Footer";
 import Dashboard from "@/pages/Dashboard";
 import Ingredients from "@/pages/Ingredients";
+import Inventory from "@/pages/Inventory";
 import Recipes from "@/pages/Recipes";
 import RecipeBuilder from "@/pages/RecipeBuilder";
 import Settings from "@/pages/Settings";
@@ -20,6 +21,7 @@ export default function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/ingredients" element={<Ingredients />} />
+                <Route path="/inventory" element={<Inventory />} />
                 <Route path="/recipes" element={<Recipes />} />
                 <Route path="/recipes/:id" element={<RecipeBuilder />} />
                 <Route path="/settings" element={<Settings />} />

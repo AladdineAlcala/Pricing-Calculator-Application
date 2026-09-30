@@ -24,6 +24,10 @@ export interface Ingredient {
   package_type?: string;
   net_quantity?: number;
   net_unit?: string;
+  current_stock_qty?: number;
+  reorder_threshold?: number;
+  supplier?: string | null;
+  sku?: string | null;
   conversions?: IngredientConversion[];
 }
 
@@ -36,6 +40,10 @@ export interface IngredientInput {
   package_type: string;
   net_quantity: number;
   net_unit: string;
+  current_stock_qty?: number;
+  reorder_threshold?: number;
+  supplier?: string | null;
+  sku?: string | null;
   conversions?: IngredientConversionInput[];
 }
 
@@ -155,3 +163,57 @@ export const exportDataCsv = (recipe_id: number) =>
   invoke<string>("export_data_csv", { recipeId: recipe_id });
 export const backupDatabase = (backup_path: string) =>
   invoke<string>("backup_database", { backupPath: backup_path });
+
+// ── Perpetual Inventory & LRC Pricing ─────────────────────────────────────────
+
+export interface ReceiveInventoryPayload {
+  ingredient_id: number;
+  added_qty: number;
+  new_invoice_price: number;
+}
+
+export interface InventoryLedgerItem {
+  ingredient_id: number;
+  name: string;
+  purchase_unit: string;
+  purchase_price: number;
+  current_stock_qty: number;
+  reorder_threshold: number;
+  total_value: number;
+  is_low_stock: boolean;
+}
+
+export interface StockDeficit {
+  ingredient_name: string;
+  required_bulk_qty: number;
+  current_bulk_qty: number;
+  deficit_qty: number;
+  unit: string;
+}
+
+export interface ProduceBatchPayload {
+  recipe_id: number;
+  batches: number;
+}
+
+export interface ProduceBatchSuccess {
+  recipe_id: number;
+  recipe_name: string;
+  batches_produced: number;
+  timestamp: string;
+}
+
+export interface ProductionError {
+  message: string;
+  deficits?: StockDeficit[];
+}
+
+export const receiveInventory = (payload: ReceiveInventoryPayload) =>
+  invoke<InventoryLedgerItem>("receive_inventory", { payload });
+
+export const getInventoryLedger = () =>
+  invoke<InventoryLedgerItem[]>("get_inventory_ledger");
+
+export const produceBatchWithValidation = (payload: ProduceBatchPayload) =>
+  invoke<ProduceBatchSuccess>("produce_batch_with_validation", { payload });
+

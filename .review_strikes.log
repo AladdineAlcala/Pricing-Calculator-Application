@@ -1,0 +1,5 @@
+# Code Review Strikes Log
+STRIKES: 0
+LAST_REVIEW: 2026-09-29T22:54:15+08:00
+STATUS: APPROVED
+NOTES: Successfully implemented and verified end-to-end database persistence for Supplier/Brand and SKU / Storage Location. Added supplier TEXT and sku TEXT columns and safe migrations in db.rs, updated Ingredient and IngredientInput in models.rs, updated get_ingredients, create_ingredient, and update_ingredient in commands.rs, and updated TypeScript interfaces in api.ts. Redesigned Add/Edit Ingredient modal in Ingredients.tsx to max-w-3xl, standardized inputs to h-[42px], replaced browser dropdown arrows with balanced ChevronDown indicators, and labeled optional fields with clean pill badges. Validated with cargo check --tests (zero errors), npm run build (zero errors), and 13 of 13 Playwright E2E tests passing.

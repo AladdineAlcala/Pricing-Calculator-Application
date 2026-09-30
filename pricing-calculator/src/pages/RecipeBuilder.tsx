@@ -40,7 +40,14 @@ import {
   type RecipeCostResult,
   type Ingredient,
   type RecipeInput,
+  type ProduceBatchSuccess,
+  type ProductionError,
+  type StockDeficit,
 } from "@/lib/api";
+import { ProductionTriggerPanel } from "@/components/ProductionTriggerPanel";
+import { StockDeficitModal } from "@/components/StockDeficitModal";
+import { ReceiveDeliveryModal } from "@/components/ReceiveDeliveryModal";
+import { Header } from "@/components/Header";
 import { Spinner, Tooltip } from "@/components/ui";
 import { useApp } from "@/context/AppContext";
 
@@ -113,6 +120,11 @@ export default function RecipeBuilder() {
   const [result, setResult] = useState<RecipeCostResult | null>(null);
   const [allIngredients, setAllIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const unpricedCount = useMemo(
+    () => allIngredients.filter((i) => i.purchase_price <= 0).length,
+    [allIngredients]
+  );
   const [saving, setSaving] = useState(false);
   const [committedFeedback, setCommittedFeedback] = useState(false);
   const [alertDismissed, setAlertDismissed] = useState(false);
@@ -136,6 +148,13 @@ export default function RecipeBuilder() {
   const [addModalLoading, setAddModalLoading] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Production Execution & Stock Deficit Modal State
+  const [deficitModalOpen, setDeficitModalOpen] = useState(false);
+  const [activeDeficits, setActiveDeficits] = useState<StockDeficit[]>([]);
+  const [failedBatches, setFailedBatches] = useState<number>(1);
+  const [receiveDeliveryModalOpen, setReceiveDeliveryModalOpen] = useState(false);
+  const [preselectedReceiveIngId, setPreselectedReceiveIngId] = useState<number | null>(null);
+
   // Floating Toast Notification
   const [toast, setToast] = useState<{
     show: boolean;
@@ -150,6 +169,41 @@ export default function RecipeBuilder() {
     },
     []
   );
+
+  const handleProductionSuccess = (res: ProduceBatchSuccess) => {
+    showToast(
+      "Batch Production Recorded",
+      `Successfully produced ${res.batches_produced} batch(es) of "${res.recipe_name}". Perpetual inventory was deducted.`,
+      "success"
+    );
+    load();
+  };
+
+  const handleProductionError = (err: ProductionError) => {
+    if (err.deficits && err.deficits.length > 0) {
+      setActiveDeficits(err.deficits);
+      setDeficitModalOpen(true);
+    } else {
+      showToast(
+        "Production Interrupted",
+        err.message || "Failed to execute production run.",
+        "error"
+      );
+    }
+  };
+
+  const handleQuickReceiveFromDeficit = (ingredientName: string) => {
+    const match = allIngredients.find(
+      (i) => i.name.toLowerCase() === ingredientName.toLowerCase()
+    );
+    if (match) {
+      setPreselectedReceiveIngId(match.ingredient_id);
+      setReceiveDeliveryModalOpen(true);
+    } else {
+      setPreselectedReceiveIngId(null);
+      setReceiveDeliveryModalOpen(true);
+    }
+  };
 
   useEffect(() => {
     if (toast?.show) {
@@ -593,22 +647,28 @@ export default function RecipeBuilder() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Spinner className="w-10 h-10 text-emerald-600" />
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+        <Header unpricedCount={unpricedCount} />
+        <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+          <Spinner className="w-10 h-10 text-emerald-600" />
+        </div>
       </div>
     );
   }
 
   if (!result) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
-        <p className="text-slate-500 dark:text-slate-400 font-medium">Recipe formula not found.</p>
-        <button
-          onClick={() => navigate("/recipes")}
-          className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline"
-        >
-          ← Return to Recipe Master
-        </button>
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+        <Header unpricedCount={unpricedCount} />
+        <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Recipe formula not found.</p>
+          <button
+            onClick={() => navigate("/recipes")}
+            className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+          >
+            ← Return to Recipe Master
+          </button>
+        </div>
       </div>
     );
   }
@@ -648,8 +708,10 @@ export default function RecipeBuilder() {
   const skuCode = `SKU-BNB0${r.recipe_id}`;
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 print:p-4" ref={printRef}>
-      {/* ── Top Breadcrumb & Status Bar ── */}
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+      <Header unpricedCount={unpricedCount} />
+      <div className="flex-1 p-6 md:p-8 space-y-6 print:p-4 w-full" ref={printRef}>
+        {/* ── Top Breadcrumb & Status Bar ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-slate-200/80 dark:border-slate-800/80 pb-4 print:hidden">
         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 flex-wrap">
           <button
@@ -812,6 +874,17 @@ export default function RecipeBuilder() {
           </div>
         </div>
       )}
+
+      {/* ── Production Execution Ribbon ── */}
+      <div className="print:hidden">
+        <ProductionTriggerPanel
+          recipeId={recipeId}
+          recipeName={r.name}
+          onSuccess={handleProductionSuccess}
+          onError={handleProductionError}
+          disabled={result.line_items.length === 0}
+        />
+      </div>
 
       {/* Print header */}
       <div className="hidden print:block mb-6 border-b pb-4">
@@ -2037,6 +2110,32 @@ export default function RecipeBuilder() {
         </div>
       </div>
 
+      {/* ── Stock Deficit Hard Stop Modal ── */}
+      <StockDeficitModal
+        isOpen={deficitModalOpen}
+        onClose={() => setDeficitModalOpen(false)}
+        recipeName={r.name}
+        batches={failedBatches}
+        deficits={activeDeficits}
+        onQuickReceive={handleQuickReceiveFromDeficit}
+      />
+
+      {/* ── Quick Receive Delivery Modal ── */}
+      <ReceiveDeliveryModal
+        isOpen={receiveDeliveryModalOpen}
+        onClose={() => setReceiveDeliveryModalOpen(false)}
+        preselectedIngredientId={preselectedReceiveIngId}
+        onSuccess={async (item) => {
+          await load();
+          setDeficitModalOpen(false);
+          showToast(
+            "Stock Intake Recorded",
+            `Received delivery for ${item.name}. Active LRC price updated to ₱${item.purchase_price.toFixed(2)}.`,
+            "success"
+          );
+        }}
+      />
+
       {/* ── Toast Notification Banner ── */}
       {toast?.show && (
         <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
@@ -2083,6 +2182,7 @@ export default function RecipeBuilder() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
