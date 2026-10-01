@@ -1,6 +1,82 @@
 // Data models / DTOs shared between Rust and frontend via serde_json
 use serde::{Deserialize, Serialize};
 
+// ── v2.0: Centralized Unit Entity ───────────────────────────────────────────
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct Unit {
+    pub unit_id: i64,
+    pub code: String,
+    pub name: String,
+    pub unit_type: String,
+    pub is_base: bool,
+}
+
+// ── v2.0: Ingredient Purchase Entity ────────────────────────────────────────
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct IngredientPurchase {
+    pub purchase_id: i64,
+    pub ingredient_id: i64,
+    #[serde(default)]
+    pub supplier_name: Option<String>,
+    pub package_quantity: f64,
+    pub package_unit_id: i64,
+    pub purchase_price: f64,
+    pub purchase_date: String,
+    #[serde(default = "default_true")]
+    pub is_active: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct IngredientPurchaseInput {
+    #[serde(default)]
+    pub supplier_name: Option<String>,
+    pub package_quantity: f64,
+    pub package_unit_id: i64,
+    pub purchase_price: f64,
+}
+
+// ── v2.0: Cost Calculation DTO ──────────────────────────────────────────────
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[allow(dead_code)]
+pub struct RecipeIngredientCostResult {
+    pub ingredient_id: i64,
+    pub ingredient_name: String,
+    pub recipe_quantity: f64,
+    pub recipe_unit_code: String,
+    pub normalized_quantity: f64,
+    pub base_unit_code: String,
+    pub package_quantity: f64,
+    pub package_unit_code: String,
+    pub purchase_price: f64,
+    pub base_unit_cost: f64,
+    pub ingredient_cost: f64,
+    pub yield_factor: f64,
+}
+
+/// Normalizes a quantity from any unit to the base unit (g, ml, or pcs).
+/// Uses system-level unit conversions (kg→g = 1000, L→ml = 1000, etc.)
+pub fn normalize_to_base_unit(qty: f64, from_unit_code: &str, base_unit_code: &str) -> f64 {
+    let from = from_unit_code.trim().to_lowercase();
+    let base = base_unit_code.trim().to_lowercase();
+    if from == base {
+        return qty;
+    }
+    match (from.as_str(), base.as_str()) {
+        ("kg" | "kilogram" | "kilograms", "g" | "gram" | "grams") => qty * 1000.0,
+        ("oz" | "ounce" | "ounces", "g" | "gram" | "grams") => qty * 28.3495,
+        ("lb" | "pound" | "pounds", "g" | "gram" | "grams") => qty * 453.592,
+        ("l" | "liter" | "liters" | "litre" | "litres", "ml" | "milliliter" | "milliliters") => qty * 1000.0,
+        ("tsp" | "teaspoon" | "teaspoons", "ml" | "milliliter" | "milliliters") => qty * 4.929,
+        ("tbsp" | "tablespoon" | "tablespoons", "ml" | "milliliter" | "milliliters") => qty * 14.787,
+        ("cup" | "cups", "ml" | "milliliter" | "milliliters") => qty * 236.588,
+        _ => qty,
+    }
+}
+
+fn default_true() -> bool {
+    true
+}
+
 fn default_package_type() -> String {
     "Package".to_string()
 }
@@ -17,6 +93,19 @@ pub struct IngredientConversion {
     pub ingredient_id: i64,
     pub recipe_unit: String,
     pub yield_factor: f64,
+    // v2.0: Base-unit conversion engine fields
+    #[serde(default)]
+    pub from_unit_id: Option<i64>,
+    #[serde(default)]
+    pub to_unit_id: Option<i64>,
+    #[serde(default)]
+    pub conversion_factor: Option<f64>,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(default)]
+    pub effective_date: Option<String>,
+    #[serde(default = "default_true")]
+    pub is_active: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -24,6 +113,15 @@ pub struct IngredientConversionInput {
     pub conversion_id: Option<i64>,
     pub recipe_unit: String,
     pub yield_factor: f64,
+    // v2.0: Base-unit conversion engine fields
+    #[serde(default)]
+    pub from_unit_id: Option<i64>,
+    #[serde(default)]
+    pub to_unit_id: Option<i64>,
+    #[serde(default)]
+    pub conversion_factor: Option<f64>,
+    #[serde(default)]
+    pub source: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -50,6 +148,13 @@ pub struct Ingredient {
     pub sku: Option<String>,
     #[serde(default)]
     pub conversions: Vec<IngredientConversion>,
+    // v2.0: Base-unit conversion engine fields
+    #[serde(default)]
+    pub base_unit_id: Option<i64>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub purchases: Vec<IngredientPurchase>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -75,6 +180,13 @@ pub struct IngredientInput {
     pub sku: Option<String>,
     #[serde(default)]
     pub conversions: Vec<IngredientConversionInput>,
+    // v2.0: Base-unit conversion engine fields
+    #[serde(default)]
+    pub base_unit_id: Option<i64>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub purchases: Vec<IngredientPurchaseInput>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -131,6 +243,12 @@ pub struct RecipeIngredient {
     // Computed fields (precision preserved from Rust)
     pub normalized_unit_cost: f64,
     pub line_item_cost: f64,
+    #[serde(default)]
+    pub base_unit_code: Option<String>,
+    #[serde(default)]
+    pub base_unit_cost: Option<f64>,
+    #[serde(default)]
+    pub normalized_quantity: Option<f64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -442,5 +560,56 @@ mod tests {
         // Strictly above threshold -> Normal (false)
         assert!(!(5.01f64 <= reorder_threshold));
         assert!(!(10.00f64 <= reorder_threshold));
+    }
+
+    #[test]
+    fn test_base_unit_normalization_and_costing_formulas() {
+        // Test 1: Flour: 1 cup from 1 kg @ P50 (ConversionFactor = 125g/cup)
+        let package_qty_kg = 1.0;
+        let package_price = 50.0;
+        let package_base_qty = normalize_to_base_unit(package_qty_kg, "kg", "g"); // 1000g
+        assert_eq!(package_base_qty, 1000.0);
+        let base_unit_cost = package_price / package_base_qty; // 0.05 / g
+        assert_eq!(base_unit_cost, 0.05);
+
+        let recipe_qty_cups = 1.0;
+        let flour_conversion_factor = 125.0; // 125g per cup
+        let normalized_recipe_qty = recipe_qty_cups * flour_conversion_factor; // 125g
+        assert_eq!(normalized_recipe_qty, 125.0);
+
+        let ingredient_cost = normalized_recipe_qty * base_unit_cost; // 125 * 0.05 = 6.25
+        assert_eq!(ingredient_cost, 6.25);
+
+        let derived_yield = package_base_qty / normalized_recipe_qty; // 1000 / 125 = 8.0
+        assert_eq!(derived_yield, 8.0);
+
+        // Test 2: Sugar: 0.25 cup from 1 kg @ P50 (ConversionFactor = 200g/cup)
+        let sugar_conversion_factor = 200.0;
+        let sugar_recipe_qty = 0.25;
+        let sugar_normalized_qty = sugar_recipe_qty * sugar_conversion_factor; // 50g
+        assert_eq!(sugar_normalized_qty, 50.0);
+        let sugar_cost = sugar_normalized_qty * (50.0 / 1000.0); // 50 * 0.05 = 2.50
+        assert_eq!(sugar_cost, 2.50);
+
+        // Test 3: Flour: 150g from 1 kg @ P50 (direct base unit match)
+        let direct_qty_g = 150.0;
+        let direct_cost = direct_qty_g * base_unit_cost; // 150 * 0.05 = 7.50
+        assert_eq!(direct_cost, 7.50);
+
+        // Test 4: Butter: 0.5 cup (113.5g) from 225g @ P120
+        let butter_pkg_g = 225.0;
+        let butter_price = 120.0;
+        let butter_base_cost = butter_price / butter_pkg_g; // 120 / 225 = 0.5333333333333333
+        let butter_qty_g = 0.5 * 227.0; // 113.5g
+        let butter_cost = butter_qty_g * butter_base_cost;
+        assert!((butter_cost - 60.53333333333333f64).abs() < 1e-4);
+
+        // Test 5: Eggs: 2 pcs from 12 pcs @ P96
+        let egg_pkg_pcs = 12.0;
+        let egg_price = 96.0;
+        let egg_base_cost = egg_price / egg_pkg_pcs; // 8.0 / pc
+        let egg_qty = 2.0;
+        let egg_cost = egg_qty * egg_base_cost; // 16.0
+        assert_eq!(egg_cost, 16.0);
     }
 }

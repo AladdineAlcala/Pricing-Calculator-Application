@@ -15,6 +15,19 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
     conn.execute_batch("PRAGMA journal_mode=WAL;")?;
     conn.execute_batch("PRAGMA foreign_keys=ON;")?;
 
+    // ── 0. units (Centralized Unit System — Fixed Seed) ──────────────────────
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS units (
+            unit_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+            code        TEXT    NOT NULL UNIQUE,
+            name        TEXT    NOT NULL,
+            unit_type   TEXT    NOT NULL,
+            is_base     INTEGER NOT NULL DEFAULT 0
+        );",
+    )?;
+
+    seed_units(conn)?;
+
     // ── 1. ingredients ──────────────────────────────────────────────────────
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS ingredients (
@@ -65,6 +78,15 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
         "ALTER TABLE ingredients ADD COLUMN sku TEXT",
         [],
     );
+    // v2.0: Base-unit conversion engine columns
+    let _ = conn.execute(
+        "ALTER TABLE ingredients ADD COLUMN base_unit_id INTEGER REFERENCES units(unit_id)",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredients ADD COLUMN category TEXT",
+        [],
+    );
 
     // ── 2. ingredient_conversions (Multi-Unit Architecture) ─────────────────
     conn.execute_batch(
@@ -77,6 +99,32 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
         CREATE INDEX IF NOT EXISTS idx_ingredient_conversions_ing
             ON ingredient_conversions(ingredient_id);",
     )?;
+
+    // v2.0: Conversion engine columns on ingredient_conversions
+    let _ = conn.execute(
+        "ALTER TABLE ingredient_conversions ADD COLUMN from_unit_id INTEGER REFERENCES units(unit_id)",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredient_conversions ADD COLUMN to_unit_id INTEGER REFERENCES units(unit_id)",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredient_conversions ADD COLUMN conversion_factor REAL",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredient_conversions ADD COLUMN source TEXT",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredient_conversions ADD COLUMN effective_date TEXT",
+        [],
+    );
+    let _ = conn.execute(
+        "ALTER TABLE ingredient_conversions ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1",
+        [],
+    );
 
     // ── 3. recipes ───────────────────────────────────────────────────────────
     conn.execute_batch(
@@ -188,7 +236,146 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
     // ── Seed UOM ingredients ─────────────────────────────────────────────────
     seed_ingredients(conn)?;
 
+    // ── 6. ingredient_purchases (v2.0 — Separate Purchase Entity) ────────────
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS ingredient_purchases (
+            purchase_id       INTEGER PRIMARY KEY AUTOINCREMENT,
+            ingredient_id     INTEGER NOT NULL REFERENCES ingredients(ingredient_id) ON DELETE CASCADE,
+            supplier_name     TEXT,
+            package_quantity  REAL    NOT NULL,
+            package_unit_id   INTEGER NOT NULL REFERENCES units(unit_id),
+            purchase_price    REAL    NOT NULL,
+            purchase_date     TEXT    NOT NULL DEFAULT (datetime('now')),
+            is_active         INTEGER NOT NULL DEFAULT 1
+        );
+        CREATE INDEX IF NOT EXISTS idx_ingredient_purchases_ing
+            ON ingredient_purchases(ingredient_id, is_active);",
+    )?;
+
+    // v2.0: Add unit_id to recipe_ingredients for base-unit recipe tracking
+    let _ = conn.execute(
+        "ALTER TABLE recipe_ingredients ADD COLUMN unit_id INTEGER REFERENCES units(unit_id)",
+        [],
+    );
+
+    // ── v2.0: Auto-populate base_unit_id for existing ingredients ────────────
+    let _ = conn.execute_batch(
+        "UPDATE ingredients SET base_unit_id = (SELECT unit_id FROM units WHERE code='g')
+         WHERE base_unit_id IS NULL AND (
+             net_unit IN ('g', 'Kilogram', 'kg') OR
+             name LIKE '%Flour%' OR name LIKE '%Sugar%' OR
+             name LIKE '%Butter%' OR name LIKE '%Powder%' OR name LIKE '%Soda%'
+         );
+
+         UPDATE ingredients SET base_unit_id = (SELECT unit_id FROM units WHERE code='ml')
+         WHERE base_unit_id IS NULL AND (
+             net_unit IN ('ml', 'Liter', 'L') OR
+             name LIKE '%Milk%' OR name LIKE '%Cream%' OR
+             name LIKE '%Oil%' OR name LIKE '%Extract%' OR name LIKE '%Vanilla%'
+         );
+
+         UPDATE ingredients SET base_unit_id = (SELECT unit_id FROM units WHERE code='pcs')
+         WHERE base_unit_id IS NULL AND (
+             net_unit IN ('pcs') OR name LIKE '%Egg%'
+         );",
+    );
+
+    // ── v2.0: Auto-migrate purchase data to ingredient_purchases ─────────────
+    let _ = conn.execute_batch(
+        "INSERT OR IGNORE INTO ingredient_purchases (ingredient_id, supplier_name, package_quantity, package_unit_id, purchase_price, is_active)
+         SELECT
+             i.ingredient_id,
+             i.supplier,
+             i.net_quantity,
+             COALESCE(
+                 (SELECT u.unit_id FROM units u WHERE
+                     (i.net_unit = 'Kilogram' AND u.code = 'kg') OR
+                     (i.net_unit = 'g' AND u.code = 'g') OR
+                     (i.net_unit = 'Liter' AND u.code = 'L') OR
+                     (i.net_unit = 'L' AND u.code = 'L') OR
+                     (i.net_unit = 'ml' AND u.code = 'ml') OR
+                     (i.net_unit = 'pcs' AND u.code = 'pcs')
+                 LIMIT 1),
+                 (SELECT unit_id FROM units WHERE code = 'kg')
+             ),
+             i.purchase_price,
+             1
+         FROM ingredients i
+         WHERE i.purchase_price > 0
+           AND NOT EXISTS (
+               SELECT 1 FROM ingredient_purchases ip WHERE ip.ingredient_id = i.ingredient_id
+           );",
+    );
+
+    // ── v2.0: Auto-populate conversion_factor from USDA reference data ───────
+    populate_usda_conversion_factors(conn);
+
     Ok(())
+}
+
+fn seed_units(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "INSERT OR IGNORE INTO units (code, name, unit_type, is_base) VALUES
+            ('g',     'Gram',       'weight', 1),
+            ('kg',    'Kilogram',   'weight', 0),
+            ('oz',    'Ounce',      'weight', 0),
+            ('lb',    'Pound',      'weight', 0),
+            ('ml',    'Milliliter', 'volume', 1),
+            ('L',     'Liter',      'volume', 0),
+            ('tsp',   'Teaspoon',   'volume', 0),
+            ('tbsp',  'Tablespoon', 'volume', 0),
+            ('cup',   'Cup',        'volume', 0),
+            ('pcs',   'Piece',      'count',  1),
+            ('pack',  'Pack',       'count',  0),
+            ('box',   'Box',        'count',  0),
+            ('bottle','Bottle',     'count',  0),
+            ('can',   'Can',        'count',  0);",
+    )?;
+    Ok(())
+}
+
+#[allow(clippy::cognitive_complexity)]
+fn populate_usda_conversion_factors(conn: &Connection) {
+    // Map USDA standard baking conversion factors onto existing ingredient_conversions.
+    // This runs idempotently — only updates rows where conversion_factor IS NULL.
+    let usda_mappings: Vec<(&str, &str, &str, f64)> = vec![
+        // (ingredient_name_like, recipe_unit, base_code, conversion_factor)
+        ("%Flour%",         "Cup",        "g",  125.0),
+        ("%Flour%",         "Tablespoon", "g",  7.8),
+        ("%Flour%",         "Gram",       "g",  1.0),
+        ("Granulated Sugar","Cup",        "g",  200.0),
+        ("Granulated Sugar","Tablespoon", "g",  12.5),
+        ("Granulated Sugar","Gram",       "g",  1.0),
+        ("Brown Sugar%",    "Cup",        "g",  213.0),
+        ("Brown Sugar%",    "Tablespoon", "g",  12.5),
+        ("Brown Sugar%",    "Gram",       "g",  1.0),
+        ("%Butter%",        "Cup",        "g",  227.0),
+        ("%Butter%",        "Gram",       "g",  1.0),
+        ("%Butter%",        "Stick",      "g",  113.0),
+        ("Cocoa Powder",    "Cup",        "g",  100.0),
+        ("%Milk%",          "Cup",        "ml", 240.0),
+        ("%Milk%",          "ml",         "ml", 1.0),
+        ("%Milk%",          "Tablespoon", "ml", 15.0),
+        ("%Oil%",           "Cup",        "ml", 240.0),
+        ("Vanilla%",        "tsp",        "ml", 5.0),
+        ("Baking Powder",   "tsp",        "g",  5.0),
+        ("Baking Soda",     "tsp",        "g",  5.0),
+        ("%Egg%",           "pcs",        "pcs",1.0),
+    ];
+
+    for (name_like, recipe_unit, base_code, factor) in usda_mappings {
+        let _ = conn.execute(
+            "UPDATE ingredient_conversions
+             SET conversion_factor = ?1,
+                 from_unit_id = (SELECT unit_id FROM units WHERE LOWER(name) = LOWER(?2) OR LOWER(code) = LOWER(?2) LIMIT 1),
+                 to_unit_id = (SELECT unit_id FROM units WHERE code = ?3 LIMIT 1),
+                 source = 'USDA NDB'
+             WHERE conversion_factor IS NULL
+               AND ingredient_id IN (SELECT ingredient_id FROM ingredients WHERE name LIKE ?4)
+               AND recipe_unit = ?2",
+            params![factor, recipe_unit, base_code, name_like],
+        );
+    }
 }
 
 fn check_and_migrate_legacy_db(conn: &Connection, db_path: &std::path::Path) -> Result<()> {

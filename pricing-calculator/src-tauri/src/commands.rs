@@ -7,18 +7,157 @@ use tauri::State;
 
 pub struct DbState(pub Mutex<Connection>);
 
+// ── Units (v2.0) ─────────────────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_units(state: State<DbState>) -> Result<Vec<Unit>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT unit_id, code, name, unit_type, is_base FROM units ORDER BY unit_type ASC, name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map([], |row| {
+            Ok(Unit {
+                unit_id: row.get(0)?,
+                code: row.get(1)?,
+                name: row.get(2)?,
+                unit_type: row.get(3)?,
+                is_base: row.get::<_, i32>(4)? == 1,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+// ── Ingredient Purchases (v2.0) ──────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_ingredient_purchases(
+    state: State<DbState>,
+    ingredient_id: i64,
+) -> Result<Vec<IngredientPurchase>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT purchase_id, ingredient_id, supplier_name, package_quantity,
+                    package_unit_id, purchase_price, purchase_date, is_active
+             FROM ingredient_purchases
+             WHERE ingredient_id = ?1 AND is_active = 1
+             ORDER BY purchase_date DESC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map(params![ingredient_id], |row| {
+            Ok(IngredientPurchase {
+                purchase_id: row.get(0)?,
+                ingredient_id: row.get(1)?,
+                supplier_name: row.get(2)?,
+                package_quantity: row.get(3)?,
+                package_unit_id: row.get(4)?,
+                purchase_price: row.get(5)?,
+                purchase_date: row.get(6)?,
+                is_active: row.get::<_, i32>(7)? == 1,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn create_ingredient_purchase(
+    state: State<DbState>,
+    ingredient_id: i64,
+    input: IngredientPurchaseInput,
+) -> Result<IngredientPurchase, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "INSERT INTO ingredient_purchases (ingredient_id, supplier_name, package_quantity, package_unit_id, purchase_price, is_active)
+         VALUES (?1, ?2, ?3, ?4, ?5, 1)",
+        params![
+            ingredient_id,
+            input.supplier_name,
+            input.package_quantity,
+            input.package_unit_id,
+            input.purchase_price
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    let id = conn.last_insert_rowid();
+    Ok(IngredientPurchase {
+        purchase_id: id,
+        ingredient_id,
+        supplier_name: input.supplier_name,
+        package_quantity: input.package_quantity,
+        package_unit_id: input.package_unit_id,
+        purchase_price: input.purchase_price,
+        purchase_date: chrono::Local::now().to_rfc3339(),
+        is_active: true,
+    })
+}
+
+#[tauri::command]
+pub fn update_ingredient_purchase(
+    state: State<DbState>,
+    purchase_id: i64,
+    input: IngredientPurchaseInput,
+) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE ingredient_purchases SET supplier_name=?1, package_quantity=?2,
+         package_unit_id=?3, purchase_price=?4
+         WHERE purchase_id=?5",
+        params![
+            input.supplier_name,
+            input.package_quantity,
+            input.package_unit_id,
+            input.purchase_price,
+            purchase_id
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn delete_ingredient_purchase(
+    state: State<DbState>,
+    purchase_id: i64,
+) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    // Soft-delete: set is_active = 0
+    conn.execute(
+        "UPDATE ingredient_purchases SET is_active = 0 WHERE purchase_id = ?1",
+        params![purchase_id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 // ── Ingredients ──────────────────────────────────────────────────────────────
 
 #[tauri::command]
 pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
 
-    // Load conversions map
+    // Load conversions map (includes v2.0 base-unit fields)
     let mut conv_map: std::collections::HashMap<i64, Vec<IngredientConversion>> =
         std::collections::HashMap::new();
     let mut conv_stmt = conn
         .prepare(
-            "SELECT conversion_id, ingredient_id, recipe_unit, yield_factor
+            "SELECT conversion_id, ingredient_id, recipe_unit, yield_factor,
+                    from_unit_id, to_unit_id, conversion_factor, source, effective_date,
+                    COALESCE(is_active, 1)
              FROM ingredient_conversions ORDER BY conversion_id ASC",
         )
         .map_err(|e| e.to_string())?;
@@ -30,6 +169,12 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
                 ingredient_id: row.get(1)?,
                 recipe_unit: row.get(2)?,
                 yield_factor: row.get(3)?,
+                from_unit_id: row.get(4)?,
+                to_unit_id: row.get(5)?,
+                conversion_factor: row.get(6)?,
+                source: row.get(7)?,
+                effective_date: row.get(8)?,
+                is_active: row.get::<_, i32>(9)? == 1,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -38,11 +183,43 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
         conv_map.entry(conv.ingredient_id).or_default().push(conv);
     }
 
+    // Load purchases map (v2.0)
+    let mut purchase_map: std::collections::HashMap<i64, Vec<IngredientPurchase>> =
+        std::collections::HashMap::new();
+    let mut purch_stmt = conn
+        .prepare(
+            "SELECT purchase_id, ingredient_id, supplier_name, package_quantity,
+                    package_unit_id, purchase_price, purchase_date, is_active
+             FROM ingredient_purchases WHERE is_active = 1
+             ORDER BY purchase_date DESC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let purch_rows = purch_stmt
+        .query_map([], |row| {
+            Ok(IngredientPurchase {
+                purchase_id: row.get(0)?,
+                ingredient_id: row.get(1)?,
+                supplier_name: row.get(2)?,
+                package_quantity: row.get(3)?,
+                package_unit_id: row.get(4)?,
+                purchase_price: row.get(5)?,
+                purchase_date: row.get(6)?,
+                is_active: row.get::<_, i32>(7)? == 1,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    for purch in purch_rows.flatten() {
+        purchase_map.entry(purch.ingredient_id).or_default().push(purch);
+    }
+
     let mut stmt = conn
         .prepare(
             "SELECT ingredient_id, name, purchase_unit, purchase_price, recipe_unit, yield_factor,
                     COALESCE(package_type, 'Package'), COALESCE(net_quantity, 1.0), COALESCE(net_unit, 'Kilogram'),
-                    COALESCE(current_stock_qty, 0.0), COALESCE(reorder_threshold, 0.0), supplier, sku
+                    COALESCE(current_stock_qty, 0.0), COALESCE(reorder_threshold, 0.0), supplier, sku,
+                    base_unit_id, category
              FROM ingredients ORDER BY name ASC",
         )
         .map_err(|e| e.to_string())?;
@@ -62,6 +239,8 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
             let reorder_threshold: f64 = row.get(10)?;
             let supplier: Option<String> = row.get(11)?;
             let sku: Option<String> = row.get(12)?;
+            let base_unit_id: Option<i64> = row.get(13)?;
+            let category: Option<String> = row.get(14)?;
 
             let conversions = conv_map.remove(&ingredient_id).unwrap_or_else(|| {
                 vec![IngredientConversion {
@@ -69,8 +248,16 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
                     ingredient_id,
                     recipe_unit: recipe_unit.clone(),
                     yield_factor,
+                    from_unit_id: None,
+                    to_unit_id: None,
+                    conversion_factor: None,
+                    source: None,
+                    effective_date: None,
+                    is_active: true,
                 }]
             });
+
+            let purchases = purchase_map.remove(&ingredient_id).unwrap_or_default();
 
             Ok(Ingredient {
                 ingredient_id,
@@ -87,6 +274,9 @@ pub fn get_ingredients(state: State<DbState>) -> Result<Vec<Ingredient>, String>
                 supplier,
                 sku,
                 conversions,
+                base_unit_id,
+                category,
+                purchases,
             })
         })
         .map_err(|e| e.to_string())?
@@ -103,8 +293,8 @@ pub fn create_ingredient(
 ) -> Result<Ingredient, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     conn.execute(
-        "INSERT INTO ingredients (name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit, current_stock_qty, reorder_threshold, supplier, sku)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+        "INSERT INTO ingredients (name, purchase_unit, purchase_price, recipe_unit, yield_factor, package_type, net_quantity, net_unit, current_stock_qty, reorder_threshold, supplier, sku, base_unit_id, category)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
         params![
             input.name,
             input.purchase_unit,
@@ -117,7 +307,9 @@ pub fn create_ingredient(
             input.current_stock_qty,
             input.reorder_threshold,
             input.supplier,
-            input.sku
+            input.sku,
+            input.base_unit_id,
+            input.category,
         ],
     )
     .map_err(|e| e.to_string())?;
@@ -128,8 +320,17 @@ pub fn create_ingredient(
     if !input.conversions.is_empty() {
         for conv in &input.conversions {
             conn.execute(
-                "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor) VALUES (?1, ?2, ?3)",
-                params![id, conv.recipe_unit, conv.yield_factor],
+                "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor, from_unit_id, to_unit_id, conversion_factor, source, is_active)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 1)",
+                params![
+                    id,
+                    conv.recipe_unit,
+                    conv.yield_factor,
+                    conv.from_unit_id,
+                    conv.to_unit_id,
+                    conv.conversion_factor,
+                    conv.source
+                ],
             )
             .map_err(|e| e.to_string())?;
             let cid = conn.last_insert_rowid();
@@ -138,11 +339,17 @@ pub fn create_ingredient(
                 ingredient_id: id,
                 recipe_unit: conv.recipe_unit.clone(),
                 yield_factor: conv.yield_factor,
+                from_unit_id: conv.from_unit_id,
+                to_unit_id: conv.to_unit_id,
+                conversion_factor: conv.conversion_factor,
+                source: conv.source.clone(),
+                effective_date: None,
+                is_active: true,
             });
         }
     } else {
         conn.execute(
-            "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor) VALUES (?1, ?2, ?3)",
+            "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor, is_active) VALUES (?1, ?2, ?3, 1)",
             params![id, input.recipe_unit, input.yield_factor],
         )
         .map_err(|e| e.to_string())?;
@@ -152,6 +359,39 @@ pub fn create_ingredient(
             ingredient_id: id,
             recipe_unit: input.recipe_unit.clone(),
             yield_factor: input.yield_factor,
+            from_unit_id: None,
+            to_unit_id: None,
+            conversion_factor: None,
+            source: None,
+            effective_date: None,
+            is_active: true,
+        });
+    }
+
+    let mut created_purchases = Vec::new();
+    for p in &input.purchases {
+        conn.execute(
+            "INSERT INTO ingredient_purchases (ingredient_id, supplier_name, package_quantity, package_unit_id, purchase_price, is_active)
+             VALUES (?1, ?2, ?3, ?4, ?5, 1)",
+            params![
+                id,
+                p.supplier_name,
+                p.package_quantity,
+                p.package_unit_id,
+                p.purchase_price
+            ],
+        )
+        .map_err(|e| e.to_string())?;
+        let pid = conn.last_insert_rowid();
+        created_purchases.push(IngredientPurchase {
+            purchase_id: pid,
+            ingredient_id: id,
+            supplier_name: p.supplier_name.clone(),
+            package_quantity: p.package_quantity,
+            package_unit_id: p.package_unit_id,
+            purchase_price: p.purchase_price,
+            purchase_date: chrono::Local::now().to_rfc3339(),
+            is_active: true,
         });
     }
 
@@ -170,6 +410,9 @@ pub fn create_ingredient(
         supplier: input.supplier,
         sku: input.sku,
         conversions: created_conversions,
+        base_unit_id: input.base_unit_id,
+        category: input.category,
+        purchases: created_purchases,
     })
 }
 
@@ -197,8 +440,8 @@ pub fn update_ingredient(
         "UPDATE ingredients SET name=?1, purchase_unit=?2, purchase_price=?3,
          recipe_unit=?4, yield_factor=?5, package_type=?6, net_quantity=?7, net_unit=?8,
          current_stock_qty=?9, reorder_threshold=?10, supplier=?11, sku=?12,
-         updated_at=datetime('now')
-         WHERE ingredient_id=?13",
+         base_unit_id=?13, category=?14, updated_at=datetime('now')
+         WHERE ingredient_id=?15",
         params![
             input.name,
             input.purchase_unit,
@@ -212,6 +455,8 @@ pub fn update_ingredient(
             input.reorder_threshold,
             input.supplier,
             input.sku,
+            input.base_unit_id,
+            input.category,
             ingredient_id
         ],
     )
@@ -223,15 +468,35 @@ pub fn update_ingredient(
         for conv in &input.conversions {
             if let Some(cid) = conv.conversion_id {
                 conn.execute(
-                    "UPDATE ingredient_conversions SET recipe_unit=?1, yield_factor=?2 WHERE conversion_id=?3 AND ingredient_id=?4",
-                    params![conv.recipe_unit, conv.yield_factor, cid, ingredient_id],
+                    "UPDATE ingredient_conversions SET recipe_unit=?1, yield_factor=?2,
+                     from_unit_id=?3, to_unit_id=?4, conversion_factor=?5, source=?6
+                     WHERE conversion_id=?7 AND ingredient_id=?8",
+                    params![
+                        conv.recipe_unit,
+                        conv.yield_factor,
+                        conv.from_unit_id,
+                        conv.to_unit_id,
+                        conv.conversion_factor,
+                        conv.source,
+                        cid,
+                        ingredient_id
+                    ],
                 )
                 .map_err(|e| e.to_string())?;
                 keep_ids.push(cid);
             } else {
                 conn.execute(
-                    "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor) VALUES (?1, ?2, ?3)",
-                    params![ingredient_id, conv.recipe_unit, conv.yield_factor],
+                    "INSERT INTO ingredient_conversions (ingredient_id, recipe_unit, yield_factor, from_unit_id, to_unit_id, conversion_factor, source, is_active)
+                     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 1)",
+                    params![
+                        ingredient_id,
+                        conv.recipe_unit,
+                        conv.yield_factor,
+                        conv.from_unit_id,
+                        conv.to_unit_id,
+                        conv.conversion_factor,
+                        conv.source
+                    ],
                 )
                 .map_err(|e| e.to_string())?;
                 keep_ids.push(conn.last_insert_rowid());
@@ -428,10 +693,13 @@ pub fn get_recipe_ingredients(
                     COALESCE(i.package_type, 'Package'),
                     COALESCE(i.net_quantity, 1.0),
                     COALESCE(i.net_unit, 'Kilogram'),
-                    CASE WHEN ri.conversion_id IS NOT NULL AND ic.conversion_id IS NULL THEN 1 ELSE 0 END AS is_orphaned
+                    CASE WHEN ri.conversion_id IS NOT NULL AND ic.conversion_id IS NULL THEN 1 ELSE 0 END AS is_orphaned,
+                    ic.conversion_factor,
+                    bu.code AS base_unit_code
              FROM recipe_ingredients ri
              JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
              LEFT JOIN ingredient_conversions ic ON ic.conversion_id = ri.conversion_id
+             LEFT JOIN units bu ON bu.unit_id = i.base_unit_id
              WHERE ri.recipe_id = ?1
              ORDER BY i.name ASC",
         )
@@ -454,13 +722,40 @@ pub fn get_recipe_ingredients(
             let net_unit: String = row.get(12)?;
             let is_orphaned_int: i32 = row.get(13)?;
             let is_orphaned_conversion = is_orphaned_int == 1;
+            let conversion_factor: Option<f64> = row.get(14)?;
+            let base_unit_code: Option<String> = row.get(15)?;
 
-            let normalized_unit_cost = if yield_factor != 0.0 {
-                purchase_price / yield_factor
-            } else {
-                0.0
+            let (normalized_unit_cost, line_item_cost, effective_yield, base_cost, norm_qty) = match (conversion_factor, base_unit_code.as_deref()) {
+                (Some(factor), Some(base_code)) if factor > 0.0 => {
+                    let package_base_qty = normalize_to_base_unit(net_quantity, &net_unit, base_code);
+                    let base_unit_cost = if package_base_qty > 0.0 {
+                        purchase_price / package_base_qty
+                    } else {
+                        0.0
+                    };
+                    let normalized_recipe_qty = if recipe_unit.trim().eq_ignore_ascii_case(base_code) {
+                        batch_qty
+                    } else {
+                        batch_qty * factor
+                    };
+                    let cost = normalized_recipe_qty * base_unit_cost;
+                    let unit_cost = if batch_qty > 0.0 { cost / batch_qty } else { 0.0 };
+                    let derived_yf = if normalized_recipe_qty > 0.0 {
+                        package_base_qty / (normalized_recipe_qty / batch_qty)
+                    } else {
+                        yield_factor
+                    };
+                    (unit_cost, cost, derived_yf, Some(base_unit_cost), Some(normalized_recipe_qty))
+                }
+                _ => {
+                    let nuc = if yield_factor != 0.0 {
+                        purchase_price / yield_factor
+                    } else {
+                        0.0
+                    };
+                    (nuc, batch_qty * nuc, yield_factor, None, None)
+                }
             };
-            let line_item_cost = batch_qty * normalized_unit_cost;
 
             Ok(RecipeIngredient {
                 id,
@@ -472,13 +767,16 @@ pub fn get_recipe_ingredients(
                 purchase_unit,
                 purchase_price,
                 recipe_unit,
-                yield_factor,
+                yield_factor: effective_yield,
                 package_type,
                 net_quantity,
                 net_unit,
                 is_orphaned_conversion,
                 normalized_unit_cost,
                 line_item_cost,
+                base_unit_code,
+                base_unit_cost: base_cost,
+                normalized_quantity: norm_qty,
             })
         })
         .map_err(|e| e.to_string())?
@@ -625,10 +923,13 @@ pub fn calculate_recipe_cost(
                     COALESCE(i.package_type, 'Package'),
                     COALESCE(i.net_quantity, 1.0),
                     COALESCE(i.net_unit, 'Kilogram'),
-                    CASE WHEN ri.conversion_id IS NOT NULL AND ic.conversion_id IS NULL THEN 1 ELSE 0 END AS is_orphaned
+                    CASE WHEN ri.conversion_id IS NOT NULL AND ic.conversion_id IS NULL THEN 1 ELSE 0 END AS is_orphaned,
+                    ic.conversion_factor,
+                    bu.code AS base_unit_code
              FROM recipe_ingredients ri
              JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
              LEFT JOIN ingredient_conversions ic ON ic.conversion_id = ri.conversion_id
+             LEFT JOIN units bu ON bu.unit_id = i.base_unit_id
              WHERE ri.recipe_id = ?1
              ORDER BY i.name ASC",
         )
@@ -651,13 +952,42 @@ pub fn calculate_recipe_cost(
             let net_unit: String = row.get(12)?;
             let is_orphaned_int: i32 = row.get(13)?;
             let is_orphaned_conversion = is_orphaned_int == 1;
+            let conversion_factor: Option<f64> = row.get(14)?;
+            let base_unit_code: Option<String> = row.get(15)?;
 
-            let normalized_unit_cost = if yield_factor != 0.0 {
-                purchase_price / yield_factor
-            } else {
-                0.0
+            // ── v2.0 Base-Unit Normalization Pipeline (Dual-Mode Safety) ─────
+            let (normalized_unit_cost, line_item_cost, effective_yield, base_cost, norm_qty) = match (conversion_factor, base_unit_code.as_deref()) {
+                (Some(factor), Some(base_code)) if factor > 0.0 => {
+                    let package_base_qty = normalize_to_base_unit(net_quantity, &net_unit, base_code);
+                    let base_unit_cost = if package_base_qty > 0.0 {
+                        purchase_price / package_base_qty
+                    } else {
+                        0.0
+                    };
+                    let normalized_recipe_qty = if recipe_unit.trim().eq_ignore_ascii_case(base_code) {
+                        batch_qty
+                    } else {
+                        batch_qty * factor
+                    };
+                    let cost = normalized_recipe_qty * base_unit_cost;
+                    let unit_cost = if batch_qty > 0.0 { cost / batch_qty } else { 0.0 };
+                    let derived_yf = if normalized_recipe_qty > 0.0 {
+                        package_base_qty / (normalized_recipe_qty / batch_qty)
+                    } else {
+                        yield_factor
+                    };
+                    (unit_cost, cost, derived_yf, Some(base_unit_cost), Some(normalized_recipe_qty))
+                }
+                _ => {
+                    let nuc = if yield_factor != 0.0 {
+                        purchase_price / yield_factor
+                    } else {
+                        0.0
+                    };
+                    (nuc, batch_qty * nuc, yield_factor, None, None)
+                }
             };
-            let line_item_cost = batch_qty * normalized_unit_cost;
+
             Ok(RecipeIngredient {
                 id,
                 recipe_id,
@@ -668,13 +998,16 @@ pub fn calculate_recipe_cost(
                 purchase_unit,
                 purchase_price,
                 recipe_unit,
-                yield_factor,
+                yield_factor: effective_yield,
                 package_type,
                 net_quantity,
                 net_unit,
                 is_orphaned_conversion,
                 normalized_unit_cost,
                 line_item_cost,
+                base_unit_code,
+                base_unit_cost: base_cost,
+                normalized_quantity: norm_qty,
             })
         })
         .map_err(|e| e.to_string())?
@@ -817,30 +1150,64 @@ pub fn export_data_csv(state: State<DbState>, recipe_id: i64) -> Result<String, 
 
     let mut stmt = conn
         .prepare(
-            "SELECT ri.batch_qty, i.name, i.purchase_unit, i.purchase_price, i.recipe_unit, i.yield_factor
-             FROM recipe_ingredients ri JOIN ingredients i ON i.ingredient_id=ri.ingredient_id
+            "SELECT ri.batch_qty, i.name, i.purchase_unit, i.purchase_price,
+                    COALESCE(ic.recipe_unit, i.recipe_unit) AS recipe_unit,
+                    COALESCE(ic.yield_factor, i.yield_factor) AS yield_factor,
+                    ic.conversion_factor, bu.code AS base_unit_code,
+                    COALESCE(i.net_quantity, 1.0), COALESCE(i.net_unit, 'Kilogram')
+             FROM recipe_ingredients ri
+             JOIN ingredients i ON i.ingredient_id=ri.ingredient_id
+             LEFT JOIN ingredient_conversions ic ON ic.conversion_id = ri.conversion_id
+             LEFT JOIN units bu ON bu.unit_id = i.base_unit_id
              WHERE ri.recipe_id=?1",
         )
         .map_err(|e| e.to_string())?;
 
     stmt.query_map(params![recipe_id], |row| {
         let batch_qty: f64 = row.get(0)?;
+        let name: String = row.get(1)?;
+        let purchase_unit: String = row.get(2)?;
         let purchase_price: f64 = row.get(3)?;
+        let recipe_unit: String = row.get(4)?;
         let yield_factor: f64 = row.get(5)?;
-        Ok((
-            row.get::<_, String>(1)?,
-            row.get::<_, String>(2)?,
-            purchase_price,
-            row.get::<_, String>(4)?,
-            yield_factor,
-            batch_qty,
-        ))
+        let conversion_factor: Option<f64> = row.get(6)?;
+        let base_unit_code: Option<String> = row.get(7)?;
+        let net_quantity: f64 = row.get(8)?;
+        let net_unit: String = row.get(9)?;
+
+        let (nuc, lic, eff_yf) = match (conversion_factor, base_unit_code) {
+            (Some(factor), Some(ref base_code)) if factor > 0.0 => {
+                let package_base_qty = normalize_to_base_unit(net_quantity, &net_unit, base_code);
+                let base_unit_cost = if package_base_qty > 0.0 {
+                    purchase_price / package_base_qty
+                } else {
+                    0.0
+                };
+                let normalized_recipe_qty = if recipe_unit.trim().eq_ignore_ascii_case(base_code) {
+                    batch_qty
+                } else {
+                    batch_qty * factor
+                };
+                let cost = normalized_recipe_qty * base_unit_cost;
+                let unit_cost = if batch_qty > 0.0 { cost / batch_qty } else { 0.0 };
+                let derived_yf = if normalized_recipe_qty > 0.0 {
+                    package_base_qty / (normalized_recipe_qty / batch_qty)
+                } else {
+                    yield_factor
+                };
+                (unit_cost, cost, derived_yf)
+            }
+            _ => {
+                let cost_per_unit = if yield_factor != 0.0 { purchase_price / yield_factor } else { 0.0 };
+                (cost_per_unit, batch_qty * cost_per_unit, yield_factor)
+            }
+        };
+
+        Ok((name, purchase_unit, purchase_price, recipe_unit, eff_yf, batch_qty, nuc, lic))
     })
     .map_err(|e| e.to_string())?
     .for_each(|r| {
-        if let Ok((name, pu, pp, ru, yf, bq)) = r {
-            let nuc = if yf != 0.0 { pp / yf } else { 0.0 };
-            let lic = bq * nuc;
+        if let Ok((name, pu, pp, ru, yf, bq, nuc, lic)) = r {
             let _ = wtr.write_record([
                 recipe.name.as_str(),
                 name.as_str(),
@@ -1039,10 +1406,14 @@ pub fn produce_batch_with_validation(
         .prepare(
             "SELECT ri.ingredient_id, ri.batch_qty,
                     COALESCE(ic.yield_factor, i.yield_factor) AS yield_factor,
-                    i.name, i.purchase_unit, i.current_stock_qty
+                    i.name, i.purchase_unit, i.current_stock_qty,
+                    COALESCE(ic.recipe_unit, i.recipe_unit) AS recipe_unit,
+                    ic.conversion_factor, bu.code AS base_unit_code,
+                    COALESCE(i.net_quantity, 1.0), COALESCE(i.net_unit, 'Kilogram')
              FROM recipe_ingredients ri
              JOIN ingredients i ON i.ingredient_id = ri.ingredient_id
              LEFT JOIN ingredient_conversions ic ON ic.conversion_id = ri.conversion_id
+             LEFT JOIN units bu ON bu.unit_id = i.base_unit_id
              WHERE ri.recipe_id = ?1",
         )
         .map_err(|e| ProductionError {
@@ -1058,7 +1429,24 @@ pub fn produce_batch_with_validation(
             let name: String = row.get(3)?;
             let purchase_unit: String = row.get(4)?;
             let current_stock_qty: f64 = row.get(5)?;
-            Ok((ingredient_id, batch_qty, yield_factor, name, purchase_unit, current_stock_qty))
+            let recipe_unit: String = row.get(6)?;
+            let conversion_factor: Option<f64> = row.get(7)?;
+            let base_unit_code: Option<String> = row.get(8)?;
+            let net_quantity: f64 = row.get(9)?;
+            let net_unit: String = row.get(10)?;
+            Ok((
+                ingredient_id,
+                batch_qty,
+                yield_factor,
+                name,
+                purchase_unit,
+                current_stock_qty,
+                recipe_unit,
+                conversion_factor,
+                base_unit_code,
+                net_quantity,
+                net_unit,
+            ))
         })
         .map_err(|e| ProductionError {
             message: e.to_string(),
@@ -1081,11 +1469,41 @@ pub fn produce_batch_with_validation(
 
     // Pre-flight conversion & multi-occurrence aggregation
     let mut req_map: std::collections::BTreeMap<i64, RequirementAgg> = std::collections::BTreeMap::new();
-    for (ingredient_id, batch_qty, yield_factor, name, purchase_unit, current_stock_qty) in rows {
-        let bulk_needed = if yield_factor > 0.0 {
-            (batch_qty * payload.batches) / yield_factor
-        } else {
-            0.0
+    for (
+        ingredient_id,
+        batch_qty,
+        yield_factor,
+        name,
+        purchase_unit,
+        current_stock_qty,
+        recipe_unit,
+        conversion_factor,
+        base_unit_code,
+        net_quantity,
+        net_unit,
+    ) in rows
+    {
+        let bulk_needed = match (conversion_factor, base_unit_code) {
+            (Some(factor), Some(ref base_code)) if factor > 0.0 => {
+                let package_base_qty = normalize_to_base_unit(net_quantity, &net_unit, base_code);
+                let normalized_recipe_qty = if recipe_unit.trim().eq_ignore_ascii_case(base_code) {
+                    batch_qty
+                } else {
+                    batch_qty * factor
+                };
+                if package_base_qty > 0.0 {
+                    (normalized_recipe_qty * payload.batches) / package_base_qty
+                } else {
+                    0.0
+                }
+            }
+            _ => {
+                if yield_factor > 0.0 {
+                    (batch_qty * payload.batches) / yield_factor
+                } else {
+                    0.0
+                }
+            }
         };
 
         let entry = req_map.entry(ingredient_id).or_insert_with(|| RequirementAgg {

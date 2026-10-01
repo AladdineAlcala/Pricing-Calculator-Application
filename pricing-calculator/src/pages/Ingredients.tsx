@@ -29,12 +29,15 @@ import {
 } from "lucide-react";
 import {
   getIngredients,
+  getUnits,
   createIngredient,
   updateIngredient,
   deleteIngredient,
   type Ingredient,
   type IngredientInput,
   type IngredientConversionInput,
+  type Unit,
+  type IngredientPurchase,
 } from "@/lib/api";
 import { Spinner, Tooltip } from "@/components/ui";
 import { useApp } from "@/context/AppContext";
@@ -219,6 +222,7 @@ interface FormState {
   recipeUnit: string;
   yieldFactor: number;
   conversions: IngredientConversionInput[];
+  base_unit_id?: number | null;
 }
 
 const DEFAULT_FORM: FormState = {
@@ -235,10 +239,11 @@ const DEFAULT_FORM: FormState = {
   recipeUnit: "Cup",
   yieldFactor: 5.0,
   conversions: [
-    { recipe_unit: "Cup", yield_factor: 5.0 },
-    { recipe_unit: "Gram", yield_factor: 1000.0 },
-    { recipe_unit: "Tablespoon", yield_factor: 80.0 },
+    { recipe_unit: "Cup", yield_factor: 5.0, conversion_factor: 200 },
+    { recipe_unit: "Gram", yield_factor: 1000.0, conversion_factor: 1 },
+    { recipe_unit: "Tablespoon", yield_factor: 80.0, conversion_factor: 12.5 },
   ],
+  base_unit_id: null,
 };
 
 // Category badge color mapper
@@ -377,6 +382,7 @@ function IngredientsSkeleton() {
 export default function Ingredients() {
   const { fmt } = useApp();
   const [items, setItems] = useState<Ingredient[]>([]);
+  const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
@@ -430,8 +436,12 @@ export default function Ingredients() {
 
   const load = useCallback(async () => {
     try {
-      const data = await getIngredients();
-      setItems(data);
+      const [data, unitsData] = await Promise.all([
+        getIngredients().catch(() => []),
+        getUnits().catch(() => []),
+      ]);
+      setItems(data || []);
+      setUnits(unitsData || []);
       setLoading(false);
       return data;
     } catch {
@@ -464,14 +474,18 @@ export default function Ingredients() {
           conversion_id: c.conversion_id,
           recipe_unit: c.recipe_unit,
           yield_factor: c.yield_factor,
+          from_unit_id: c.from_unit_id,
+          to_unit_id: c.to_unit_id,
+          conversion_factor: c.conversion_factor,
+          source: c.source,
         }))
         : [
-          { recipe_unit: ing.recipe_unit, yield_factor: ing.yield_factor },
+          { recipe_unit: ing.recipe_unit, yield_factor: ing.yield_factor, conversion_factor: 1 },
         ];
 
     setForm({
       name: ing.name,
-      category: inferCategory(ing.name),
+      category: ing.category || inferCategory(ing.name),
       supplier: ing.supplier || "",
       sku: ing.sku || "",
       packageType: pkgType,
@@ -483,6 +497,7 @@ export default function Ingredients() {
       recipeUnit: conversions[0]?.recipe_unit || ing.recipe_unit,
       yieldFactor: conversions[0]?.yield_factor || ing.yield_factor,
       conversions,
+      base_unit_id: ing.base_unit_id ?? null,
     });
     setErrors({});
     setShowPresets(false);
@@ -495,22 +510,38 @@ export default function Ingredients() {
       ...prev,
       conversions: [
         ...prev.conversions,
-        { recipe_unit: "Gram", yield_factor: 100 },
+        { recipe_unit: "Gram", yield_factor: 100, conversion_factor: 1 },
       ],
     }));
   };
 
   const handleUpdateConversionRule = (
     index: number,
-    field: "recipe_unit" | "yield_factor",
+    field: "recipe_unit" | "yield_factor" | "conversion_factor",
     value: string | number
   ) => {
     setForm((prev) => {
       const updated = [...prev.conversions];
-      updated[index] = {
-        ...updated[index],
-        [field]: value,
-      };
+      const current = { ...updated[index], [field]: value };
+
+      // Helper to compute base package quantity in base units
+      const baseUnitObj = units.find((u) => u.unit_id === prev.base_unit_id) || units.find((u) => u.is_base);
+      const baseCode = baseUnitObj?.code || (prev.netUnit.toLowerCase().includes("ml") ? "ml" : "g");
+      let baseFactor = 1.0;
+      const nu = prev.netUnit.toLowerCase();
+      if ((nu === "kg" || nu === "kilogram") && baseCode === "g") baseFactor = 1000.0;
+      else if ((nu === "oz" || nu === "ounce") && baseCode === "g") baseFactor = 28.3495;
+      else if ((nu === "lb" || nu === "pound") && baseCode === "g") baseFactor = 453.592;
+      else if ((nu === "l" || nu === "liter") && baseCode === "ml") baseFactor = 1000.0;
+      const packageBaseQty = prev.netQuantity * baseFactor;
+
+      if (field === "conversion_factor" && typeof value === "number" && value > 0 && packageBaseQty > 0) {
+        current.yield_factor = Number((packageBaseQty / value).toFixed(4));
+      } else if (field === "yield_factor" && typeof value === "number" && value > 0 && packageBaseQty > 0) {
+        current.conversion_factor = Number((packageBaseQty / value).toFixed(4));
+      }
+
+      updated[index] = current;
       const primaryUnit = updated[0]?.recipe_unit || prev.recipeUnit;
       const primaryYield = updated[0]?.yield_factor || prev.yieldFactor;
       return {
@@ -548,10 +579,10 @@ export default function Ingredients() {
     const tspFactor = calculateAutoYield(netQty, netU, "tsp", ingName);
 
     const rules: IngredientConversionInput[] = [
-      { recipe_unit: "Cup", yield_factor: cupFactor },
-      { recipe_unit: "Gram", yield_factor: gramFactor },
-      { recipe_unit: "Tablespoon", yield_factor: tbspFactor },
-      { recipe_unit: "tsp", yield_factor: tspFactor },
+      { recipe_unit: "Cup", yield_factor: cupFactor, conversion_factor: 200 },
+      { recipe_unit: "Gram", yield_factor: gramFactor, conversion_factor: 1 },
+      { recipe_unit: "Tablespoon", yield_factor: tbspFactor, conversion_factor: 12.5 },
+      { recipe_unit: "tsp", yield_factor: tspFactor, conversion_factor: 4.17 },
     ];
 
     setForm((prev) => ({
@@ -603,6 +634,8 @@ export default function Ingredients() {
         supplier: form.supplier.trim() || undefined,
         sku: form.sku.trim() || undefined,
         conversions: form.conversions,
+        base_unit_id: form.base_unit_id ?? undefined,
+        category: form.category || undefined,
       };
 
       if (editTarget) {
@@ -1284,14 +1317,30 @@ export default function Ingredients() {
                             <span className="font-semibold text-slate-800 dark:text-slate-200">
                               {ing.recipe_unit}
                             </span>
-                            {ing.conversions && ing.conversions.length > 1 && (
-                              <span
-                                className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 cursor-help"
-                                title={`Mapped units: ${ing.conversions.map((c) => `${c.recipe_unit} (${c.yield_factor})`).join(", ")}`}
-                              >
-                                +{ing.conversions.length - 1} units
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1 flex-wrap justify-center">
+                              {(() => {
+                                const bu = units.find((u) => u.unit_id === ing.base_unit_id);
+                                if (bu) {
+                                  return (
+                                    <span
+                                      className="inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/60"
+                                      title={`Canonical Base Unit: ${bu.name} (${bu.code})`}
+                                    >
+                                      Base: {bu.code}
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
+                              {ing.conversions && ing.conversions.length > 1 && (
+                                <span
+                                  className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60 cursor-help"
+                                  title={`Mapped units: ${ing.conversions.map((c) => `${c.recipe_unit} (${c.conversion_factor ? `factor: ${c.conversion_factor}` : `yield: ${c.yield_factor}`})`).join(", ")}`}
+                                >
+                                  +{ing.conversions.length - 1} units
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
 
@@ -1428,19 +1477,19 @@ export default function Ingredients() {
             onClick={() => setModalOpen(false)}
           >
             <div
-              className="relative z-10 w-full max-w-3xl rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
+              className="relative z-10 w-full max-w-5xl xl:max-w-6xl rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="p-6 md:p-8 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+              <div className="p-6 md:p-8 pb-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0e1322]/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                      <span>Inventory & Costing</span>
+                      <ShoppingBag className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Inventory &amp; Costing Engine</span>
                     </span>
-                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                      PHP (₱) Active
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      Philippine Peso (₱) Active
                     </span>
                   </div>
                   <button
@@ -1455,121 +1504,42 @@ export default function Ingredients() {
                   {editTarget ? "Edit Ingredient" : "Add New Ingredient"}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Configure purchase volume, pricing, and yield factor to determine exact recipe portion costs.
+                  Configure procurement packaging, base unit normalization, and culinary conversion rules to determine exact recipe portion costs.
                 </p>
               </div>
 
               {/* Modal Body */}
               <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1">
-                {/* Row 1: Name and Category */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="sm:col-span-2 space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1">
-                      <span>INGREDIENT NAME</span> <span className="text-rose-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      placeholder="e.g., All-Purpose Flour"
-                      id="ingredient-name"
-                      className={`w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border ${errors.name ? "border-rose-400" : "border-slate-200 dark:border-slate-800"
-                        } text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium`}
-                    />
-                    {errors.name && <p className="text-xs text-rose-500">{errors.name}</p>}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                      CATEGORY
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={form.category}
-                        onChange={(e) => setForm({ ...form, category: e.target.value })}
-                        className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer font-medium"
-                      >
-                        {STANDARD_CATEGORIES.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Row 2: Supplier and SKU (Harmonized Optional Fields) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                        SUPPLIER / BRAND
+                {/* Section A: Core Identity & Categorization */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+                    <div className="sm:col-span-8 space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1">
+                        <span>INGREDIENT NAME</span> <span className="text-rose-500">*</span>
                       </label>
-                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-[#182033] px-2 py-0.5 rounded-full">
-                        Optional
-                      </span>
+                      <input
+                        type="text"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        placeholder="e.g., All-Purpose Flour"
+                        id="ingredient-name"
+                        className={`w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border ${errors.name ? "border-rose-400" : "border-slate-200 dark:border-slate-800"
+                          } text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium shadow-2xs`}
+                      />
+                      {errors.name && <p className="text-xs text-rose-500 font-medium">{errors.name}</p>}
                     </div>
-                    <input
-                      type="text"
-                      value={form.supplier}
-                      onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-                      placeholder="e.g., San Miguel Mills / Metro Mart"
-                      className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                    />
-                  </div>
 
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                        SKU / STORAGE LOCATION
-                      </label>
-                      <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-[#182033] px-2 py-0.5 rounded-full">
-                        Optional
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      value={form.sku}
-                      onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                      placeholder="e.g., DRY-BIN-04"
-                      className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                    />
-                  </div>
-                </div>
-
-                {/* Section 1: PURCHASE PACKAGING & NET CONTENT */}
-                <div className="pt-2">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                      <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                      <span>PURCHASE PACKAGING &amp; NET USABLE CONTENT</span>
-                    </div>
-                    <span className="text-xs text-slate-400">Decouples commercial packaging from net physical mass/volume</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5 mt-3.5">
-                    {/* Container Type */}
                     <div className="sm:col-span-4 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
-                          <span>PACKAGE CONTAINER</span> <span className="text-rose-500">*</span>
-                        </label>
-                        <span className="text-[10px] text-slate-400 uppercase font-semibold">Bulk Type</span>
-                      </div>
+                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        CATEGORY
+                      </label>
                       <div className="relative">
                         <select
-                          value={form.packageType}
-                          onChange={(e) => {
-                            const newType = e.target.value;
-                            const formatted = `${newType} (${form.netQuantity} ${form.netUnit})`;
-                            setForm({ ...form, packageType: newType, purchaseUnit: formatted });
-                          }}
-                          id="package-type"
-                          className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
+                          value={form.category}
+                          onChange={(e) => setForm({ ...form, category: e.target.value })}
+                          className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer font-medium shadow-2xs"
                         >
-                          {PACKAGE_CONTAINERS.map((c) => (
+                          {STANDARD_CATEGORIES.map((c) => (
                             <option key={c} value={c}>
                               {c}
                             </option>
@@ -1577,77 +1547,151 @@ export default function Ingredients() {
                         </select>
                         <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
                       </div>
-                      <p className="text-[11px] text-slate-400">e.g. Box, Sack, Tub, Carton</p>
-                    </div>
-
-                    {/* Net Quantity */}
-                    <div className="sm:col-span-4 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
-                          <span>NET QUANTITY</span> <span className="text-rose-500">*</span>
-                        </label>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Net Mass/Vol</span>
-                      </div>
-                      <input
-                        type="number"
-                        min="0.001"
-                        step="any"
-                        value={form.netQuantity || ""}
-                        placeholder="e.g., 10"
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value) || 0;
-                          const formatted = `${form.packageType} (${val} ${form.netUnit})`;
-                          setForm({ ...form, netQuantity: val, purchaseUnit: formatted });
-                        }}
-                        id="net-quantity"
-                        className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all"
-                      />
-                      <p className="text-[11px] text-slate-400">e.g., 10 (grams) or 25 (kg)</p>
-                    </div>
-
-                    {/* Net Unit (Secondary UOM) */}
-                    <div className="sm:col-span-4 space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
-                          <span>CONTENT UNIT (UOM)</span> <span className="text-rose-500">*</span>
-                        </label>
-                        <span className="text-[10px] text-slate-400 uppercase font-semibold">Standard Unit</span>
-                      </div>
-                      <div className="relative">
-                        <select
-                          value={form.netUnit}
-                          onChange={(e) => {
-                            const newUnit = e.target.value;
-                            const formatted = `${form.packageType} (${form.netQuantity} ${newUnit})`;
-                            setForm({ ...form, netUnit: newUnit, purchaseUnit: formatted });
-                          }}
-                          id="net-unit"
-                          className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer"
-                        >
-                          {NET_CONTENT_UNITS.map((u) => (
-                            <option key={u.value} value={u.value}>
-                              {u.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
-                      </div>
-                      <p className="text-[11px] text-slate-400">Physical measurement</p>
                     </div>
                   </div>
 
-                  {/* Purchase Price Row & Live Cost per Net Unit Ribbon */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3.5">
-                    {/* Container Purchase Price */}
+                  {/* Supplier and SKU */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                          SUPPLIER / BRAND
+                        </label>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-[#182033] px-2 py-0.5 rounded-full">
+                          Optional
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={form.supplier}
+                        onChange={(e) => setForm({ ...form, supplier: e.target.value })}
+                        placeholder="e.g., San Miguel Mills / Metro Mart"
+                        className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium shadow-2xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                          SKU / STORAGE LOCATION
+                        </label>
+                        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-[#182033] px-2 py-0.5 rounded-full">
+                          Optional
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={form.sku}
+                        onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                        placeholder="e.g., DRY-BIN-04"
+                        className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium shadow-2xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section B: Balanced Two-Column Procurement & Economic Engine Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-1">
+                  {/* Left Column: Commercial Purchase Packaging & Net Usable Mass */}
+                  <div className="lg:col-span-7 space-y-4 rounded-2xl p-5 bg-slate-50/70 dark:bg-[#111726]/70 border border-slate-200/80 dark:border-slate-800/80">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-200/80 dark:border-slate-800/80">
+                      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                        <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <span>PURCHASE PACKAGING &amp; NET USABLE CONTENT</span>
+                      </div>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Bulk Invoicing Basis</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+                      {/* Package Container */}
+                      <div className="sm:col-span-5 space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
+                          <span>PACKAGE CONTAINER</span> <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={form.packageType}
+                            onChange={(e) => {
+                              const newType = e.target.value;
+                              const formatted = `${newType} (${form.netQuantity} ${form.netUnit})`;
+                              setForm({ ...form, packageType: newType, purchaseUnit: formatted });
+                            }}
+                            id="package-type"
+                            className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer shadow-2xs"
+                          >
+                            {PACKAGE_CONTAINERS.map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
+                        </div>
+                        <p className="text-[11px] text-slate-400">e.g. Bag, Box, Sack, Tub</p>
+                      </div>
+
+                      {/* Net Quantity */}
+                      <div className="sm:col-span-4 space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
+                          <span>NET QUANTITY</span> <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          min="0.001"
+                          step="any"
+                          value={form.netQuantity || ""}
+                          placeholder="e.g., 1"
+                          onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            const formatted = `${form.packageType} (${val} ${form.netUnit})`;
+                            setForm({ ...form, netQuantity: val, purchaseUnit: formatted });
+                          }}
+                          id="net-quantity"
+                          className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-2xs"
+                        />
+                        <p className="text-[11px] text-slate-400">Net physical amount</p>
+                      </div>
+
+                      {/* Net Unit (Secondary UOM) */}
+                      <div className="sm:col-span-3 space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
+                          <span>UNIT (UOM)</span> <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            value={form.netUnit}
+                            onChange={(e) => {
+                              const newUnit = e.target.value;
+                              const formatted = `${form.packageType} (${form.netQuantity} ${newUnit})`;
+                              setForm({ ...form, netUnit: newUnit, purchaseUnit: formatted });
+                            }}
+                            id="net-unit"
+                            className="w-full h-[42px] appearance-none pl-3.5 pr-8 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer shadow-2xs"
+                          >
+                            {NET_CONTENT_UNITS.map((u) => (
+                              <option key={u.value} value={u.value}>
+                                {u.label}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                        </div>
+                        <p className="text-[11px] text-slate-400">kg, g, L, ml</p>
+                      </div>
+                    </div>
+
+                    {/* Container Purchase Price */}
+                    <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                           <span>CONTAINER PURCHASE PRICE (₱)</span> <span className="text-rose-500">*</span>
                         </label>
-                        <span className="text-[10px] text-slate-400 font-medium">Per {form.packageType}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                          Invoice Price per 1 {form.packageType}
+                        </span>
                       </div>
-                      <div className="flex h-[42px] items-center rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c]">
-                        <span className="h-full px-3 flex items-center justify-center text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-[#182033] border-r border-slate-200 dark:border-slate-800 shrink-0 select-none">
+                      <div className="flex h-[42px] items-center rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c] shadow-2xs">
+                        <span className="h-full px-3.5 flex items-center justify-center text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-[#182033] border-r border-slate-200 dark:border-slate-700 shrink-0 select-none">
                           ₱
                         </span>
                         <input
@@ -1661,27 +1705,66 @@ export default function Ingredients() {
                           className="min-w-0 flex-1 h-full px-3 text-sm bg-transparent text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span
-                          className="h-full px-3 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-800 shrink-0 whitespace-nowrap"
+                          className="h-full px-3.5 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-700 shrink-0 whitespace-nowrap"
                           title={`Cost in Philippine Pesos per ${form.packageType}`}
                         >
                           PHP / {form.packageType}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-400">Total invoice/purchase price for 1 {form.packageType}</p>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Economic Engine & Canonical Base Unit Basis */}
+                  <div className="lg:col-span-5 space-y-4 rounded-2xl p-5 bg-gradient-to-br from-emerald-500/[0.04] via-slate-50/50 to-emerald-500/[0.04] dark:from-emerald-950/20 dark:via-[#111726]/60 dark:to-emerald-950/20 border border-emerald-500/20 dark:border-emerald-800/40 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between pb-2.5 border-b border-emerald-500/15 dark:border-emerald-800/30">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
+                          <Scale className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <span>UNIT ECONOMIC BASIS</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full">
+                          Cost Engine
+                        </span>
+                      </div>
+
+                      {/* Canonical Base Unit Selector */}
+                      <div className="space-y-1.5 mt-3.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                            CANONICAL BASE UNIT (NORMALIZED COST BASIS)
+                          </label>
+                        </div>
+                        <div className="relative">
+                          <select
+                            value={form.base_unit_id ?? ""}
+                            onChange={(e) => {
+                              const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                              setForm({ ...form, base_unit_id: val });
+                            }}
+                            id="base-unit-selector"
+                            className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer shadow-2xs"
+                          >
+                            <option value="">Auto-detected standard base unit</option>
+                            {units
+                              .filter((u) => u.is_base)
+                              .map((u) => (
+                                <option key={u.unit_id} value={u.unit_id}>
+                                  {u.name} ({u.code}) — {u.unit_type}
+                                </option>
+                              ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                          Reference base ({units.filter(u => u.is_base).map(u => `${u.code}`).join(", ") || "g, ml, pcs"}) used by the cost engine to normalize recipe quantities.
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Real-time Net Unit Metric Card (Harmonized & Aligned) */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
-                          CALCULATED NET UNIT COST
-                        </label>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Live Rate</span>
-                      </div>
-                      <div className="flex h-[42px] items-center justify-between px-3.5 rounded-xl bg-slate-50/90 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800">
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                          Effective Cost:
-                        </span>
+                    {/* Live Cost Rate Card */}
+                    <div className="mt-3 p-3.5 rounded-xl bg-white/80 dark:bg-[#141b2c]/80 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold text-slate-500 dark:text-slate-400">Effective Net Rate:</span>
                         <div className="flex items-baseline gap-1">
                           <span className="text-base font-black text-emerald-700 dark:text-emerald-400 tabular-nums">
                             {fmt(calculatedCostPerNetUnit)}
@@ -1691,15 +1774,18 @@ export default function Ingredients() {
                           </span>
                         </div>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                        Billed packaging: <strong>1 {form.packageType} = {form.netQuantity} {form.netUnit}</strong>
-                      </p>
+                      <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                        <span>Pack Definition:</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                          1 {form.packageType} = {form.netQuantity} {form.netUnit}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Section 2: RECIPE USAGE & MULTI-UNIT CONVERSIONS (Master-Detail Inline Sub-Grid) */}
-                <div className="pt-2 space-y-3">
+                {/* Section C: RECIPE USAGE & MULTI-UNIT CONVERSIONS (Master-Detail Inline Sub-Grid) */}
+                <div className="space-y-3 pt-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
                     <div>
                       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
@@ -1707,7 +1793,7 @@ export default function Ingredients() {
                         <span>RECIPE USAGE &amp; MULTI-UNIT CONVERSIONS</span>
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        Map this bulk item to infinite recipe unit variations (e.g., cup, grams, tablespoons).
+                        Configure recipe measurement units (e.g., cup, grams, tablespoons) and base-unit conversion factors.
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -1732,14 +1818,15 @@ export default function Ingredients() {
                   </div>
 
                   {/* Sub-grid: Inline Editable Conversion Rules Table */}
-                  <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
-                    <table className="w-full text-xs">
+                  <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
+                    <table className="w-full text-xs border-collapse">
                       <thead>
                         <tr className="bg-slate-50 dark:bg-[#182033] border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                          <th className="py-2.5 px-3.5 text-left">Kitchen Recipe Unit</th>
-                          <th className="py-2.5 px-3 text-left">Yield Factor (Units / {form.packageType})</th>
-                          <th className="py-2.5 px-3 text-right">Normalized Micro-Cost</th>
-                          <th className="py-2.5 px-2 text-center w-12">Action</th>
+                          <th className="py-3 px-4 text-left w-[24%] min-w-[170px]">Kitchen Recipe Unit</th>
+                          <th className="py-3 px-4 text-left w-[25%] min-w-[200px]">Conversion Factor (Base Qty)</th>
+                          <th className="py-3 px-4 text-left w-[25%] min-w-[200px]">Yield Factor (Derived)</th>
+                          <th className="py-3 px-4 text-right w-[18%] min-w-[150px]">Normalized Micro-Cost</th>
+                          <th className="py-3 px-3 text-center w-[8%] min-w-[60px]">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -1748,21 +1835,24 @@ export default function Ingredients() {
                             conv.yield_factor > 0 && form.purchasePrice > 0
                               ? form.purchasePrice / conv.yield_factor
                               : 0;
+                          const bu = units.find((u) => u.unit_id === form.base_unit_id) || units.find((u) => u.is_base);
+                          const baseCode = bu?.code || (form.netUnit.toLowerCase().includes("ml") ? "ml" : "g");
+
                           return (
                             <tr
                               key={idx}
-                              className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors"
+                              className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                             >
-                              {/* Recipe Unit */}
-                              <td className="py-2.5 px-3.5">
+                              {/* Kitchen Recipe Unit */}
+                              <td className="py-3 px-4">
                                 <div className="flex items-center gap-2">
-                                  <div className="relative">
+                                  <div className="relative flex-1 max-w-[180px]">
                                     <select
                                       value={conv.recipe_unit}
                                       onChange={(e) =>
                                         handleUpdateConversionRule(idx, "recipe_unit", e.target.value)
                                       }
-                                      className="appearance-none pl-3 pr-8 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 text-xs cursor-pointer"
+                                      className="w-full appearance-none pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 text-xs cursor-pointer shadow-2xs"
                                     >
                                       {RECIPE_UNITS.map((u) => (
                                         <option key={u.value} value={u.value}>
@@ -1773,54 +1863,83 @@ export default function Ingredients() {
                                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
                                   </div>
                                   {idx === 0 && (
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 shrink-0">
                                       Primary
                                     </span>
                                   )}
                                 </div>
                               </td>
 
-                              {/* Yield Factor */}
-                              <td className="py-2.5 px-3">
-                                <div className="flex items-center gap-1.5 max-w-[200px]">
-                                  <input
-                                    type="number"
-                                    min="0.0001"
-                                    step="any"
-                                    value={conv.yield_factor}
-                                    onChange={(e) =>
-                                      handleUpdateConversionRule(
-                                        idx,
-                                        "yield_factor",
-                                        parseFloat(e.target.value) || 0
-                                      )
-                                    }
-                                    className="w-24 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-bold text-slate-900 dark:text-white tabular-nums text-xs focus:outline-none focus:border-emerald-500"
-                                  />
-                                  <span className="text-slate-400 text-[11px] font-medium">
-                                    {conv.recipe_unit}s
-                                  </span>
+                              {/* Conversion Factor (Base Qty) */}
+                              <td className="py-3 px-4">
+                                <div className="flex items-center">
+                                  <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-[#141b2c] focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 shadow-2xs">
+                                    <input
+                                      type="number"
+                                      min="0.0001"
+                                      step="any"
+                                      id={`conv-factor-${idx}`}
+                                      value={conv.conversion_factor ?? ""}
+                                      placeholder="e.g., 125"
+                                      onChange={(e) =>
+                                        handleUpdateConversionRule(
+                                          idx,
+                                          "conversion_factor",
+                                          parseFloat(e.target.value) || 0
+                                        )
+                                      }
+                                      className="w-24 px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white tabular-nums bg-transparent focus:outline-none"
+                                    />
+                                    <span className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-700 whitespace-nowrap select-none">
+                                      {baseCode} / {conv.recipe_unit}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Yield Factor (Derived) */}
+                              <td className="py-3 px-4">
+                                <div className="flex items-center">
+                                  <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-[#141b2c] focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 shadow-2xs">
+                                    <input
+                                      type="number"
+                                      min="0.0001"
+                                      step="any"
+                                      id={`yield-factor-${idx}`}
+                                      value={conv.yield_factor}
+                                      onChange={(e) =>
+                                        handleUpdateConversionRule(
+                                          idx,
+                                          "yield_factor",
+                                          parseFloat(e.target.value) || 0
+                                        )
+                                      }
+                                      className="w-24 px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white tabular-nums bg-transparent focus:outline-none"
+                                    />
+                                    <span className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-700 whitespace-nowrap select-none">
+                                      {conv.recipe_unit}s / {form.packageType}
+                                    </span>
+                                  </div>
                                 </div>
                               </td>
 
                               {/* Normalized Micro-Cost */}
-                              <td className="py-2.5 px-3 text-right">
-                                <div className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                              <td className="py-3 px-4 text-right">
+                                <div className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400 tabular-nums">
                                   {fmt(microCost)}
-                                  <span className="text-[11px] text-slate-400 font-normal">
-                                    {" "}
+                                  <span className="text-[11px] font-normal text-slate-400 dark:text-slate-500 ml-1">
                                     / {conv.recipe_unit}
                                   </span>
                                 </div>
                               </td>
 
                               {/* Action: Delete Rule */}
-                              <td className="py-2.5 px-2 text-center">
+                              <td className="py-3 px-3 text-center">
                                 <button
                                   type="button"
                                   disabled={form.conversions.length <= 1}
                                   onClick={() => handleDeleteConversionRule(idx)}
-                                  className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
                                   title={
                                     form.conversions.length <= 1
                                       ? "At least one conversion rule is required"
@@ -1840,14 +1959,14 @@ export default function Ingredients() {
                     <p className="text-xs text-rose-500 font-medium">{errors.conversions}</p>
                   )}
 
-                  {/* Quick Presets */}
-                  <div className="pt-1">
-                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+                  {/* Quick Presets Toolbar */}
+                  <div className="pt-2">
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
                       <span className="font-bold text-slate-700 dark:text-slate-300">
                         ⚡ Quick Package &amp; Culinary Conversion Presets:
                       </span>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {PACKAGE_CONTENT_PRESETS.map((p) => (
                         <button
                           key={p.label}
@@ -1872,7 +1991,7 @@ export default function Ingredients() {
                               ],
                             });
                           }}
-                          className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 dark:bg-[#141b2c] dark:hover:bg-emerald-950/70 dark:text-slate-300 dark:hover:text-emerald-300 transition-colors border border-slate-200 dark:border-slate-800 cursor-pointer"
+                          className="text-[11px] font-semibold px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 dark:bg-[#141b2c] dark:hover:bg-emerald-950/70 dark:text-slate-300 dark:hover:text-emerald-300 transition-colors border border-slate-200/80 dark:border-slate-800 cursor-pointer shadow-2xs"
                           title={p.hint}
                         >
                           {p.label}
@@ -1882,14 +2001,14 @@ export default function Ingredients() {
                   </div>
                 </div>
 
-                {/* Calculated Recipe Cost Box */}
-                <div className="rounded-2xl p-4.5 bg-slate-50 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black text-sm flex items-center justify-center shadow-md shadow-emerald-600/20">
+                {/* Section D: Summary Hero Ribbon */}
+                <div className="rounded-2xl p-5 bg-gradient-to-r from-slate-50 via-emerald-50/20 to-slate-50 dark:from-[#111726] dark:via-emerald-950/10 dark:to-[#111726] border border-slate-200/90 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white font-black text-base flex items-center justify-center shadow-md shadow-emerald-600/20 shrink-0">
                       ₱
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                         Calculated Recipe Cost
                       </h4>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -1913,6 +2032,45 @@ export default function Ingredients() {
                   </div>
                 </div>
 
+                {/* Purchase Records & Multi-Supplier Tracking */}
+                {editTarget && editTarget.purchases && editTarget.purchases.length > 0 && (
+                  <div className="pt-2 space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                      <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <span>PURCHASE RECORDS &amp; SUPPLIER HISTORY</span>
+                    </div>
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 dark:bg-[#182033] border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                            <th className="py-2.5 px-4 text-left">Supplier</th>
+                            <th className="py-2.5 px-4 text-left">Package Quantity</th>
+                            <th className="py-2.5 px-4 text-right">Purchase Price</th>
+                            <th className="py-2.5 px-4 text-right">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                          {editTarget.purchases.map((p) => (
+                            <tr key={p.purchase_id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                              <td className="py-2.5 px-4 font-semibold text-slate-900 dark:text-white">
+                                {p.supplier_name || "Primary Supplier"}
+                              </td>
+                              <td className="py-2.5 px-4 text-slate-600 dark:text-slate-300">
+                                {p.package_quantity} {form.packageType}
+                              </td>
+                              <td className="py-2.5 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                                {fmt(p.purchase_price)}
+                              </td>
+                              <td className="py-2.5 px-4 text-right text-slate-400 text-[11px]">
+                                {new Date(p.purchase_date).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Modal Actions Footer */}
