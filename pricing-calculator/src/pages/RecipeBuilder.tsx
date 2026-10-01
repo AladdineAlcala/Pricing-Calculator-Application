@@ -959,8 +959,7 @@ export default function RecipeBuilder() {
                   <tr className="border-b border-slate-100 dark:border-slate-800/80 text-[10px] uppercase font-bold tracking-wider text-slate-400">
                     <th className="text-left py-3 pr-4">Ingredient</th>
                     <th className="text-right py-3 px-3">Purchase Price</th>
-                    <th className="text-right py-3 px-3">Yield Factor</th>
-                    <th className="text-right py-3 px-3">Unit Cost</th>
+                    <th className="text-right py-3 px-3">Base &amp; Unit Cost</th>
                     <th className="text-center py-3 px-3">Recipe Qty</th>
                     <th className="text-right py-3 pl-3">Line Cost</th>
                     <th className="w-8 py-3 pl-2 print:hidden" />
@@ -969,7 +968,7 @@ export default function RecipeBuilder() {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                   {displayItems.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-500">
+                      <td colSpan={6} className="py-12 text-center text-slate-400 dark:text-slate-500">
                         <Box className="w-8 h-8 mx-auto mb-2 opacity-30" />
                         <p className="font-semibold text-sm">No raw ingredients added yet.</p>
                         <button
@@ -1003,6 +1002,11 @@ export default function RecipeBuilder() {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80" />
                             <span>
                               {li.purchase_unit || (li.package_type ? `${li.package_type} (${li.net_quantity} ${li.net_unit})` : "Package")}
+                              {li.yield_factor > 0 && (
+                                <span className="text-slate-400 dark:text-slate-500 ml-1 font-medium">
+                                  • {li.yield_factor.toFixed(1)} {li.recipe_unit}s/pack
+                                </span>
+                              )}
                               {li.net_quantity && li.net_quantity > 0 && li.purchase_price > 0 && (
                                 <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">
                                   ({fmt(li.purchase_price / li.net_quantity)}/{li.net_unit || "unit"})
@@ -1017,17 +1021,17 @@ export default function RecipeBuilder() {
                           {fmt(li.purchase_price)}
                         </td>
 
-                        {/* Yield Factor */}
-                        <td className="py-3.5 px-3 text-right text-slate-600 dark:text-slate-300 tabular-nums">
-                          <span>{li.yield_factor.toFixed(2)} {li.recipe_unit}s</span>
-                        </td>
-
-                        {/* Unit Cost */}
+                        {/* Base & Unit Cost */}
                         <td className="py-3.5 px-3 text-right tabular-nums">
                           <span className="font-bold text-slate-800 dark:text-slate-200">
                             {fmt(li.normalized_unit_cost)}
                           </span>
                           <span className="text-[11px] text-slate-400 block">/{li.recipe_unit}</span>
+                          {li.base_unit_cost != null && li.base_unit_code && (
+                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-semibold mt-0.5">
+                              Base: {fmt(li.base_unit_cost)}/{li.base_unit_code}
+                            </span>
+                          )}
                         </td>
 
                         {/* Recipe Qty (Inline Input) */}
@@ -1099,6 +1103,11 @@ export default function RecipeBuilder() {
                               );
                             })()}
                           </div>
+                          {li.normalized_quantity != null && li.base_unit_code && (
+                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 block font-medium mt-0.5" title="Normalized canonical base quantity used for costing">
+                              ≈ {li.normalized_quantity.toFixed(1)} {li.base_unit_code}
+                            </span>
+                          )}
                         </td>
 
                         {/* Line Cost */}

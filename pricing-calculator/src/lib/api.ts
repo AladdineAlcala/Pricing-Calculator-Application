@@ -1,17 +1,55 @@
 // Tauri IPC bridge — typed wrappers around invoke()
 import { invoke } from "@tauri-apps/api/core";
 
+// ── Units (v2.0) ─────────────────────────────────────────────────────────────
+export interface Unit {
+  unit_id: number;
+  code: string;
+  name: string;
+  unit_type: 'weight' | 'volume' | 'count';
+  is_base: boolean;
+}
+
+// ── Ingredient Purchases (v2.0) ──────────────────────────────────────────────
+export interface IngredientPurchase {
+  purchase_id: number;
+  ingredient_id: number;
+  supplier_name?: string | null;
+  package_quantity: number;
+  package_unit_id: number;
+  purchase_price: number;
+  purchase_date: string;
+  is_active: boolean;
+}
+
+export interface IngredientPurchaseInput {
+  supplier_name?: string | null;
+  package_quantity: number;
+  package_unit_id: number;
+  purchase_price: number;
+}
+
 export interface IngredientConversion {
   conversion_id: number;
   ingredient_id: number;
   recipe_unit: string;
   yield_factor: number;
+  from_unit_id?: number | null;
+  to_unit_id?: number | null;
+  conversion_factor?: number | null;
+  source?: string | null;
+  effective_date?: string | null;
+  is_active?: boolean;
 }
 
 export interface IngredientConversionInput {
   conversion_id?: number;
   recipe_unit: string;
   yield_factor: number;
+  from_unit_id?: number | null;
+  to_unit_id?: number | null;
+  conversion_factor?: number | null;
+  source?: string | null;
 }
 
 export interface Ingredient {
@@ -29,6 +67,9 @@ export interface Ingredient {
   supplier?: string | null;
   sku?: string | null;
   conversions?: IngredientConversion[];
+  base_unit_id?: number | null;
+  category?: string | null;
+  purchases?: IngredientPurchase[];
 }
 
 export interface IngredientInput {
@@ -45,6 +86,24 @@ export interface IngredientInput {
   supplier?: string | null;
   sku?: string | null;
   conversions?: IngredientConversionInput[];
+  base_unit_id?: number | null;
+  category?: string | null;
+  purchases?: IngredientPurchaseInput[];
+}
+
+export interface RecipeIngredientCostResult {
+  ingredient_id: number;
+  ingredient_name: string;
+  recipe_quantity: number;
+  recipe_unit_code: string;
+  normalized_quantity: number;
+  base_unit_code: string;
+  package_quantity: number;
+  package_unit_code: string;
+  purchase_price: number;
+  base_unit_cost: number;
+  ingredient_cost: number;
+  yield_factor: number;
 }
 
 export interface Recipe {
@@ -89,6 +148,9 @@ export interface RecipeIngredient {
   is_orphaned_conversion?: boolean;
   normalized_unit_cost: number;
   line_item_cost: number;
+  base_unit_code?: string | null;
+  base_unit_cost?: number | null;
+  normalized_quantity?: number | null;
 }
 
 export interface RecipeCostResult {
@@ -113,6 +175,19 @@ export interface AppSetting {
   setting_key: string;
   setting_value: string;
 }
+
+// ── Units (v2.0) ─────────────────────────────────────────────────────────────
+export const getUnits = () => invoke<Unit[]>("get_units");
+
+// ── Ingredient Purchases (v2.0) ──────────────────────────────────────────────
+export const getIngredientPurchases = (ingredient_id: number) =>
+  invoke<IngredientPurchase[]>("get_ingredient_purchases", { ingredientId: ingredient_id });
+export const createIngredientPurchase = (ingredient_id: number, input: IngredientPurchaseInput) =>
+  invoke<IngredientPurchase>("create_ingredient_purchase", { ingredientId: ingredient_id, input });
+export const updateIngredientPurchase = (purchase_id: number, input: IngredientPurchaseInput) =>
+  invoke<void>("update_ingredient_purchase", { purchaseId: purchase_id, input });
+export const deleteIngredientPurchase = (purchase_id: number) =>
+  invoke<void>("delete_ingredient_purchase", { purchaseId: purchase_id });
 
 // ── Ingredients ──────────────────────────────────────────────────────────────
 export const getIngredients = () => invoke<Ingredient[]>("get_ingredients");

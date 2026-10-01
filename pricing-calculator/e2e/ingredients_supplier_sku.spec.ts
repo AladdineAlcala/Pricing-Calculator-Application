@@ -33,6 +33,13 @@ test.describe('Ingredients: Supplier / Brand and SKU / Storage Location Persiste
               { setting_key: 'theme', setting_value: 'light' },
             ];
           }
+          if (cmd === 'get_units') {
+            return [
+              { unit_id: 1, code: 'g', name: 'Gram', unit_type: 'weight', is_base: true },
+              { unit_id: 2, code: 'kg', name: 'Kilogram', unit_type: 'weight', is_base: false },
+              { unit_id: 3, code: 'ml', name: 'Milliliter', unit_type: 'volume', is_base: true },
+            ];
+          }
           if (cmd === 'get_ingredients') {
             return [...mockIngredients];
           }

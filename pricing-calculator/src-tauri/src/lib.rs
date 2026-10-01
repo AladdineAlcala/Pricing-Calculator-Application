@@ -33,6 +33,11 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::get_units,
+            commands::get_ingredient_purchases,
+            commands::create_ingredient_purchase,
+            commands::update_ingredient_purchase,
+            commands::delete_ingredient_purchase,
             commands::get_ingredients,
             commands::create_ingredient,
             commands::update_ingredient,
