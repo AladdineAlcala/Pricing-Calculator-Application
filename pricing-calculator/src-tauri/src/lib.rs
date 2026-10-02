@@ -57,6 +57,16 @@ pub fn run() {
             commands::receive_inventory,
             commands::get_inventory_ledger,
             commands::produce_batch_with_validation,
+            commands::get_packaging_list,
+            commands::create_packaging,
+            commands::update_packaging,
+            commands::toggle_packaging_active,
+            commands::get_recipe_packaging,
+            commands::upsert_recipe_packaging,
+            commands::remove_recipe_packaging,
+            commands::receive_packaging_inventory,
+            commands::get_packaging_inventory_ledger,
+            commands::get_packaging_transactions,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

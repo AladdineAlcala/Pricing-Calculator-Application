@@ -926,12 +926,6 @@ export default function Ingredients() {
                 <span>{unpricedCount} Needs Price</span>
               </div>
             </div>
-
-            <div className="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500 mb-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Real-time FIFO Inventory Sync Connected</span>
-            </div>
-
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               Ingredients & UOM Conversion
             </h1>

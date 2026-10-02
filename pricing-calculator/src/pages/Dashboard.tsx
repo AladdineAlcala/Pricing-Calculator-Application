@@ -160,7 +160,7 @@ export default function Dashboard() {
     return (
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14]">
         <Header unpricedCount={0} />
-        <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-8 animate-pulse">
+        <main className="flex-1 p-6 md:p-8 w-full space-y-8 animate-pulse">
           {/* Skeleton Header */}
           <div className="space-y-3">
             <div className="h-5 w-44 bg-artisan-subtle dark:bg-slate-800 rounded-full" />
@@ -198,7 +198,7 @@ export default function Dashboard() {
       <Header unpricedCount={unpricedCount} />
 
       {/* ── Main Scrollable Dashboard Content ── */}
-      <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main className="flex-1 p-6 md:p-8 w-full space-y-8">
         {/* Seed Data Success Toast */}
         {seedSuccessNotice && (
           <div className="flex items-center justify-between p-4 rounded-xl bg-culinary-50 dark:bg-emerald-950/70 border border-culinary-200 dark:border-emerald-800 text-culinary-800 dark:text-emerald-200 text-xs shadow-artisan-subtle animate-in fade-in slide-in-from-top-2 duration-300">

@@ -156,6 +156,9 @@ export interface RecipeIngredient {
 export interface RecipeCostResult {
   recipe: Recipe;
   line_items: RecipeIngredient[];
+  packaging_items?: RecipePackaging[];
+  total_ingredient_cost?: number;
+  total_packaging_cost?: number;
   total_variable_cost: number;
   total_overhead: number;
   total_cost_per_batch: number;
@@ -233,6 +236,103 @@ export const getSettings = () => invoke<AppSetting[]>("get_settings");
 export const setSetting = (key: string, value: string) =>
   invoke<void>("set_setting", { key, value });
 
+// ── Packaging (v2.1) ─────────────────────────────────────────────────────────
+export interface Packaging {
+  packaging_id: number;
+  packaging_code: string;
+  name: string;
+  packaging_type: string;
+  unit: string;
+  current_unit_cost: number;
+  current_stock_qty: number;
+  reorder_threshold: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PackagingInput {
+  packaging_code: string;
+  name: string;
+  packaging_type: string;
+  unit: string;
+  current_unit_cost: number;
+  reorder_threshold: number;
+  is_active?: boolean;
+}
+
+export interface RecipePackaging {
+  id: number;
+  recipe_id: number;
+  packaging_id: number;
+  batch_qty: number;
+  packaging_code: string;
+  packaging_name: string;
+  packaging_type: string;
+  unit: string;
+  current_unit_cost: number;
+  line_item_cost: number;
+}
+
+export interface RecipePackagingInput {
+  id?: number | null;
+  recipe_id: number;
+  packaging_id: number;
+  batch_qty: number;
+}
+
+export interface PackagingTransaction {
+  transaction_id: number;
+  packaging_id: number;
+  transaction_type: "IN" | "OUT";
+  quantity: number;
+  unit_cost: number;
+  reference: string;
+  created_at: string;
+}
+
+export interface ReceivePackagingPayload {
+  packaging_id: number;
+  added_qty: number;
+  new_unit_cost: number;
+}
+
+export interface PackagingLedgerItem {
+  packaging_id: number;
+  packaging_code: string;
+  name: string;
+  packaging_type: string;
+  unit: string;
+  current_unit_cost: number;
+  current_stock_qty: number;
+  reorder_threshold: number;
+  total_value: number;
+  is_low_stock: boolean;
+}
+
+export const getPackagingList = () => invoke<Packaging[]>("get_packaging_list");
+export const createPackaging = (input: PackagingInput) =>
+  invoke<Packaging>("create_packaging", { input });
+export const updatePackaging = (packaging_id: number, input: PackagingInput) =>
+  invoke<Packaging>("update_packaging", { packagingId: packaging_id, input });
+export const togglePackagingActive = (packaging_id: number, is_active: boolean) =>
+  invoke<void>("toggle_packaging_active", { packagingId: packaging_id, isActive: is_active });
+
+export const getRecipePackaging = (recipe_id: number) =>
+  invoke<RecipePackaging[]>("get_recipe_packaging", { recipeId: recipe_id });
+export const upsertRecipePackaging = (input: RecipePackagingInput) =>
+  invoke<RecipePackaging>("upsert_recipe_packaging", { input });
+export const removeRecipePackaging = (id: number) =>
+  invoke<void>("remove_recipe_packaging", { id });
+
+export const receivePackagingInventory = (payload: ReceivePackagingPayload) =>
+  invoke<void>("receive_packaging_inventory", { payload });
+export const getPackagingLedger = () =>
+  invoke<PackagingLedgerItem[]>("get_packaging_inventory_ledger");
+export const getPackagingInventoryLedger = getPackagingLedger;
+export const getPackagingTransactions = (packaging_id?: number | null) =>
+  invoke<PackagingTransaction[]>("get_packaging_transactions", { packagingId: packaging_id ?? null });
+
 // ── Export / Backup ───────────────────────────────────────────────────────────
 export const exportDataCsv = (recipe_id: number) =>
   invoke<string>("export_data_csv", { recipeId: recipe_id });
@@ -264,6 +364,7 @@ export interface StockDeficit {
   current_bulk_qty: number;
   deficit_qty: number;
   unit: string;
+  item_type?: string;
 }
 
 export interface ProduceBatchPayload {

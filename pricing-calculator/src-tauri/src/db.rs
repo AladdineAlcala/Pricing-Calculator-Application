@@ -310,6 +310,83 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
     // ── v2.0: Auto-populate conversion_factor from USDA reference data ───────
     populate_usda_conversion_factors(conn);
 
+    // ── 7. packaging (v2.1: Packaging Management Subsystem) ─────────────────
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS packaging (
+            packaging_id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            packaging_code      TEXT    NOT NULL UNIQUE,
+            name                TEXT    NOT NULL,
+            packaging_type      TEXT    NOT NULL,
+            unit                TEXT    NOT NULL,
+            current_unit_cost   REAL    NOT NULL DEFAULT 0.0,
+            current_stock_qty   REAL    NOT NULL DEFAULT 0.0,
+            reorder_threshold   REAL    NOT NULL DEFAULT 0.0,
+            is_active           INTEGER NOT NULL DEFAULT 1,
+            created_at          TEXT    NOT NULL DEFAULT (datetime('now')),
+            updated_at          TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_packaging_active ON packaging(is_active);
+        CREATE INDEX IF NOT EXISTS idx_packaging_code ON packaging(packaging_code);
+
+        CREATE TABLE IF NOT EXISTS recipe_packaging (
+            id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipe_id           INTEGER NOT NULL REFERENCES recipes(recipe_id) ON DELETE CASCADE,
+            packaging_id        INTEGER NOT NULL REFERENCES packaging(packaging_id) ON DELETE RESTRICT,
+            batch_qty           REAL    NOT NULL DEFAULT 0.0,
+            UNIQUE(recipe_id, packaging_id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_recipe_packaging_recipe ON recipe_packaging(recipe_id);
+        CREATE INDEX IF NOT EXISTS idx_recipe_packaging_pkg ON recipe_packaging(packaging_id);
+
+        CREATE TABLE IF NOT EXISTS packaging_transactions (
+            transaction_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+            packaging_id        INTEGER NOT NULL REFERENCES packaging(packaging_id) ON DELETE CASCADE,
+            transaction_type    TEXT    NOT NULL,
+            quantity            REAL    NOT NULL,
+            unit_cost           REAL    NOT NULL,
+            reference           TEXT    NOT NULL,
+            created_at          TEXT    NOT NULL DEFAULT (datetime('now'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_packaging_trans_pkg ON packaging_transactions(packaging_id);",
+    )?;
+
+    seed_packaging(conn)?;
+
+    Ok(())
+}
+
+fn seed_packaging(conn: &Connection) -> Result<()> {
+    let existing: i64 = conn
+        .query_row("SELECT COUNT(*) FROM packaging", [], |row| row.get(0))
+        .unwrap_or(0);
+
+    if existing > 0 {
+        return Ok(());
+    }
+
+    let seeds: Vec<(&str, &str, &str, &str, f64, f64, f64)> = vec![
+        ("PKG-BML-01", "Banana Muffin Liner",            "Liner",     "Piece", 2.0,  500.0, 100.0),
+        ("PKG-BMB-02", "Banana Muffin Box",              "Box",       "Piece", 15.0,  50.0,  20.0),
+        ("PKG-BBB-03", "Banana Bread Box",               "Box",       "Box",   15.0,  40.0,  15.0),
+        ("PKG-CCL-04", "Custard Clamshell",              "Clamshell", "Piece", 8.0,   60.0,  20.0),
+        ("PKG-ESH-05", "Ensaymada Sheet",                "Sheet",     "Sheet", 1.0,  300.0,  50.0),
+        ("PKG-CCL-06", "Cupcake Liner",                  "Liner",     "Piece", 1.0,  400.0, 100.0),
+        ("PKG-YCC-07", "Yema Cake Container",            "Container", "Piece", 6.0,   80.0,  25.0),
+        ("PKG-MML-08", "Mammon Liner",                   "Liner",     "Piece", 1.0,  250.0,  50.0),
+        ("PKG-SBP-09", "Spanish Bread Packaging",        "Wrapper",   "Piece", 2.0,  200.0,  50.0),
+        ("PKG-MCC-10", "Moist Cake Container",           "Container", "Piece", 6.0,   80.0,  25.0),
+        ("PKG-TSP-11", "Taisan Packaging",               "Bag",       "Piece", 13.0,  50.0,  15.0),
+        ("PKG-LYM-12", "Lengua de Gato/Yema/Moist Cake", "Container", "Piece", 6.0,   75.0,  20.0),
+    ];
+
+    for (code, name, pkg_type, unit, cost, stock, reorder) in seeds {
+        conn.execute(
+            "INSERT OR IGNORE INTO packaging (packaging_code, name, packaging_type, unit, current_unit_cost, current_stock_qty, reorder_threshold, is_active)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 1)",
+            params![code, name, pkg_type, unit, cost, stock, reorder],
+        )?;
+    }
+
     Ok(())
 }
 

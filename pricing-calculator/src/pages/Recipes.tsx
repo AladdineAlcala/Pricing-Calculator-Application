@@ -14,7 +14,6 @@ import {
   Info,
   User,
   Lightbulb,
-  Box,
   Layers,
   ArrowUpRight,
   Download,
@@ -118,7 +117,7 @@ export default function Recipes() {
         yield_qty: r.yield_qty,
         labor_cost: r.labor_cost,
         electricity_cost: r.electricity_cost,
-        other_overhead: r.other_overhead,
+        other_overhead: 0,
         target_markup_pct: r.target_markup_pct,
         reseller_markup_pct: r.reseller_markup_pct,
         desired_profit_alert: r.desired_profit_alert,
@@ -161,7 +160,6 @@ export default function Recipes() {
     if (form.desired_profit_alert < 0) e.desired_profit_alert = "Alert threshold cannot be negative";
     if (form.labor_cost < 0) e.labor_cost = "Labor cost cannot be negative";
     if (form.electricity_cost < 0) e.electricity_cost = "Electricity cost cannot be negative";
-    if (form.other_overhead < 0) e.other_overhead = "Other overhead cannot be negative";
     if (form.target_markup_pct < 0) e.target_markup_pct = "Target markup cannot be negative";
     if (form.reseller_markup_pct < 0) e.reseller_markup_pct = "Reseller markup cannot be negative";
     setErrors(e);
@@ -190,8 +188,8 @@ export default function Recipes() {
 
   // Live Modal Telemetry Calculations
   const modalTotalOverhead = useMemo(() => {
-    return (form.labor_cost || 0) + (form.electricity_cost || 0) + (form.other_overhead || 0);
-  }, [form.labor_cost, form.electricity_cost, form.other_overhead]);
+    return (form.labor_cost || 0) + (form.electricity_cost || 0);
+  }, [form.labor_cost, form.electricity_cost]);
 
   const modalOverheadPerUnit = useMemo(() => {
     return form.yield_qty > 0 ? modalTotalOverhead / form.yield_qty : 0;
@@ -222,7 +220,7 @@ export default function Recipes() {
     }
 
     const totalOverheadSum = recipes.reduce(
-      (sum, r) => sum + (r.labor_cost + r.electricity_cost + r.other_overhead),
+      (sum, r) => sum + (r.labor_cost + r.electricity_cost),
       0
     );
     const avgOverhead = totalOverheadSum / totalCount;
@@ -259,8 +257,8 @@ export default function Recipes() {
         if (sortBy === "margin") return b.target_markup_pct - a.target_markup_pct;
         if (sortBy === "name") return a.name.localeCompare(b.name);
         if (sortBy === "overhead") {
-          const aTotal = a.labor_cost + a.electricity_cost + a.other_overhead;
-          const bTotal = b.labor_cost + b.electricity_cost + b.other_overhead;
+          const aTotal = a.labor_cost + a.electricity_cost;
+          const bTotal = b.labor_cost + b.electricity_cost;
           return bTotal - aTotal;
         }
         if (sortBy === "yield") return b.yield_qty - a.yield_qty;
@@ -583,7 +581,7 @@ export default function Recipes() {
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {paginatedRecipes.map((r, idx) => {
-              const totalOverheadCard = r.labor_cost + r.electricity_cost + r.other_overhead;
+              const totalOverheadCard = r.labor_cost + r.electricity_cost;
               const retailMarkupPct = Math.round(r.target_markup_pct > 1 ? r.target_markup_pct : r.target_markup_pct * 100);
               const resellerMarkupPct = Math.round(r.reseller_markup_pct > 1 ? r.reseller_markup_pct : r.reseller_markup_pct * 100);
               const isFav = !!favorites[r.recipe_id];
@@ -688,12 +686,6 @@ export default function Recipes() {
                           <span className="text-slate-500 dark:text-slate-400">Electricity & Gas:</span>
                           <span className="font-semibold tabular-nums text-slate-900 dark:text-white">
                             {fmt(r.electricity_cost)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-500 dark:text-slate-400">Other Overhead & Pkg:</span>
-                          <span className="font-semibold tabular-nums text-slate-900 dark:text-white">
-                            {fmt(r.other_overhead)}
                           </span>
                         </div>
                         <div className="pt-2 border-t border-slate-200/80 dark:border-slate-800/80 flex justify-between font-bold">
@@ -805,7 +797,7 @@ export default function Recipes() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium text-slate-800 dark:text-slate-200">
                   {paginatedRecipes.map((r, idx) => {
-                    const totalOverheadCard = r.labor_cost + r.electricity_cost + r.other_overhead;
+                    const totalOverheadCard = r.labor_cost + r.electricity_cost;
                     const retailMarkupPct = Math.round(r.target_markup_pct > 1 ? r.target_markup_pct : r.target_markup_pct * 100);
                     const isFav = !!favorites[r.recipe_id];
                     return (
@@ -1123,7 +1115,7 @@ export default function Recipes() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-3">
                     {/* Labor Cost */}
                     <div className="rounded-2xl p-3.5 bg-slate-50 dark:bg-[#121826] border border-slate-200 dark:border-slate-800/90 space-y-2">
                       <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -1176,33 +1168,6 @@ export default function Recipes() {
                         />
                       </div>
                       <p className="text-[11px] text-slate-400 dark:text-slate-500">Oven run-time & baking energy</p>
-                    </div>
-
-                    {/* Other Overhead */}
-                    <div className="rounded-2xl p-3.5 bg-slate-50 dark:bg-[#121826] border border-slate-200 dark:border-slate-800/90 space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                        <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 flex items-center justify-center">
-                          <Box className="w-3.5 h-3.5" />
-                        </div>
-                        <span>Other Overhead (₱)</span>
-                      </div>
-
-                      <div className="flex rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d121c] overflow-hidden focus-within:border-violet-500">
-                        <span className="px-2.5 py-2 text-xs text-slate-400 font-bold">₱</span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={form.other_overhead || ""}
-                          placeholder="0"
-                          onChange={(e) =>
-                            setForm({ ...form, other_overhead: parseFloat(e.target.value) || 0 })
-                          }
-                          id="other-overhead"
-                          className="w-full pr-2.5 py-2 text-sm bg-transparent text-slate-900 dark:text-white font-medium focus:outline-none tabular-nums"
-                        />
-                      </div>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500">Box, liners, stickers & misc</p>
                     </div>
                   </div>
                 </div>
