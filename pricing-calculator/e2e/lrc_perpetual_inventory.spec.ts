@@ -116,6 +116,10 @@ test.beforeEach(async ({ page }) => {
           }));
         }
 
+        if (cmd === 'get_packaging_inventory_ledger') {
+          return [];
+        }
+
         if (cmd === 'get_ingredients') {
           return ledger.map((item) => ({
             ingredient_id: item.ingredient_id,

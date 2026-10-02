@@ -1014,8 +1014,52 @@ pub fn calculate_recipe_cost(
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
 
+    // ── Fetch packaging line items ──────────────────────────────────────────
+    let mut pkg_stmt = conn
+        .prepare(
+            "SELECT rp.id, rp.recipe_id, rp.packaging_id, rp.batch_qty,
+                    p.packaging_code, p.name, p.packaging_type, p.unit, p.current_unit_cost
+             FROM recipe_packaging rp
+             JOIN packaging p ON p.packaging_id = rp.packaging_id
+             WHERE rp.recipe_id = ?1
+             ORDER BY p.name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let packaging_items: Vec<RecipePackaging> = pkg_stmt
+        .query_map(params![recipe_id], |row| {
+            let id: i64 = row.get(0)?;
+            let recipe_id: i64 = row.get(1)?;
+            let packaging_id: i64 = row.get(2)?;
+            let batch_qty: f64 = row.get(3)?;
+            let packaging_code: String = row.get(4)?;
+            let packaging_name: String = row.get(5)?;
+            let packaging_type: String = row.get(6)?;
+            let unit: String = row.get(7)?;
+            let current_unit_cost: f64 = row.get(8)?;
+            let line_item_cost = batch_qty * current_unit_cost;
+
+            Ok(RecipePackaging {
+                id,
+                recipe_id,
+                packaging_id,
+                batch_qty,
+                packaging_code,
+                packaging_name,
+                packaging_type,
+                unit,
+                current_unit_cost,
+                line_item_cost,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
     // ── Business logic (floating-point precision maintained) ─────────────────
-    let total_variable_cost: f64 = line_items.iter().map(|li| li.line_item_cost).sum();
+    let total_ingredient_cost: f64 = line_items.iter().map(|li| li.line_item_cost).sum();
+    let total_packaging_cost: f64 = packaging_items.iter().map(|pi| pi.line_item_cost).sum();
+    let total_variable_cost: f64 = total_ingredient_cost + total_packaging_cost;
     let total_overhead = recipe.labor_cost + recipe.electricity_cost + recipe.other_overhead;
     let total_cost_per_batch = total_variable_cost + total_overhead;
 
@@ -1053,12 +1097,15 @@ pub fn calculate_recipe_cost(
     // Retail Revenue / Batch = Retail Price × Items per Batch
     let retail_revenue_batch = recommended_retail_price_item * recipe.yield_qty;
 
-    recipe.ingredient_cost = total_variable_cost;
+    recipe.ingredient_cost = total_ingredient_cost;
     recipe.unit_retail_price = recommended_retail_price_item;
 
     Ok(RecipeCostResult {
         recipe,
         line_items,
+        packaging_items,
+        total_ingredient_cost,
+        total_packaging_cost,
         total_variable_cost,
         total_overhead,
         total_cost_per_batch,
@@ -1516,7 +1563,58 @@ pub fn produce_batch_with_validation(
         entry.total_bulk_required += bulk_needed;
     }
 
-    // Validation Check (Hard Stop)
+    // ── Fetch packaging requirements for recipe ─────────────────────────────
+    let mut pkg_stmt = conn
+        .prepare(
+            "SELECT rp.packaging_id, rp.batch_qty, p.name, p.unit, p.current_stock_qty, p.current_unit_cost
+             FROM recipe_packaging rp
+             JOIN packaging p ON p.packaging_id = rp.packaging_id
+             WHERE rp.recipe_id = ?1",
+        )
+        .map_err(|e| ProductionError {
+            message: e.to_string(),
+            deficits: vec![],
+        })?;
+
+    struct PkgReq {
+        packaging_id: i64,
+        name: String,
+        unit: String,
+        required_qty: f64,
+        current_stock: f64,
+        unit_cost: f64,
+    }
+
+    let pkg_rows = pkg_stmt
+        .query_map(params![payload.recipe_id], |row| {
+            let packaging_id: i64 = row.get(0)?;
+            let batch_qty: f64 = row.get(1)?;
+            let name: String = row.get(2)?;
+            let unit: String = row.get(3)?;
+            let current_stock: f64 = row.get(4)?;
+            let unit_cost: f64 = row.get(5)?;
+            let required_qty = batch_qty * payload.batches;
+            Ok(PkgReq {
+                packaging_id,
+                name,
+                unit,
+                required_qty,
+                current_stock,
+                unit_cost,
+            })
+        })
+        .map_err(|e| ProductionError {
+            message: e.to_string(),
+            deficits: vec![],
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()
+        .map_err(|e| ProductionError {
+            message: e.to_string(),
+            deficits: vec![],
+        })?;
+    drop(pkg_stmt);
+
+    // Validation Check (Hard Stop for both Ingredients and Packaging)
     let mut deficits: Vec<StockDeficit> = Vec::new();
     for agg in req_map.values() {
         if agg.total_bulk_required > agg.current_stock_qty {
@@ -1527,6 +1625,21 @@ pub fn produce_batch_with_validation(
                 current_bulk_qty: agg.current_stock_qty,
                 deficit_qty,
                 unit: agg.purchase_unit.clone(),
+                item_type: "ingredient".to_string(),
+            });
+        }
+    }
+
+    for pkg in &pkg_rows {
+        if pkg.required_qty > pkg.current_stock {
+            let deficit_qty = pkg.required_qty - pkg.current_stock;
+            deficits.push(StockDeficit {
+                ingredient_name: pkg.name.clone(),
+                required_bulk_qty: pkg.required_qty,
+                current_bulk_qty: pkg.current_stock,
+                deficit_qty,
+                unit: pkg.unit.clone(),
+                item_type: "packaging".to_string(),
             });
         }
     }
@@ -1535,7 +1648,7 @@ pub fn produce_batch_with_validation(
         // Path 1 (Deficit): Transaction aborts without any modification
         return Err(ProductionError {
             message: format!(
-                "Insufficient stock to produce {} batch(es) of '{}'. {} ingredient(s) in deficit.",
+                "Insufficient stock to produce {} batch(es) of '{}'. {} item(s) in deficit.",
                 payload.batches,
                 recipe_name,
                 deficits.len()
@@ -1564,6 +1677,35 @@ pub fn produce_batch_with_validation(
         })?;
     }
 
+    for pkg in &pkg_rows {
+        tx.execute(
+            "UPDATE packaging
+             SET current_stock_qty = current_stock_qty - ?1,
+                 updated_at = datetime('now')
+             WHERE packaging_id = ?2",
+            params![pkg.required_qty, pkg.packaging_id],
+        )
+        .map_err(|e| ProductionError {
+            message: e.to_string(),
+            deficits: vec![],
+        })?;
+
+        tx.execute(
+            "INSERT INTO packaging_transactions (packaging_id, transaction_type, quantity, unit_cost, reference)
+             VALUES (?1, 'OUT', ?2, ?3, ?4)",
+            params![
+                pkg.packaging_id,
+                pkg.required_qty,
+                pkg.unit_cost,
+                format!("Production: {} ({} batch(es))", recipe_name, payload.batches)
+            ],
+        )
+        .map_err(|e| ProductionError {
+            message: e.to_string(),
+            deficits: vec![],
+        })?;
+    }
+
     tx.commit().map_err(|e| ProductionError {
         message: e.to_string(),
         deficits: vec![],
@@ -1575,4 +1717,394 @@ pub fn produce_batch_with_validation(
         batches_produced: payload.batches,
         timestamp: chrono::Local::now().to_rfc3339(),
     })
+}
+
+// ── Packaging Commands (v2.1) ────────────────────────────────────────────────
+
+#[tauri::command]
+pub fn get_packaging_list(state: State<DbState>) -> Result<Vec<Packaging>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT packaging_id, packaging_code, name, packaging_type, unit,
+                    current_unit_cost, current_stock_qty, reorder_threshold, is_active,
+                    created_at, updated_at
+             FROM packaging
+             ORDER BY name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map([], |row| {
+            Ok(Packaging {
+                packaging_id: row.get(0)?,
+                packaging_code: row.get(1)?,
+                name: row.get(2)?,
+                packaging_type: row.get(3)?,
+                unit: row.get(4)?,
+                current_unit_cost: row.get(5)?,
+                current_stock_qty: row.get(6)?,
+                reorder_threshold: row.get(7)?,
+                is_active: row.get::<_, i32>(8)? == 1,
+                created_at: row.get(9)?,
+                updated_at: row.get(10)?,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn create_packaging(
+    state: State<DbState>,
+    input: PackagingInput,
+) -> Result<Packaging, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let is_active_int = if input.is_active { 1 } else { 0 };
+
+    conn.execute(
+        "INSERT INTO packaging (packaging_code, name, packaging_type, unit, current_unit_cost, current_stock_qty, reorder_threshold, is_active)
+         VALUES (?1, ?2, ?3, ?4, ?5, 0.0, ?6, ?7)",
+        params![
+            input.packaging_code,
+            input.name,
+            input.packaging_type,
+            input.unit,
+            input.current_unit_cost,
+            input.reorder_threshold,
+            is_active_int
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    let id = conn.last_insert_rowid();
+    Ok(Packaging {
+        packaging_id: id,
+        packaging_code: input.packaging_code,
+        name: input.name,
+        packaging_type: input.packaging_type,
+        unit: input.unit,
+        current_unit_cost: input.current_unit_cost,
+        current_stock_qty: 0.0,
+        reorder_threshold: input.reorder_threshold,
+        is_active: input.is_active,
+        created_at: chrono::Local::now().to_rfc3339(),
+        updated_at: chrono::Local::now().to_rfc3339(),
+    })
+}
+
+#[tauri::command]
+pub fn update_packaging(
+    state: State<DbState>,
+    packaging_id: i64,
+    input: PackagingInput,
+) -> Result<Packaging, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let is_active_int = if input.is_active { 1 } else { 0 };
+
+    conn.execute(
+        "UPDATE packaging
+         SET packaging_code = ?1, name = ?2, packaging_type = ?3, unit = ?4,
+             current_unit_cost = ?5, reorder_threshold = ?6, is_active = ?7,
+             updated_at = datetime('now')
+         WHERE packaging_id = ?8",
+        params![
+            input.packaging_code,
+            input.name,
+            input.packaging_type,
+            input.unit,
+            input.current_unit_cost,
+            input.reorder_threshold,
+            is_active_int,
+            packaging_id
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    let current_stock_qty: f64 = conn
+        .query_row(
+            "SELECT current_stock_qty FROM packaging WHERE packaging_id = ?1",
+            params![packaging_id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0.0);
+
+    Ok(Packaging {
+        packaging_id,
+        packaging_code: input.packaging_code,
+        name: input.name,
+        packaging_type: input.packaging_type,
+        unit: input.unit,
+        current_unit_cost: input.current_unit_cost,
+        current_stock_qty,
+        reorder_threshold: input.reorder_threshold,
+        is_active: input.is_active,
+        created_at: chrono::Local::now().to_rfc3339(),
+        updated_at: chrono::Local::now().to_rfc3339(),
+    })
+}
+
+#[tauri::command]
+pub fn toggle_packaging_active(
+    state: State<DbState>,
+    packaging_id: i64,
+    is_active: bool,
+) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let flag = if is_active { 1 } else { 0 };
+    conn.execute(
+        "UPDATE packaging SET is_active = ?1, updated_at = datetime('now') WHERE packaging_id = ?2",
+        params![flag, packaging_id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_recipe_packaging(
+    state: State<DbState>,
+    recipe_id: i64,
+) -> Result<Vec<RecipePackaging>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT rp.id, rp.recipe_id, rp.packaging_id, rp.batch_qty,
+                    p.packaging_code, p.name, p.packaging_type, p.unit, p.current_unit_cost
+             FROM recipe_packaging rp
+             JOIN packaging p ON p.packaging_id = rp.packaging_id
+             WHERE rp.recipe_id = ?1
+             ORDER BY p.name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map(params![recipe_id], |row| {
+            let id: i64 = row.get(0)?;
+            let recipe_id: i64 = row.get(1)?;
+            let packaging_id: i64 = row.get(2)?;
+            let batch_qty: f64 = row.get(3)?;
+            let packaging_code: String = row.get(4)?;
+            let packaging_name: String = row.get(5)?;
+            let packaging_type: String = row.get(6)?;
+            let unit: String = row.get(7)?;
+            let current_unit_cost: f64 = row.get(8)?;
+            let line_item_cost = batch_qty * current_unit_cost;
+
+            Ok(RecipePackaging {
+                id,
+                recipe_id,
+                packaging_id,
+                batch_qty,
+                packaging_code,
+                packaging_name,
+                packaging_type,
+                unit,
+                current_unit_cost,
+                line_item_cost,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn upsert_recipe_packaging(
+    state: State<DbState>,
+    input: RecipePackagingInput,
+) -> Result<RecipePackaging, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    if let Some(id) = input.id {
+        conn.execute(
+            "UPDATE recipe_packaging SET packaging_id = ?1, batch_qty = ?2 WHERE id = ?3",
+            params![input.packaging_id, input.batch_qty, id],
+        )
+        .map_err(|e| e.to_string())?;
+    } else {
+        conn.execute(
+            "INSERT INTO recipe_packaging (recipe_id, packaging_id, batch_qty)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT(recipe_id, packaging_id) DO UPDATE SET batch_qty = excluded.batch_qty",
+            params![input.recipe_id, input.packaging_id, input.batch_qty],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+
+    let (id, code, name, ptype, unit, cost): (i64, String, String, String, String, f64) = conn
+        .query_row(
+            "SELECT rp.id, p.packaging_code, p.name, p.packaging_type, p.unit, p.current_unit_cost
+             FROM recipe_packaging rp
+             JOIN packaging p ON p.packaging_id = rp.packaging_id
+             WHERE rp.recipe_id = ?1 AND rp.packaging_id = ?2",
+            params![input.recipe_id, input.packaging_id],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?, row.get(5)?)),
+        )
+        .map_err(|e| e.to_string())?;
+
+    let line_item_cost = input.batch_qty * cost;
+
+    Ok(RecipePackaging {
+        id,
+        recipe_id: input.recipe_id,
+        packaging_id: input.packaging_id,
+        batch_qty: input.batch_qty,
+        packaging_code: code,
+        packaging_name: name,
+        packaging_type: ptype,
+        unit,
+        current_unit_cost: cost,
+        line_item_cost,
+    })
+}
+
+#[tauri::command]
+pub fn remove_recipe_packaging(state: State<DbState>, id: i64) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM recipe_packaging WHERE id = ?1", params![id])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn receive_packaging_inventory(
+    state: State<DbState>,
+    payload: ReceivePackagingPayload,
+) -> Result<(), String> {
+    if payload.added_qty <= 0.0 {
+        return Err("Received quantity must be greater than zero".to_string());
+    }
+    let mut conn = state.0.lock().map_err(|e| e.to_string())?;
+    let tx = conn.transaction().map_err(|e| e.to_string())?;
+
+    if payload.new_unit_cost > 0.0 {
+        tx.execute(
+            "UPDATE packaging
+             SET current_stock_qty = current_stock_qty + ?1,
+                 current_unit_cost = ?2,
+                 updated_at = datetime('now')
+             WHERE packaging_id = ?3",
+            params![payload.added_qty, payload.new_unit_cost, payload.packaging_id],
+        )
+        .map_err(|e| e.to_string())?;
+    } else {
+        tx.execute(
+            "UPDATE packaging
+             SET current_stock_qty = current_stock_qty + ?1,
+                 updated_at = datetime('now')
+             WHERE packaging_id = ?2",
+            params![payload.added_qty, payload.packaging_id],
+        )
+        .map_err(|e| e.to_string())?;
+    }
+
+    tx.execute(
+        "INSERT INTO packaging_transactions (packaging_id, transaction_type, quantity, unit_cost, reference)
+         VALUES (?1, 'IN', ?2, ?3, 'Stock Receipt')",
+        params![payload.packaging_id, payload.added_qty, payload.new_unit_cost],
+    )
+    .map_err(|e| e.to_string())?;
+
+    tx.commit().map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_packaging_inventory_ledger(
+    state: State<DbState>,
+) -> Result<Vec<PackagingLedgerItem>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT packaging_id, packaging_code, name, packaging_type, unit,
+                    current_unit_cost, current_stock_qty, reorder_threshold
+             FROM packaging
+             WHERE is_active = 1
+             ORDER BY (CASE WHEN current_stock_qty <= reorder_threshold THEN 0 ELSE 1 END) ASC, name ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map([], |row| {
+            let packaging_id: i64 = row.get(0)?;
+            let packaging_code: String = row.get(1)?;
+            let name: String = row.get(2)?;
+            let packaging_type: String = row.get(3)?;
+            let unit: String = row.get(4)?;
+            let current_unit_cost: f64 = row.get(5)?;
+            let current_stock_qty: f64 = row.get(6)?;
+            let reorder_threshold: f64 = row.get(7)?;
+            let total_value = current_stock_qty * current_unit_cost;
+            let is_low_stock = current_stock_qty <= reorder_threshold;
+
+            Ok(PackagingLedgerItem {
+                packaging_id,
+                packaging_code,
+                name,
+                packaging_type,
+                unit,
+                current_unit_cost,
+                current_stock_qty,
+                reorder_threshold,
+                total_value,
+                is_low_stock,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn get_packaging_transactions(
+    state: State<DbState>,
+    packaging_id: Option<i64>,
+) -> Result<Vec<PackagingTransaction>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+
+    let sql = if packaging_id.is_some() {
+        "SELECT transaction_id, packaging_id, transaction_type, quantity, unit_cost, reference, created_at
+         FROM packaging_transactions
+         WHERE packaging_id = ?1
+         ORDER BY transaction_id DESC"
+    } else {
+        "SELECT transaction_id, packaging_id, transaction_type, quantity, unit_cost, reference, created_at
+         FROM packaging_transactions
+         ORDER BY transaction_id DESC"
+    };
+
+    let mut stmt = conn.prepare(sql).map_err(|e| e.to_string())?;
+
+    let map_fn = |row: &rusqlite::Row| {
+        Ok(PackagingTransaction {
+            transaction_id: row.get(0)?,
+            packaging_id: row.get(1)?,
+            transaction_type: row.get(2)?,
+            quantity: row.get(3)?,
+            unit_cost: row.get(4)?,
+            reference: row.get(5)?,
+            created_at: row.get(6)?,
+        })
+    };
+
+    let items = if let Some(pid) = packaging_id {
+        stmt.query_map(params![pid], map_fn)
+            .map_err(|e| e.to_string())?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| e.to_string())?
+    } else {
+        stmt.query_map([], map_fn)
+            .map_err(|e| e.to_string())?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| e.to_string())?
+    };
+
+    Ok(items)
 }

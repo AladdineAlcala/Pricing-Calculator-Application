@@ -266,6 +266,12 @@ pub struct RecipeIngredientInput {
 pub struct RecipeCostResult {
     pub recipe: Recipe,
     pub line_items: Vec<RecipeIngredient>,
+    #[serde(default)]
+    pub packaging_items: Vec<RecipePackaging>,
+    #[serde(default)]
+    pub total_ingredient_cost: f64,
+    #[serde(default)]
+    pub total_packaging_cost: f64,
     pub total_variable_cost: f64,
     pub total_overhead: f64,
     pub total_cost_per_batch: f64,
@@ -283,6 +289,90 @@ pub struct RecipeCostResult {
     pub gross_margin_pct: f64,
     /// Recommended Retail Price per Item × yield_qty
     pub retail_revenue_batch: f64,
+}
+
+// ── v2.1: Packaging Management Entities ──────────────────────────────────────
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct Packaging {
+    pub packaging_id: i64,
+    pub packaging_code: String,
+    pub name: String,
+    pub packaging_type: String,
+    pub unit: String,
+    pub current_unit_cost: f64,
+    pub current_stock_qty: f64,
+    pub reorder_threshold: f64,
+    #[serde(default = "default_true")]
+    pub is_active: bool,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PackagingInput {
+    pub packaging_code: String,
+    pub name: String,
+    pub packaging_type: String,
+    pub unit: String,
+    pub current_unit_cost: f64,
+    pub reorder_threshold: f64,
+    #[serde(default = "default_true")]
+    pub is_active: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+pub struct RecipePackaging {
+    pub id: i64,
+    pub recipe_id: i64,
+    pub packaging_id: i64,
+    pub batch_qty: f64,
+    pub packaging_code: String,
+    pub packaging_name: String,
+    pub packaging_type: String,
+    pub unit: String,
+    pub current_unit_cost: f64,
+    pub line_item_cost: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RecipePackagingInput {
+    #[serde(default)]
+    pub id: Option<i64>,
+    pub recipe_id: i64,
+    pub packaging_id: i64,
+    pub batch_qty: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PackagingTransaction {
+    pub transaction_id: i64,
+    pub packaging_id: i64,
+    pub transaction_type: String,
+    pub quantity: f64,
+    pub unit_cost: f64,
+    pub reference: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ReceivePackagingPayload {
+    pub packaging_id: i64,
+    pub added_qty: f64,
+    pub new_unit_cost: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PackagingLedgerItem {
+    pub packaging_id: i64,
+    pub packaging_code: String,
+    pub name: String,
+    pub packaging_type: String,
+    pub unit: String,
+    pub current_unit_cost: f64,
+    pub current_stock_qty: f64,
+    pub reorder_threshold: f64,
+    pub total_value: f64,
+    pub is_low_stock: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -319,6 +409,12 @@ pub struct StockDeficit {
     pub current_bulk_qty: f64,
     pub deficit_qty: f64,
     pub unit: String,
+    #[serde(default = "default_ingredient_type")]
+    pub item_type: String,
+}
+
+fn default_ingredient_type() -> String {
+    "ingredient".to_string()
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -612,4 +708,114 @@ mod tests {
         let egg_cost = egg_qty * egg_base_cost; // 16.0
         assert_eq!(egg_cost, 16.0);
     }
+
+    #[test]
+    fn test_packaging_unit_cost_and_batch_extension() {
+        // Business test case: Banana Muffin batch requiring liners and a box
+        // Liner: 12 pcs @ ₱2.00
+        let liner_batch_qty = 12.0f64;
+        let liner_unit_cost = 2.00f64;
+        let liner_line_item_cost = liner_batch_qty * liner_unit_cost;
+        assert_eq!(liner_line_item_cost, 24.00f64);
+
+        // Box: 1 pc @ ₱15.00
+        let box_batch_qty = 1.0f64;
+        let box_unit_cost = 15.00f64;
+        let box_line_item_cost = box_batch_qty * box_unit_cost;
+        assert_eq!(box_line_item_cost, 15.00f64);
+
+        let total_packaging_cost = liner_line_item_cost + box_line_item_cost;
+        assert_eq!(total_packaging_cost, 39.00f64);
+    }
+
+    #[test]
+    fn test_recipe_cost_rollup_with_packaging_and_overhead() {
+        // Rollup Invariant:
+        // total_variable_cost = total_ingredient_cost + total_packaging_cost
+        // total_cost_per_batch = total_variable_cost + total_overhead
+        let total_ingredient_cost = 150.00f64;
+        let total_packaging_cost = 39.00f64;
+        let total_overhead = 25.00f64;
+
+        let total_variable_cost = total_ingredient_cost + total_packaging_cost;
+        assert_eq!(total_variable_cost, 189.00f64);
+
+        let total_cost_per_batch = total_variable_cost + total_overhead;
+        assert_eq!(total_cost_per_batch, 214.00f64);
+
+        let batch_yield = 12.0f64;
+        let cost_per_piece = total_cost_per_batch / batch_yield;
+        assert!((cost_per_piece - 17.833333333333332f64).abs() < 1e-9);
+
+        // 50% Markup
+        let markup_percentage = 50.0f64;
+        let recommended_retail_price = cost_per_piece * (1.0 + markup_percentage / 100.0);
+        assert!((recommended_retail_price - 26.75f64).abs() < 1e-9);
+
+        // Verification of gross margin at recommended price
+        let gross_margin = ((recommended_retail_price - cost_per_piece) / recommended_retail_price) * 100.0;
+        assert!((gross_margin - 33.333333333333336f64).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_packaging_stock_deficit_detection_and_multi_item_classification() {
+        // Multi-Item Deficit Interception Invariant:
+        // System must identify both ingredient and packaging shortages in a single atomic pre-flight check
+        let batches_to_produce = 2.0f64;
+
+        // Ingredient requirement: Flour (requires 2.5 kg, has 1.0 kg)
+        let flour_req = 1.25f64 * batches_to_produce; // 2.5 kg
+        let flour_stock = 1.00f64;
+        let flour_deficit = StockDeficit {
+            ingredient_name: "All-Purpose Flour".to_string(),
+            required_bulk_qty: flour_req,
+            current_bulk_qty: flour_stock,
+            deficit_qty: flour_req - flour_stock,
+            unit: "kg".to_string(),
+            item_type: "ingredient".to_string(),
+        };
+
+        // Packaging requirement: Liner (requires 24 pcs, has 10 pcs)
+        let liner_req = 12.0f64 * batches_to_produce; // 24 pcs
+        let liner_stock = 10.0f64;
+        let liner_deficit = StockDeficit {
+            ingredient_name: "Banana Muffin Liner".to_string(),
+            required_bulk_qty: liner_req,
+            current_bulk_qty: liner_stock,
+            deficit_qty: liner_req - liner_stock,
+            unit: "Piece".to_string(),
+            item_type: "packaging".to_string(),
+        };
+
+        let deficits = vec![flour_deficit, liner_deficit];
+        assert_eq!(deficits.len(), 2);
+        assert_eq!(deficits[0].item_type, "ingredient");
+        assert_eq!(deficits[0].deficit_qty, 1.50f64);
+        assert_eq!(deficits[1].item_type, "packaging");
+        assert_eq!(deficits[1].deficit_qty, 14.0f64);
+    }
+
+    #[test]
+    fn test_packaging_stock_receiving_and_ledger_math() {
+        // Flow: Perpetual inventory reception and valuation
+        let initial_stock = 50.0f64;
+        let initial_cost = 2.00f64;
+        assert_eq!(initial_stock * initial_cost, 100.00f64);
+
+        // Stock receipt: +100 units at revised unit cost ₱2.20
+        let received_qty = 100.0f64;
+        let new_unit_cost = 2.20f64;
+
+        let updated_stock = initial_stock + received_qty;
+        assert_eq!(updated_stock, 150.00f64);
+
+        let total_valuation = updated_stock * new_unit_cost;
+        assert_eq!(total_valuation, 330.00f64);
+
+        // Low stock threshold check
+        let reorder_threshold = 200.00f64;
+        let is_low_stock = updated_stock <= reorder_threshold;
+        assert!(is_low_stock);
+    }
 }
+

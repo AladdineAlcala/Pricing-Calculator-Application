@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertOctagon, X, Truck, ShieldAlert, ArrowUpRight } from "lucide-react";
+import { AlertOctagon, X, Truck, ShieldAlert, ArrowUpRight, Box, Layers } from "lucide-react";
 import type { StockDeficit } from "@/lib/api";
 
 export interface StockDeficitModalProps {
@@ -8,7 +8,7 @@ export interface StockDeficitModalProps {
   recipeName: string;
   batches: number;
   deficits: StockDeficit[];
-  onQuickReceive?: (ingredientName: string) => void;
+  onQuickReceive?: (ingredientName: string, itemType?: string) => void;
 }
 
 export function StockDeficitModal({
@@ -80,8 +80,9 @@ export function StockDeficitModal({
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-artisan-border dark:border-slate-800 bg-artisan-subtle/60 dark:bg-slate-800/40 text-[11px] font-semibold text-espresso-500 dark:text-slate-400">
-                    <th className="py-2.5 px-4">Ingredient</th>
-                    <th className="py-2.5 px-3 text-right">Required Bulk</th>
+                    <th className="py-2.5 px-4">Material / Item</th>
+                    <th className="py-2.5 px-3">Type</th>
+                    <th className="py-2.5 px-3 text-right">Required</th>
                     <th className="py-2.5 px-3 text-right">Current Stock</th>
                     <th className="py-2.5 px-3 text-right">Deficit</th>
                     <th className="py-2.5 px-4 text-center">Action</th>
@@ -92,6 +93,19 @@ export function StockDeficitModal({
                     <tr key={idx} className="hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-colors">
                       <td className="py-3 px-4 font-sans font-bold text-espresso-900 dark:text-white">
                         {d.ingredient_name}
+                      </td>
+                      <td className="py-3 px-3 font-sans">
+                        {d.item_type === "packaging" ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+                            <Box className="w-3 h-3" />
+                            <span>Packaging</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                            <Layers className="w-3 h-3" />
+                            <span>Ingredient</span>
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-3 text-right text-espresso-700 dark:text-slate-300">
                         {d.required_bulk_qty.toFixed(2)} {d.unit}
@@ -106,7 +120,7 @@ export function StockDeficitModal({
                         {onQuickReceive && (
                           <button
                             type="button"
-                            onClick={() => onQuickReceive(d.ingredient_name)}
+                            onClick={() => onQuickReceive(d.ingredient_name, d.item_type)}
                             className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-culinary-700 dark:text-culinary-300 bg-culinary-50 dark:bg-culinary-950/70 hover:bg-culinary-100 dark:hover:bg-culinary-900/90 border border-culinary-200 dark:border-culinary-800 rounded-lg transition-colors cursor-pointer"
                           >
                             <Truck className="w-3 h-3" />
