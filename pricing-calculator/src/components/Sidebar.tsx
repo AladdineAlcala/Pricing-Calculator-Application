@@ -13,7 +13,7 @@ export function Sidebar() {
       {/* Top Brand Lockup and Primary Navigation */}
       <div className="flex flex-col">
         {/* Logo Header */}
-        <div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800">
+        <div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0">
           <BakeIQBrand />
         </div>
 
@@ -206,8 +206,8 @@ export function Sidebar() {
       </div>
 
       {/* Bottom Sidebar Footer with Engine Status */}
-      <div className="p-3 border-t border-artisan-border dark:border-slate-800">
-        <div className="px-2 py-1 flex items-center justify-between text-[11px] text-espresso-400 dark:text-slate-400">
+      <div className="h-12 px-4 flex items-center border-t border-artisan-border dark:border-slate-800 shrink-0">
+        <div className="w-full flex items-center justify-between text-[11px] text-espresso-400 dark:text-slate-400">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-culinary-500" />
             v3.2.0 • Real-Time FIFO

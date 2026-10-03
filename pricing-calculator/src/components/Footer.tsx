@@ -45,7 +45,7 @@ export function Footer() {
   return (
     <>
       <footer
-        className="sticky bottom-0 z-30 shrink-0 w-full bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur-md border-t border-artisan-border dark:border-slate-800 px-4 sm:px-6 py-2.5 text-xs text-espresso-500 dark:text-slate-400 flex flex-wrap items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+        className="sticky bottom-0 z-30 shrink-0 w-full h-12 bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur-md border-t border-artisan-border dark:border-slate-800 px-4 sm:px-6 text-xs text-espresso-500 dark:text-slate-400 flex items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
         data-purpose="system-status-sticky-footer"
       >
         {/* Left: Engine Status */}

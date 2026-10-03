@@ -17,11 +17,11 @@ export function Header({ unpricedCount = 0, onOpenNewRecipe }: HeaderProps) {
 
   return (
     <header
-      className="sticky top-0 z-20 print:hidden bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur border-b border-artisan-border dark:border-slate-800 px-6 py-3.5 flex items-center justify-between gap-4"
+      className="sticky top-0 z-20 print:hidden bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur border-b border-artisan-border dark:border-slate-800 px-6 h-20 flex items-center justify-between gap-4 shrink-0"
       data-purpose="top-navigation"
     >
       {/* Left: Breadcrumb & Operational Mode Indicators */}
-      <div className="flex items-center gap-3 text-xs flex-wrap">
+      <div className="flex items-center gap-3 text-xs shrink-0">
         <div className="inline-flex items-center gap-1.5 bg-culinary-50 dark:bg-emerald-950/60 text-culinary-700 dark:text-emerald-300 border border-culinary-200 dark:border-emerald-800/60 px-2.5 py-1 rounded-full font-medium">
           <span className="w-2 h-2 rounded-full bg-culinary-500 animate-pulse" />
           <span>Inventory &amp; Costing</span>
@@ -38,7 +38,7 @@ export function Header({ unpricedCount = 0, onOpenNewRecipe }: HeaderProps) {
         {/* Command Palette Hint */}
         <button
           onClick={() => navigate("/ingredients")}
-          className="hidden xl:flex items-center gap-2 bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 hover:border-espresso-300 dark:hover:border-slate-700 rounded-lg px-2.5 py-1 text-xs text-espresso-400 dark:text-slate-400 transition-colors cursor-pointer"
+          className="hidden 2xl:flex items-center gap-2 bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 hover:border-espresso-300 dark:hover:border-slate-700 rounded-lg px-2.5 py-1 text-xs text-espresso-400 dark:text-slate-400 transition-colors cursor-pointer"
           title="Search pantry ingredients (⌘K)"
           type="button"
         >

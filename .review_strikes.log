@@ -1,9 +1,10 @@
 # Code Review Strikes Log
 STRIKES: 0
-LAST_REVIEW: 2026-10-03T08:11:30+08:00
+LAST_REVIEW: 2026-10-03T09:07:30+08:00
 STATUS: APPROVED
-NOTES: Successfully executed Header Dark/Light Mode Icon Button Relocation sprint.
-1. Header.tsx: Relocated dark/light mode toggle to header right side between Bell notification and User Profile pill. Converted into an ergonomic, clickable icon button with Sun/Moon icons, proper aria-label/title attributes, and retained id="theme-toggle-btn".
-2. Sidebar.tsx: Removed bulky full-width dark mode toggle button from sidebar footer. Cleaned up unused useApp hook imports and theme state while preserving clean engine status indicator.
-3. Verification Gate: TypeScript compilation and Vite build passed with 0 errors. All 23 Playwright E2E tests (including 2 new tests in e2e/header_theme_toggle.spec.ts) passed cleanly with 0 regressions.
-4. Review Gatekeeper: Zero debug remnants, zero build warnings, clean surgical diff. Strikes remain 0.
+NOTES: Successfully executed Global Header & Sidebar BakeIQLogo Bottom Border Alignment sprint.
+1. Header.tsx: Standardized top navigation header container to h-20 (80px) with flex items-center justify-between and shrink-0. Standardized left breadcrumb indicators to shrink-0 and command palette hint to hidden 2xl:flex to ensure smooth single-row alignment.
+2. Sidebar.tsx: Standardized BakeIQLogo brand header container to h-20 (80px) with shrink-0 and border-b.
+3. Geometric Alignment: Eliminates vertical step discontinuity across the horizontal top border seam. Bottom borders of both the Sidebar logo header and Header.tsx sit at exactly y = 80px with 0px variance.
+4. Verification Gate: TypeScript compilation passed with 0 errors. All 25 Playwright E2E tests (including TC-THEME-04 header bottom border alignment assertion) passed cleanly with 0 regressions.
+5. Review Gatekeeper: Zero debug remnants, zero build warnings, clean surgical diff. Strikes remain 0.

@@ -86,4 +86,51 @@ test.describe('Header Theme Toggle Icon Button Placement & Interaction', () => {
     await expect(themeBtn).toHaveAttribute('title', 'Switch to Dark Mode');
     await expect(themeBtn).toHaveAttribute('aria-label', 'Switch to Dark Mode');
   });
+
+  test('TC-THEME-03: Footer top border aligns with the top line border of Bottom Sidebar Footer', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const footer = page.locator('footer[data-purpose="system-status-sticky-footer"]');
+    const sidebarFooter = page.locator('aside[data-purpose="sidebar-navigation"] > div').last();
+    await expect(footer).toBeVisible();
+    await expect(sidebarFooter).toBeVisible();
+
+    const footerBox = await footer.boundingBox();
+    const sidebarBox = await sidebarFooter.boundingBox();
+    expect(footerBox).not.toBeNull();
+    expect(sidebarBox).not.toBeNull();
+    if (footerBox && sidebarBox) {
+      // Both should have identical height (48px)
+      expect(footerBox.height).toBe(48);
+      expect(sidebarBox.height).toBe(48);
+      // Top borders must align with 0px variance
+      expect(Math.abs(footerBox.y - sidebarBox.y)).toBeLessThanOrEqual(0.5);
+    }
+  });
+
+  test('TC-THEME-04: Header bottom border aligns with BakeIQLogo bottom border', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const header = page.locator('header[data-purpose="top-navigation"]');
+    const logoHeader = page.locator('aside[data-purpose="sidebar-navigation"] > div:first-child > div:first-child');
+    await expect(header).toBeVisible();
+    await expect(logoHeader).toBeVisible();
+
+    const headerBox = await header.boundingBox();
+    const logoBox = await logoHeader.boundingBox();
+    expect(headerBox).not.toBeNull();
+    expect(logoBox).not.toBeNull();
+    if (headerBox && logoBox) {
+      // Both should have identical height (80px)
+      expect(headerBox.height).toBe(80);
+      expect(logoBox.height).toBe(80);
+      // Both start at y = 0
+      expect(headerBox.y).toBe(0);
+      expect(logoBox.y).toBe(0);
+      // Bottom borders must align with 0px variance
+      expect(Math.abs((headerBox.y + headerBox.height) - (logoBox.y + logoBox.height))).toBeLessThanOrEqual(0.5);
+    }
+  });
 });
