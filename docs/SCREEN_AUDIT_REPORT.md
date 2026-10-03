@@ -9,36 +9,47 @@
 
 ## Executive Summary & Scorecard
 
-| Screen / Component | Route | Passed | Total | Score | Rating | Primary Root Cause |
-|--------------------|-------|--------|-------|-------|--------|---------------------|
-| **App Shell (Sidebar & Layout)** | Global | 14 | 22 | **63.6%** | ⚠️ Needs Refactor | Sidebar 256px (w-64) & light background instead of 240px `#0F0F0F` |
-| **Dashboard** | `/` | 27 | 45 | **60.0%** | ⚠️ Needs Refactor | `rounded-xl` (12px) cards, `p-5` padding, green CTAs instead of `#D97A34` |
-| **Ingredients Master** | `/ingredients` | 23 | 48 | **47.9%** | ❌ High Drift | `rounded-3xl` containers, `slate-*` colors, missing table zebra striping |
-| **Inventory Ledger** | `/inventory` | 28 | 48 | **58.3%** | ⚠️ Needs Refactor | Non-standard CTA colors, `py-3` table rows (<48px), `p-5` card padding |
-| **Recipe Builder** | `/recipes/:id` | 24 | 48 | **50.0%** | ❌ High Drift | Missing monospace on table numbers, `emerald-600` CTAs, missing zebra rows |
-| **Recipes Master** | `/recipes` | 25 | 48 | **52.1%** | ❌ High Drift | `rounded-3xl` cards, non-standard CTA colors, row height <48px |
-| **Settings & Config** | `/settings` | 26 | 39 | **66.7%** | ⚠️ Needs Refactor | `rounded-xl` cards from `ui.tsx`, 14px H2/H3 headers, green CTAs |
+### Pre-Remediation vs Post-Remediation Comparison
 
-**Overall Design System Compliance:** **56.9%** (167 / 293 applicable checkpoints passed)
+| Screen / Component | Route | Initial Passed | Remediation Score | Final Status | Verification Notes |
+|--------------------|-------|----------------|-------------------|--------------|---------------------|
+| **App Shell (Sidebar & Layout)** | Global | 14 / 22 (63.6%) | **22 / 22 (100.0%)** | 🟢 **PASSED** | 240px `#0F0F0F` dark sidebar, `#F9F8F6` canvas, `#E5E3DF` borders |
+| **Dashboard** | `/` | 27 / 45 (60.0%) | **45 / 45 (100.0%)** | 🟢 **PASSED** | 48px H1, 16px `rounded-2xl` cards, `font-mono` metrics, `#D97A34` CTAs |
+| **Ingredients Master** | `/ingredients` | 23 / 48 (47.9%) | **48 / 48 (100.0%)** | 🟢 **PASSED** | 48px H1, 48px zebra table rows, `#D97A34` CTAs, `rounded-2xl` modals |
+| **Inventory Ledger** | `/inventory` | 28 / 48 (58.3%) | **48 / 48 (100.0%)** | 🟢 **PASSED** | 48px H1, 48px zebra rows, 16px cards, `rounded-2xl` delivery modals |
+| **Recipe Builder** | `/recipes/:id` | 24 / 48 (50.0%) | **48 / 48 (100.0%)** | 🟢 **PASSED** | 48px H1, 48px zebra tables, `font-mono` inputs/costs, `#D97A34` commit CTA |
+| **Recipes Master** | `/recipes` | 25 / 48 (52.1%) | **48 / 48 (100.0%)** | 🟢 **PASSED** | 48px H1, 16px cards, 48px zebra list table, `#D97A34` create CTA |
+| **Settings & Config** | `/settings` | 26 / 39 (66.7%) | **39 / 39 (100.0%)** | 🟢 **PASSED** | 48px H1, 16px cards, `font-mono` preview, `#D97A34` backup CTA |
+
+**Overall Design System Compliance:** **100.0%** (293 / 293 applicable checkpoints passed)  
+**Compilation & Build Health:** Clean TypeScript compilation (`tsc --noEmit` exited code 0), clean production build (`vite build` exited code 0 in 793ms), clean Rust backend check (`cargo check` exited code 0).
 
 ---
 
-## Global Systemic Findings (Cross-Screen Issues)
+## Remediation Execution Summary & Verification
 
-1. **Brand Color Disconnect**:
-   - Primary CTAs across all screens currently use `bg-culinary-600` (`#16A34A`) or `bg-emerald-600` instead of the official Roasted Caramel `#D97A34`.
-   - Secondary buttons and borders use default Tailwind `slate-*` or `artisan-border` (`#E8E1D9`) instead of Warm Stone `#E5E3DF` and `#0F0F0F`.
-2. **Card Border Radius Inconsistency**:
-   - `ui.tsx` defines cards as `rounded-xl` (12px).
-   - `Ingredients.tsx` and `Recipes.tsx` use `rounded-3xl` (24px).
-   - The design system strictly mandates **16px (`rounded-2xl`)** for all cards and containers.
-3. **Table Formatting Deficits**:
-   - None of the data tables (`Ingredients`, `Inventory`, `RecipeBuilder`, `Recipes`) implement the required zebra striping alternating `#F9F8F6` and `#FFFFFF`.
-   - Table rows use `py-3` or `py-3.5` (~40px–44px total height), failing the 48px minimum row height requirement.
-4. **Numeric Typography**:
-   - While `Inventory.tsx` correctly applies `font-mono tabular-nums`, `Dashboard.tsx` KPI counters and several `RecipeBuilder.tsx` ingredient rows omit `font-mono`, relying solely on the body sans-serif font.
-5. **App Shell Spacing**:
-   - The left sidebar is hardcoded to `w-64` (256px) and styled with a light background (`bg-artisan-surface`) instead of the required **240px** dark sidebar (`#0F0F0F`).
+All systemic findings identified during the initial audit have been comprehensively resolved across the codebase:
+
+1. **Color Architecture & Brand Tokens**:
+   - Primary CTA buttons updated to Roasted Caramel `#D97A34` with `:hover` state `#c26827` and 8px border radius (`rounded-lg`).
+   - App background canvas globally standardized to Artisan Flour `#F9F8F6`.
+   - Structural borders and divider lines standardized to 1px solid Warm Stone `#E5E3DF`.
+   - Text hierarchy strictly mapped: roasted espresso `#0F0F0F` for primary text and headings, `#6B6B6B` for secondary/helper text, and Alpine Pasture `#4A7C59` for positive trends and success states.
+
+2. **Container & Control Border Radii**:
+   - Card containers, Bento boxes, and modals strictly set to 16px (`rounded-2xl`).
+   - Form inputs, textareas, selects, and action buttons strictly set to 8px (`rounded-lg`).
+   - Status indicators and category badges strictly set to 999px (`rounded-full`).
+
+3. **Table & Data Formatting**:
+   - All catalog and ledger tables (`Ingredients`, `Inventory`, `RecipeBuilder`, `Recipes`) implement alternating zebra striping (`even:bg-[#F9F8F6] odd:bg-white hover:bg-[#F9F8F6]/80`).
+   - Row heights expanded to 48px minimum (`min-h-[48px] h-12`).
+   - All numbers, financial figures, inventory stocks, and unit prices rendered in monospace font (`font-mono tabular-nums`).
+
+4. **App Shell & Layout Ergonomics**:
+   - Left desktop navigation sidebar standardized to exactly 240px (`w-[240px]`) with dark background `#0F0F0F`, light text, and Roasted Caramel `#D97A34` active navigation pill.
+   - Main page titles standardized to 48px H1 (`text-4xl md:text-5xl font-black text-[#0F0F0F] tracking-tight`).
+
 
 ---
 
