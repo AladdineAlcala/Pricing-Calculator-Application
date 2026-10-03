@@ -1,0 +1,57 @@
+# BakeIQ Design System — Audit Checkpoints (v2 — Code-Verified)
+
+> **Source of truth:** `code.html` Tailwind config + component usage.
+> **Do not use assumed hex values.** Only use the tokens defined below.
+
+## Design Tokens (Authoritative)
+
+### Colors
+- **Espresso (Primary dark):**
+  - 900 `#140E0A` (footer, desktop title bar)
+  - 800 `#1E1510` (primary text, dark cards)
+  - 600 `#3D2F26` (secondary text)
+  - 500 `#524135` (tertiary text)
+- **Flour (Canvas):**
+  - 100 `#FBF9F5` (page background)
+  - 200 `#F5F1EA` (subtle surface)
+  - 50 `#FDFCFB` (lightest)
+- **Caramel (Warm accent):**
+  - 500 `#F59E0B` (warnings, warmth)
+  - 400 `#FBBF24` (highlights)
+- **Culinary (Success/active):**
+  - 600 `#16A34A` (active nav, primary CTA, success)
+  - 400 `#4ADE80` (light accent)
+- **Stone Border:** `#E6DFD5` (all 1px borders)
+
+### Radii
+- Cards: `rounded-2xl` (16px)
+- Buttons/inputs: `rounded-lg` (8px) or `rounded-xl` (12px) — pick one and stay consistent
+- Badges/pills: `rounded-full` (999px)
+
+### Fonts
+- Sans: `"Plus Jakarta Sans", Inter, system-ui`
+- Mono: `"JetBrains Mono", monospace` — required for ALL numeric data
+
+## Sidebar Rules (Corrected)
+- Width: `w-64` (256px) desktop, `w-full` mobile
+- Background: `bg-white` (NOT dark)
+- Border: `border-r border-stoneBorder/80`
+- Active item: `bg-culinary-600 text-white rounded-xl shadow-sm`
+- Inactive item: `text-espresso-600 hover:bg-flour-100 hover:text-espresso-800`
+- Logo: 40x40 svg tile + wordmark, `border-b border-stoneBorder/60` separator
+
+## Dashboard Layout Rules (Corrected)
+- Main content: `bg-[#F8F9FA]` (dashboard body) with `p-6 lg:p-8`
+- Metric KPI grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4`
+- Metric card: `bg-white rounded-2xl border border-stoneBorder shadow-sm p-4`
+- Metric structure: Icon badge (top-left) + badge pill (top-right) → Big number (font-mono) + unit label → Footer with link
+
+## Dark Surfaces (Only These Are Dark)
+- Footer: `bg-espresso-900`
+- Simulated desktop title bar: `bg-espresso-900`
+- Dark mode logo preview card: `bg-espresso-900`
+- **Everything else on the dashboard is LIGHT.**
+
+## Full Audit Checklist
+
+[Keep the earlier checklist tables, but override all color values, sidebar rules, and layout rules with the corrected tokens above.]
