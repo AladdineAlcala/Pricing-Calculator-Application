@@ -352,6 +352,27 @@ pub fn initialize_database(conn: &Connection, db_path: &std::path::Path) -> Resu
 
     seed_packaging(conn)?;
 
+    // ── 8. app_notifications (v2.2: Persistent SQLite Notification Center) ───
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS app_notifications (
+            id                TEXT PRIMARY KEY,
+            notification_type TEXT NOT NULL,
+            severity          TEXT NOT NULL,
+            title             TEXT NOT NULL,
+            message           TEXT NOT NULL,
+            details           TEXT,
+            action_label      TEXT,
+            action_url        TEXT,
+            created_at        TEXT NOT NULL,
+            is_read           INTEGER NOT NULL DEFAULT 0,
+            is_dismissed      INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE INDEX IF NOT EXISTS idx_app_notifs_active 
+            ON app_notifications (is_dismissed, created_at DESC);",
+    )?;
+
+    seed_notifications(conn)?;
+
     Ok(())
 }
 
@@ -571,6 +592,63 @@ fn seed_ingredients(conn: &Connection) -> Result<()> {
                 params![ing_id],
             );
         }
+    }
+
+    Ok(())
+}
+
+fn seed_notifications(conn: &Connection) -> Result<()> {
+    let existing: i64 = conn
+        .query_row("SELECT COUNT(*) FROM app_notifications", [], |row| row.get(0))
+        .unwrap_or(0);
+
+    if existing > 0 {
+        return Ok(());
+    }
+
+    let seeds = vec![
+        (
+            "alert-unpriced-pantry-items",
+            "alert",
+            "warning",
+            "Immediate Action: Unpriced Pantry Ingredients Detected",
+            "Pantry ingredients lack purchase pricing, causing inaccurate batch costing.",
+            Some("Without purchase costs, recipes using these ingredients cannot compute accurate batch costs, target markups, or gross margins. Review and set purchase prices in the ingredients master list to prevent margin leakage."),
+            Some("Price Ingredients in Pantry"),
+            Some("/ingredients"),
+            chrono::Utc::now().to_rfc3339(),
+        ),
+        (
+            "notif-new-ingredient-created",
+            "notification",
+            "success",
+            "New Ingredient Added",
+            "A new ingredient 'Organic Madagascar Vanilla' has been created.",
+            Some("Registered in pantry master catalog with unit of measure (ml), storage location, and initial packaging specifications."),
+            Some("View in Pantry"),
+            Some("/ingredients"),
+            chrono::Utc::now().to_rfc3339(),
+        ),
+        (
+            "notif-recipe-formula-updated",
+            "notification",
+            "info",
+            "Recipe Formula Synchronized",
+            "Formula for 'Artisan Croissant' has updated ingredient proportions.",
+            Some("Yield of 24 units with target retail markup of 60.0% has been recalculated using live FIFO ingredient purchase rates."),
+            Some("View Recipes"),
+            Some("/recipes"),
+            chrono::Utc::now().to_rfc3339(),
+        ),
+    ];
+
+    for (id, ntype, severity, title, message, details, action_label, action_url, created_at) in seeds {
+        conn.execute(
+            "INSERT OR IGNORE INTO app_notifications 
+             (id, notification_type, severity, title, message, details, action_label, action_url, created_at, is_read, is_dismissed)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 0, 0)",
+            params![id, ntype, severity, title, message, details, action_label, action_url, created_at],
+        )?;
     }
 
     Ok(())

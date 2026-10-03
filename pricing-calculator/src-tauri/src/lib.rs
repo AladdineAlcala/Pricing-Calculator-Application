@@ -67,6 +67,10 @@ pub fn run() {
             commands::receive_packaging_inventory,
             commands::get_packaging_inventory_ledger,
             commands::get_packaging_transactions,
+            commands::get_active_notifications,
+            commands::create_notification,
+            commands::dismiss_notification,
+            commands::clear_all_notifications,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

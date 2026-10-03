@@ -446,6 +446,40 @@ impl std::fmt::Display for ProductionError {
 
 impl std::error::Error for ProductionError {}
 
+// ── v2.2: Notification Entity ────────────────────────────────────────────────
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DbNotification {
+    pub id: String,
+    pub notification_type: String,
+    pub severity: String,
+    pub title: String,
+    pub message: String,
+    #[serde(default)]
+    pub details: Option<String>,
+    #[serde(default)]
+    pub action_label: Option<String>,
+    #[serde(default)]
+    pub action_url: Option<String>,
+    pub created_at: String,
+    pub is_read: bool,
+    pub is_dismissed: bool,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct CreateNotificationInput {
+    #[serde(default)]
+    pub id: Option<String>,
+    pub notification_type: String,
+    pub severity: String,
+    pub title: String,
+    pub message: String,
+    #[serde(default)]
+    pub details: Option<String>,
+    #[serde(default)]
+    pub action_label: Option<String>,
+    #[serde(default)]
+    pub action_url: Option<String>,
+}
 
 #[cfg(test)]
 mod tests {
