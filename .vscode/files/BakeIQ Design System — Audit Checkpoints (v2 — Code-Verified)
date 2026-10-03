@@ -1,57 +1,441 @@
 # BakeIQ Design System — Audit Checkpoints (v2 — Code-Verified)
 
-> **Source of truth:** `code.html` Tailwind config + component usage.
-> **Do not use assumed hex values.** Only use the tokens defined below.
+> **Purpose:** Pass/fail checklist to audit every screen in the BakeIQ application against the official, code-verified design system.
+> **Source of truth:** `code.html` Tailwind config + verified component usage.
+> **Companion file:** `bakeiq-agent-rules.md` (v2, Code-Verified)
+> **Usage:** Run per screen. Any unchecked item = a fix ticket.
+> **Version:** 2.0 — Code-Verified
 
-## Design Tokens (Authoritative)
+---
+
+## Table of Contents
+
+1. [Design Tokens (Reference)](#0-design-tokens-reference)
+2. [Color Compliance](#1-color-compliance)
+3. [Typography Compliance](#2-typography-compliance)
+4. [Spacing & Grid (8px System)](#3-spacing--grid-8px-system)
+5. [Component Compliance](#4-component-compliance)
+6. [Layout & Dashboard Structure](#5-layout--dashboard-structure)
+7. [Desktop / Tauri Context](#6-desktop--tauri-context)
+8. [Numeric / Data Compliance](#7-numeric--data-compliance)
+9. [Dark Surface Compliance](#8-dark-surface-compliance)
+10. [Accessibility & Consistency](#9-accessibility--consistency)
+11. [Audit Output Format](#audit-output-format)
+12. [Audit Workflow](#audit-workflow)
+13. [Priority Levels](#priority-levels)
+14. [Agent Prompt Template](#agent-prompt-template)
+
+---
+
+## 0. Design Tokens (Reference)
+
+These are the authoritative values. All checkpoint tables below reference these tokens.
 
 ### Colors
-- **Espresso (Primary dark):**
-  - 900 `#140E0A` (footer, desktop title bar)
-  - 800 `#1E1510` (primary text, dark cards)
-  - 600 `#3D2F26` (secondary text)
-  - 500 `#524135` (tertiary text)
-- **Flour (Canvas):**
-  - 100 `#FBF9F5` (page background)
-  - 200 `#F5F1EA` (subtle surface)
-  - 50 `#FDFCFB` (lightest)
-- **Caramel (Warm accent):**
-  - 500 `#F59E0B` (warnings, warmth)
-  - 400 `#FBBF24` (highlights)
-- **Culinary (Success/active):**
-  - 600 `#16A34A` (active nav, primary CTA, success)
-  - 400 `#4ADE80` (light accent)
-- **Stone Border:** `#E6DFD5` (all 1px borders)
+
+| Token | Hex | Usage |
+|---|---|---|
+| `espresso-900` | `#140E0A` | Footer bg, desktop title bar |
+| `espresso-850` | `#1A120D` | Dark mode nested surfaces |
+| `espresso-800` | `#1E1510` | **Primary text, dark cards, headings** |
+| `espresso-700` | `#2A1F18` | Dark hover, borders on dark |
+| `espresso-600` | `#3D2F26` | Secondary text, inactive nav |
+| `espresso-500` | `#524135` | Tertiary text, metadata |
+| `flour-50` | `#FDFCFB` | Lightest surface |
+| `flour-100` | `#FBF9F5` | **Page background (canvas)** |
+| `flour-200` | `#F5F1EA` | Subtle surface, badges |
+| `flour-300` | `#EAE3D6` | Deeper muted surface |
+| `flour-400` | `#D9D0C1` | Disabled / decorative |
+| `caramel-400` | `#FBBF24` | Highlights, spark accents |
+| `caramel-500` | `#F59E0B` | **Warm accent, warnings** |
+| `caramel-600` | `#D97706` | Darker caramel hover |
+| `caramel-700` | `#B45309` | Deepest caramel |
+| `culinary-400` | `#4ADE80` | Light emerald accent |
+| `culinary-500` | `#22C55E` | Mid emerald |
+| `culinary-600` | `#16A34A` | **Primary CTA, active nav, success** |
+| `culinary-700` | `#15803D` | Deep emerald, text on light bg |
+| `stoneBorder` | `#E6DFD5` | **All 1px borders and dividers** |
 
 ### Radii
-- Cards: `rounded-2xl` (16px)
-- Buttons/inputs: `rounded-lg` (8px) or `rounded-xl` (12px) — pick one and stay consistent
-- Badges/pills: `rounded-full` (999px)
+
+| Element | Class | Pixels |
+|---|---|---|
+| Cards / large containers | `rounded-2xl` | 16px |
+| Buttons / inputs | `rounded-lg` or `rounded-xl` | 8px / 12px |
+| Badges / pills | `rounded-full` | 999px |
+| Small icons | `rounded-md` / `rounded-lg` | 6px / 8px |
 
 ### Fonts
-- Sans: `"Plus Jakarta Sans", Inter, system-ui`
-- Mono: `"JetBrains Mono", monospace` — required for ALL numeric data
 
-## Sidebar Rules (Corrected)
-- Width: `w-64` (256px) desktop, `w-full` mobile
-- Background: `bg-white` (NOT dark)
-- Border: `border-r border-stoneBorder/80`
-- Active item: `bg-culinary-600 text-white rounded-xl shadow-sm`
-- Inactive item: `text-espresso-600 hover:bg-flour-100 hover:text-espresso-800`
-- Logo: 40x40 svg tile + wordmark, `border-b border-stoneBorder/60` separator
+- **Sans:** `"Plus Jakarta Sans", Inter, system-ui`
+- **Mono:** `"JetBrains Mono", monospace` — required for all numeric data
 
-## Dashboard Layout Rules (Corrected)
-- Main content: `bg-[#F8F9FA]` (dashboard body) with `p-6 lg:p-8`
-- Metric KPI grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4`
-- Metric card: `bg-white rounded-2xl border border-stoneBorder shadow-sm p-4`
-- Metric structure: Icon badge (top-left) + badge pill (top-right) → Big number (font-mono) + unit label → Footer with link
+### Spacing Grid
 
-## Dark Surfaces (Only These Are Dark)
-- Footer: `bg-espresso-900`
-- Simulated desktop title bar: `bg-espresso-900`
-- Dark mode logo preview card: `bg-espresso-900`
-- **Everything else on the dashboard is LIGHT.**
+- Base unit: **8px**
+- Allowed: `4, 8, 16, 24, 32, 48, 64`
+- Forbidden: arbitrary values (13px, 27px, 35px)
 
-## Full Audit Checklist
+---
 
-[Keep the earlier checklist tables, but override all color values, sidebar rules, and layout rules with the corrected tokens above.]
+## 1. Color Compliance
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| C-01 | Primary dark text | Uses `text-espresso-800` (`#1E1510`) | Pure `#000000`, `#0F0F0F`, or `gray-900` |
+| C-02 | Page background | Uses `bg-flour-100` (`#FBF9F5`) | Pure `#FFFFFF`, `#F9F8F6`, or `gray-100` |
+| C-03 | Primary CTA color | Uses `bg-culinary-600` (`#16A34A`) | Blue, orange, purple, or `green-500` |
+| C-04 | Warm accent / warning | Uses `bg-caramel-500` (`#F59E0B`) or `text-caramel-600` | Wrong orange (`#D97A34`), `yellow-500` |
+| C-05 | Success / positive | Uses `culinary-600` (`#16A34A`) | `#4A7C59`, `green-500`, or bright lime |
+| C-06 | Border / divider color | Uses `border-stoneBorder` (`#E6DFD5`) | `#E5E3DF`, `gray-200`, `#CCCCCC` |
+| C-07 | Secondary text | Uses `text-espresso-600` or `text-espresso-500` | `gray-500`, `gray-600`, `#999999` |
+| C-08 | Tertiary / metadata text | Uses `text-espresso-500` (`#524135`) | Any gray Tailwind default |
+| C-09 | Info badge / callout | Uses `indigo-600` / `indigo-50` for "Pantry Master" | Random blue or cyan |
+| C-10 | Recipe / formula badge | Uses `blue-600` / `blue-50` for "Cost Engine" | Random colors |
+| C-11 | No rogue colors | Zero hex values outside the token palette | Any hex not in §0 |
+
+---
+
+## 2. Typography Compliance
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| T-01 | Sans font family | `"Plus Jakarta Sans", Inter, system-ui` | Serif, Comic Sans, default Arial |
+| T-02 | Mono font family | `"JetBrains Mono", monospace` | Default `monospace` or other |
+| T-03 | Numeric font | **All numbers use `font-mono`** | Numbers using sans-serif |
+| T-04 | Tabular numerics | Numeric tables use `tabular-nums` | Decimals shift on update |
+| T-05 | Hero H1 size | 48–64px, weight 800, tracking tight | Too small (<40px) or loose tracking |
+| T-06 | Section H2 size | 30–36px, weight 800, tracking tight | Same size as body |
+| T-07 | Card H3 size | 16–20px, weight 700 | Too small or too large |
+| T-08 | Body size | 14–16px, weight 400 | <14px or >16px |
+| T-09 | Small / meta text | 11–12px, weight 500–600 | Wrong size |
+| T-10 | Data labels | 10–12px, uppercase, letter-spacing | Lowercase, no tracking, or wrong size |
+| T-11 | Eyebrow label | `text-xs uppercase font-bold tracking-widest text-caramel-600` | Wrong color or case |
+
+---
+
+## 3. Spacing & Grid (8px System)
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| S-01 | Base 8px grid | All padding/margin/gap are multiples of 8 (or 4 micro) | Arbitrary values (13px, 27px, 35px) |
+| S-02 | Page horizontal padding | `px-4 sm:px-6 lg:px-8` | Fixed or arbitrary padding |
+| S-03 | Section vertical spacing | `py-10` minimum | Cramped or excessive |
+| S-04 | Between major sections | `space-y-20` | Wrong gap |
+| S-05 | Card internal padding | `p-4` / `p-6` / `p-7` only | Non-token padding |
+| S-06 | Title → body gap | 8px (via `mb-2` etc.) | Touching or far apart |
+| S-07 | Between form fields | 16–24px | Cramped or overly airy |
+| S-08 | Input → helper text | 4–8px | Floating far from input |
+| S-09 | Sidebar padding | `p-5` (20px) | Wrong value |
+| S-10 | Main content padding | `p-6 lg:p-8` (24px → 32px) | Fixed or arbitrary |
+| S-11 | No arbitrary values | No CSS values outside token scale | Hardcoded non-grid values |
+
+---
+
+## 4. Component Compliance
+
+### 4.1 Buttons
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| CB-01 | Primary CTA | `bg-culinary-600 hover:bg-culinary-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm` | Wrong color, padding, or radius |
+| CB-02 | Secondary button | `bg-white border border-stoneBorder text-espresso-700 text-xs font-semibold px-3.5 py-2 rounded-xl hover:bg-flour-50 shadow-sm` | Filled or wrong border |
+| CB-03 | Ghost / link | `text-culinary-600 hover:underline font-bold` | Wrong color or no hover |
+| CB-04 | Icon button | Min hit area 32×32px | Icons under 24px |
+| CB-05 | Button label sizing | `text-xs` (12px) for standard buttons | Wrong size |
+
+### 4.2 Cards
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| CC-01 | Card background | `bg-white` | Tinted or gray |
+| CC-02 | Card border | `border border-stoneBorder` (1px `#E6DFD5`) | No border, thick border, wrong color |
+| CC-03 | Card radius | `rounded-2xl` (16px) | 0px, 4px, 8px, 24px |
+| CC-04 | Card shadow | `shadow-sm` (or `hover:shadow-md` on interactive) | Heavy shadows |
+| CC-05 | Card padding | `p-4` / `p-6` / `p-7` only | Arbitrary |
+
+### 4.3 Metric KPI Card
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| CM-01 | Card structure | Icon badge → big number → unit → description → footer | Missing sections |
+| CM-02 | Icon badge | `w-8 h-8 rounded-lg` with semantic bg | Wrong size/radius |
+| CM-03 | Big number | `text-2xl font-black text-espresso-800 font-mono` | Sans-serif or wrong weight |
+| CM-04 | Unit label | `text-[11px] uppercase font-bold text-espresso-500` | Wrong size or case |
+| CM-05 | Footer divider | `pt-2 border-t border-stoneBorder/60` | Missing or wrong color |
+| CM-06 | Pantry badge color | `bg-indigo-50 text-indigo-600` | Wrong semantic color |
+| CM-07 | Recipe badge color | `bg-blue-50 text-blue-600` | Wrong semantic color |
+| CM-08 | Success badge color | `bg-emerald-50 text-culinary-600` | Wrong semantic color |
+| CM-09 | Warning badge color | `bg-amber-50 text-caramel-600` | Wrong semantic color |
+
+### 4.4 Badges / Pills
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| CP-01 | Base shape | `inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold` | Square or wrong radius |
+| CP-02 | Success badge | `bg-emerald-100 text-culinary-700` | Wrong colors |
+| CP-03 | Warning badge | `bg-amber-100 text-caramel-700` | Wrong colors |
+| CP-04 | Info badge | `bg-indigo-50 text-indigo-600` | Wrong colors |
+| CP-05 | Neutral badge | `bg-flour-200 text-espresso-700` | Wrong colors |
+
+### 4.5 Inputs
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| CI-01 | Default state | `bg-white border border-stoneBorder rounded-lg px-3 py-2 text-sm` | Gray bg, wrong border, wrong radius |
+| CI-02 | Focus state | `focus:border-culinary-600 focus:ring-1 focus:ring-culinary-600` | No visible focus or blue default |
+| CI-03 | Error state | `border-red-400 focus:border-red-500` | No error state or wrong color |
+| CI-04 | Disabled state | `bg-flour-200 text-espresso-500 cursor-not-allowed` | Wrong bg or cursor |
+
+### 4.6 Navigation
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| CN-01 | Top header | `sticky top-0 z-50 bg-flour-100/90 backdrop-blur-md border-b border-stoneBorder` | Wrong bg, no blur, no border |
+| CN-02 | Header height | `h-20` (80px) | Wrong height |
+| CN-03 | Nav link | `text-xs font-semibold uppercase tracking-wider text-espresso-600 hover:text-espresso-800` | Wrong case, tracking, or color |
+| CN-04 | Sidebar background | **`bg-white`** — NOT dark | Dark background |
+| CN-05 | Sidebar width | `w-64` (256px) desktop, `w-full` mobile | Wrong width |
+| CN-06 | Sidebar right border | `border-r border-stoneBorder/80` | Missing or wrong color |
+| CN-07 | Sidebar padding | `p-5` | Wrong value |
+| CN-08 | Sidebar active item | `bg-culinary-600 text-white rounded-xl shadow-sm shadow-culinary-600/20` | Wrong color, radius, or missing shadow |
+| CN-09 | Sidebar inactive item | `text-espresso-600 hover:bg-flour-100 hover:text-espresso-800 transition-colors` | Wrong colors or no hover |
+| CN-10 | Sidebar nav icon size | `w-4 h-4` | Wrong size |
+| CN-11 | Sidebar logo block | 40×40 tile + wordmark, `pb-5 border-b border-stoneBorder/60` | Missing separator |
+
+### 4.7 Footer
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| CF-01 | Footer background | `bg-espresso-900` | Wrong dark or light |
+| CF-02 | Footer top border | `border-t border-espresso-800` | Missing or wrong color |
+| CF-03 | Footer text | `text-stone-400 text-xs` | Wrong size or color |
+| CF-04 | Footer padding | `py-12` | Wrong value |
+| CF-05 | Status dots | `w-2 h-2 rounded-full bg-culinary-500` | Wrong color or size |
+
+### 4.8 Empty State / CTA Block
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| CE-01 | Container | `bg-white rounded-2xl border border-stoneBorder p-10 text-center space-y-4 max-w-2xl mx-auto shadow-sm` | Wrong radius, padding, or centered layout |
+| CE-02 | Icon badge | `w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-white shadow-md shadow-indigo-600/30` | Wrong size, color, or missing shadow |
+| CE-03 | Title | `text-lg font-bold text-espresso-800` | Wrong size or color |
+| CE-04 | Description | `text-xs text-espresso-600 mt-1 max-w-md mx-auto` | Wrong size or color |
+| CE-05 | Actions row | `flex flex-col sm:flex-row items-center justify-center gap-3 pt-2` | Wrong layout or missing responsive |
+
+### 4.9 Typography Display Elements
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| CT-01 | Eyebrow label | `text-xs uppercase font-bold tracking-widest text-caramel-600 mb-2` | Wrong color or case |
+| CT-02 | Section H2 | `text-3xl font-extrabold text-espresso-800 tracking-tight` | Wrong size, weight, or tracking |
+| CT-03 | Section description | `text-sm text-espresso-600 mt-2 max-w-2xl` | Wrong size or max-width |
+| CT-04 | Wordmark | "Bake" in `text-espresso-800`, "IQ" in `text-culinary-600`, `font-extrabold tracking-tight` | Wrong accent color |
+
+---
+
+## 5. Layout & Dashboard Structure
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| L-01 | Page shell max width | `max-w-7xl mx-auto` | Full width or arbitrary max |
+| L-02 | Page shell padding | `px-4 sm:px-6 lg:px-8` | Fixed or missing |
+| L-03 | Dashboard body bg | `bg-[#F8F9FA]` | Wrong gray or white |
+| L-04 | Main content padding | `p-6 lg:p-8` | Fixed or arbitrary |
+| L-05 | Content sections stack | `space-y-6` | Cramped or airy |
+| L-06 | Metric KPI grid | `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4` | Wrong column count or gap |
+| L-07 | Sidebar layout (desktop) | Fixed `w-64`, not fluid | Fluid or wrong width |
+| L-08 | Sidebar layout (mobile) | `w-full`, stacks above content | Always fixed |
+| L-09 | Desktop title bar bg | `bg-espresso-900` | Wrong dark or light |
+| L-10 | Traffic lights | `#FF5F56`, `#FFBD2E`, `#27C93F`, each `w-3 h-3 rounded-full` | Wrong colors or size |
+| L-11 | Table row height | Minimum 48px via padding | Cramped rows |
+| L-12 | Multi-column layout | Desktop uses grid/multi-column | Single-column mobile layout on desktop |
+| L-13 | Decorative grid (light) | `bg-grid-subtle` 24×24px `rgba(30, 21, 16, 0.06)` | Wrong pattern or color |
+| L-14 | Decorative grid (dark) | `bg-grid-dark` 24×24px `rgba(255, 255, 255, 0.08)` | Wrong pattern or color |
+
+---
+
+## 6. Desktop / Tauri Context
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| D-01 | Click targets | Min 32×32px for mouse; 44×44 only if touch-enabled | Mobile-style 44px everywhere |
+| D-02 | Icon buttons | 32×32px minimum hit area | Icons under 24px hit area |
+| D-03 | Window chrome | Respects native Tauri title bar | Duplicates native chrome |
+| D-04 | DPI scaling | Looks correct at 100%, 125%, 150% | Breaks at non-100% scaling |
+| D-05 | Responsiveness | Works from 800px to 2560px width | Fixed-width layouts |
+| D-06 | Sidebar collapse | Collapses or stacks gracefully at narrow widths | Breaks layout |
+| D-07 | Font rendering | Uses system font stack fallback | Missing fallback font |
+
+---
+
+## 7. Numeric / Data Compliance
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| N-01 | Numeric font | `font-mono` (JetBrains Mono) | Sans-serif numbers |
+| N-02 | Tabular numerals | `tabular-nums` applied on numeric tables | Decimals shift on update |
+| N-03 | Currency prefix | `₱` with no space (`₱184.50`) | Wrong symbol or spacing |
+| N-04 | Weight formatting | Thousands separator + 2 decimals (`2,500.00 g`) | No separator or wrong decimals |
+| N-05 | Percentage formatting | 1 decimal (`68.4%`) | 0 or 2+ decimals |
+| N-06 | Metric card numbers | `text-2xl font-black text-espresso-800 font-mono` | Wrong size, weight, or font |
+| N-07 | Data labels | `text-[10px]` or `text-[11px]`, uppercase | Wrong size or case |
+| N-08 | Alignment | Numeric columns right-aligned | Left-aligned numbers |
+
+---
+
+## 8. Dark Surface Compliance
+
+Only these surfaces are allowed to be dark (`bg-espresso-900` or `bg-espresso-850`):
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| DK-01 | Footer dark | `bg-espresso-900` | Correct |
+| DK-02 | Desktop title bar dark | `bg-espresso-900` | Correct |
+| DK-03 | Dark-mode preview card | `bg-espresso-900` | Correct |
+| DK-04 | No unlisted dark surfaces | All other surfaces are light | Sidebar, cards, nav in dark |
+| DK-05 | Sidebar is light | **`bg-white`** — flag any dark sidebar | Dark sidebar = bug |
+
+---
+
+## 9. Accessibility & Consistency
+
+| ID | Checkpoint | Pass Criteria | Fail Signal |
+|---|---|---|---|
+| A-01 | Text contrast | WCAG AA (4.5:1 body, 3:1 large) | Low contrast text |
+| A-02 | Focus states | Visible ring in `culinary-600` | Invisible or default focus |
+| A-03 | Keyboard nav | Logical tab order, no trapped focus | Skipped or trapped elements |
+| A-04 | Icon labels | `aria-label` or visible text on all icons | Unlabeled interactive icons |
+| A-05 | Consistent iconography | Same icon library used everywhere | Mixed styles or sizes |
+| A-06 | Copy consistency | Same terms for same concepts | "Login" vs "Sign in" |
+| A-07 | Click target size | Min 32×32px (desktop) or 44×44 (touch) | Too small |
+| A-08 | Color independence | Information not conveyed by color alone | Color-only indicators |
+
+---
+
+## Audit Output Format
+
+When auditing a screen, output this exact structure:
+
+```markdown
+### Screen: [Screen Name / Route]
+**Audit Date:** [YYYY-MM-DD]
+**Compliance Score:** [X/Y passed = Z%]
+
+| ID | Checkpoint | Status | Evidence | Fix |
+|----|-----------|--------|----------|-----|
+| C-01 | Primary dark text | ✅ Pass | Uses text-espresso-800 | — |
+| C-03 | Primary CTA color | ❌ Fail | Button uses bg-blue-600 | Change to bg-culinary-600 |
+| T-03 | Numeric font | ❌ Fail | Metric "1,284" uses Inter | Wrap in font-mono |
+| S-05 | Card padding | ⚠️ Partial | Uses p-5 (20px) | Change to p-6 (24px) |
+| CC-03 | Card radius | ✅ Pass | rounded-2xl verified | — |
+| CN-04 | Sidebar background | ❌ Fail | Sidebar uses bg-espresso-900 | Change to bg-white |
+| N-01 | Numeric font | ❌ Fail | ₱184.50 uses sans | Wrap in font-mono |
+
+**Priority Fixes (High Impact):**
+1. Sidebar is dark — change to `bg-white` (Critical)
+2. CTA button uses blue — change to `bg-culinary-600` (High)
+3. Metric numbers missing monospace (High)
+
+**Low Priority / Polish:**
+1. Card padding should be 24px not 20px (Medium)
+2. Badge text size 11px → 10px (Low)
+```
+
+### Status Legend
+
+| Symbol | Meaning |
+|---|---|
+| ✅ Pass | Fully compliant |
+| ⚠️ Partial | Close, but needs adjustment |
+| ❌ Fail | Violates the rule |
+| ➖ N/A | Rule not applicable to this screen |
+
+---
+
+## Audit Workflow
+
+1. **Inventory screens.** List every route/page in the app (e.g., `/dashboard`, `/login`, `/orders`, `/settings`, `/recipes`).
+2. **Run audit per screen.** Feed screen code + this checklist to the agent.
+3. **Aggregate results.** Group failures by rule ID to find systemic issues (e.g., "CN-04 fails on 8 screens = sidebar component needs fixing").
+4. **Prioritize.** Fix root causes (design tokens, shared components) before one-off patches.
+5. **Re-audit.** After fixes, re-run checklist to confirm compliance.
+
+---
+
+## Priority Levels
+
+| Priority | Definition | Examples |
+|---|---|---|
+| **Critical** | Brand violation, breaks user trust | Dark sidebar, wrong logo, wrong primary color |
+| **High** | Component / color mismatch | Wrong CTA color, missing mono on data |
+| **Medium** | Spacing / typography drift | Non-8px padding, wrong heading size |
+| **Low** | Polish & consistency | Badge text size, icon size variance |
+
+---
+
+## Agent Prompt Template
+
+Use this prompt with your AI agent for each screen:
+
+> You are a design system auditor for BakeIQ. I will give you the code for a screen. Use the **BakeIQ Design System — Audit Checkpoints (v2 — Code-Verified)** to evaluate it. Output the results in the standard audit table format. For each failure, provide the exact line of code causing the issue and the specific fix using the correct token. Group fixes by priority: Critical (brand violation), High (component/color mismatch), Medium (spacing/typography), Low (polish). If you are unsure whether a value matches a token, flag it as ⚠️ Partial and ask for clarification.
+
+---
+
+## Critical Rules (Most Common Violations)
+
+These are the rules agents most often get wrong. Audit these first:
+
+1. **CN-04** — Sidebar must be `bg-white`, NOT dark (`#0F0F0F`).
+2. **C-01** — Primary dark is `#1E1510` (espresso-800), NOT `#0F0F0F`.
+3. **C-02** — Canvas is `#FBF9F5` (flour-100), NOT `#F9F8F6`.
+4. **C-03** — Primary CTA is `#16A34A` (culinary-600), NOT `#D97A34`.
+5. **C-05** — Success is `#16A34A` (culinary-600), NOT `#4A7C59`.
+6. **C-06** — Border is `#E6DFD5` (stoneBorder), NOT `#E5E3DF`.
+7. **T-03 / N-01** — All numbers use `font-mono` (JetBrains Mono).
+8. **CC-03** — Card radius is `rounded-2xl` (16px).
+9. **DK-05** — Sidebar is light. Any dark sidebar = Critical bug.
+10. **S-11** — No arbitrary spacing values.
+
+---
+
+## Appendix A: Quick Reference Card
+
+| Item | Correct Value |
+|---|---|
+| Primary text | `#1E1510` (espresso-800) |
+| Canvas | `#FBF9F5` (flour-100) |
+| Primary CTA | `#16A34A` (culinary-600) |
+| Warm accent | `#F59E0B` (caramel-500) |
+| Border | `#E6DFD5` (stoneBorder) |
+| Sidebar bg | `bg-white` (light) |
+| Sidebar width | 256px (`w-64`) |
+| Card radius | 16px (`rounded-2xl`) |
+| Button radius | 8–12px (`rounded-lg` / `rounded-xl`) |
+| Pill radius | 999px (`rounded-full`) |
+| Numeric font | JetBrains Mono (`font-mono`) |
+| Spacing grid | 8px multiples |
+
+---
+
+## Appendix B: File References
+
+| File | Purpose |
+|---|---|
+| `bakeiq-audit-checkpoints.md` | This file — pass/fail checklist |
+| `bakeiq-agent-rules.md` | Agent behavior rules (v2, code-verified) |
+| `code.html` | Source of truth for tokens and components |
+| `tailwind.config` | Defined inside `code.html` `<script>` block |
+
+---
+
+## Appendix C: Changelog
+
+| Version | Date | Changes |
+|---|---|---|
+| v1.0 | Initial | Assumed tokens (incorrect — dark sidebar, wrong hex values) |
+| v2.0 | Current | Code-verified from `code.html` — corrected sidebar (light), corrected espresso/caramel/culinary palette, added dark surface restricted list, numeric compliance section, and critical rules section |
+
+---
+
+*End of BakeIQ Design System — Audit Checkpoints (v2 — Code-Verified)*
