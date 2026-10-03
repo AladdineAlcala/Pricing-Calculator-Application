@@ -11,7 +11,6 @@ import {
   Layers,
   User,
   Zap,
-  Clock,
   Sparkles,
   Calculator,
   TrendingUp,
@@ -23,7 +22,6 @@ import {
   Info,
   Trash2,
   Box,
-  Scale,
   DollarSign,
   FileSpreadsheet,
   Search,
@@ -756,9 +754,6 @@ export default function RecipeBuilder() {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span>Production Active</span>
           </span>
-          <span className="px-2 py-0.5 rounded-full text-[11px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800/50">
-            v2.4.1
-          </span>
         </div>
       </div>
 
@@ -767,14 +762,8 @@ export default function RecipeBuilder() {
         <div>
           <div className="flex items-center gap-3 flex-wrap mb-2">
             <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
-              {r.name} 🍌
+              {r.name}
             </h1>
-            <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/50">
-              BAKERY & PASTRIES
-            </span>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800">
-              Batch: {r.yield_qty} units
-            </span>
           </div>
 
           {/* Meta Info Bar */}
@@ -792,11 +781,6 @@ export default function RecipeBuilder() {
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-2xs">
               <Zap className="w-3.5 h-3.5 text-slate-400" />
               <span>Electricity & Gas: <strong className="font-bold text-slate-900 dark:text-white">{fmt(r.electricity_cost)}</strong></span>
-            </span>
-
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span>Prep Time: <strong className="font-bold text-slate-900 dark:text-white">45 min</strong></span>
             </span>
           </div>
         </div>
@@ -964,11 +948,6 @@ export default function RecipeBuilder() {
                   <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
                   <span>Sort {ingSortBy !== "default" ? `(${ingSortBy})` : ""}</span>
                 </button>
-
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-50 dark:bg-[#121826] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-                  <Scale className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Unit Format</span>
-                </span>
               </div>
             </div>
 
@@ -1424,32 +1403,6 @@ export default function RecipeBuilder() {
               </div>
             )}
           </div>
-
-          {/* Card: Culinary Specification & Prep Ratio */}
-          <div className="rounded-3xl p-5 bg-white/70 dark:bg-[#0c101a]/70 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0 mt-0.5">
-                <Info className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
-                  CULINARY SPECIFICATION & PREP RATIO
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                  Moisture loss estimated at 7.5% during 55min baking cycle at 175°C. Total dough raw mass: 1,180g.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-              <span className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
-                Contains Gluten
-              </span>
-              <span className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300">
-                Dairy
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* ── Right Column: Sidebar Costing Cards (Col Span 5 / 4) ── */}
@@ -1472,10 +1425,10 @@ export default function RecipeBuilder() {
               </div>
               <button
                 onClick={openEdit}
-                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Row</span>
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit Overheads</span>
               </button>
             </div>
 

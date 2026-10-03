@@ -1,9 +1,10 @@
 # Code Review Strikes Log
 STRIKES: 0
-LAST_REVIEW: 2026-10-02T21:22:30+08:00
+LAST_REVIEW: 2026-10-03T09:07:30+08:00
 STATUS: APPROVED
-NOTES: Successfully executed RecipeBuilder Consolidated Direct Materials Display sprint.
-1. Sidebar Pricing & Margin Engine: Integrated prominent "Total Direct Materials" subtotal block directly grouping Raw Ingredients and Packaging & Materials with unit material cost (₱/unit) before Fixed Overhead and Total Batch Cost.
-2. Left Column Direct Materials Summary Card: Implemented an executive Consolidated Direct Materials summary card directly positioned below the Recipe Packaging & Presentation table. Displays 3-column breakdown (Ingredients Subtotal, Packaging Subtotal, and Combined Total Direct Materials), a proportional dual-ratio distribution bar, and finished unit economics.
-3. Verification Gate: Validated with `npm run build` (tsc & vite passed with 0 errors) and all 21 Playwright E2E tests passing cleanly in 35.2s across all test suites.
-4. Review Gatekeeper: Zero debug remnants, zero build warnings, clean surgical diff. Strikes remain 0.
+NOTES: Successfully executed Global Header & Sidebar BakeIQLogo Bottom Border Alignment sprint.
+1. Header.tsx: Standardized top navigation header container to h-20 (80px) with flex items-center justify-between and shrink-0. Standardized left breadcrumb indicators to shrink-0 and command palette hint to hidden 2xl:flex to ensure smooth single-row alignment.
+2. Sidebar.tsx: Standardized BakeIQLogo brand header container to h-20 (80px) with shrink-0 and border-b.
+3. Geometric Alignment: Eliminates vertical step discontinuity across the horizontal top border seam. Bottom borders of both the Sidebar logo header and Header.tsx sit at exactly y = 80px with 0px variance.
+4. Verification Gate: TypeScript compilation passed with 0 errors. All 25 Playwright E2E tests (including TC-THEME-04 header bottom border alignment assertion) passed cleanly with 0 regressions.
+5. Review Gatekeeper: Zero debug remnants, zero build warnings, clean surgical diff. Strikes remain 0.

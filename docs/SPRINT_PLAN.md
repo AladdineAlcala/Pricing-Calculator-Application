@@ -1,120 +1,105 @@
-# Sprint Plan: RecipeBuilder Consolidated Direct Materials Display
+# Sprint Plan: Global Header & Sidebar BakeIQLogo Bottom Border Alignment
 
 **Lead Architect**: `/solution-architect-business-planner`  
-**Assigned Builder**: `/frontend-uiux-design-expert`  
+**Assigned UI/UX Specialist**: `/frontend-uiux-design-expert`  
 **QA Specialist**: `qa-automation-tester`  
 **Quality Gatekeeper**: `code-reviewer`  
 **Sprint Status**: `[COMPLETED & APPROVED]` ✅  
 
 ---
 
-## 1. Executive Summary & Domain Costing Rationale
+## 1. Executive Summary & Root Cause Analysis
 
-In culinary manufacturing and managerial accounting, total product cost is composed of two primary pillars:
-1. **Direct Materials (Prime Variable Cost)**:
-   - **Raw Ingredients Cost**: Direct culinary consumption (flour, butter, sugar, eggs, yeast).
-   - **Packaging & Presentation Cost**: Direct containerization and finishing materials (boxes, cake boards, liners, ribbons, brand stickers).
-2. **Production Overheads (Fixed Cost)**:
-   - **Labor Allocation**: Direct baking and assembly labor wage per batch.
-   - **Electricity / Gas**: Oven run-time and baking utility energy per batch.
+Following the successful alignment of the application footers, the user requested the exact same alignment for the top horizontal borders: aligning the bottom border of the top navigation header (`Header.tsx`) with the bottom border of the BakeIQLogo header container (`Sidebar.tsx`).
 
-Currently, `RecipeBuilder` displays Raw Ingredients and Packaging & Materials in separate tables and separate lines in the sidebar, but lacks a synthesized **Total Direct Materials** metric. 
+### Geometric Root Cause:
+1. **Asymmetric Rendered Heights**:
+   - In `Sidebar.tsx`, the brand lockup header container has an explicit height of `h-20` (**`80px`** / `5rem`).
+   - In `Header.tsx`, the top navigation bar lacked a fixed height, relying on `py-3.5` with internal buttons (~34px). At standard 1280px desktop resolution, internal `flex-wrap` caused the mode indicators to wrap, expanding the computed header height to **`93px`** (or `~64px` un-wrapped).
+2. **Horizontal Border Seam Discontinuity**:
+   - Both `Sidebar` and `Header` originate at `y = 0` (top of the viewport).
+   - In `Sidebar.tsx`, the bottom border of the logo container is situated at `y = 80px`.
+   - In `Header.tsx`, the bottom border sat at `y = 93px` (or `y = 64px`).
+   - This produced a visible **13px to 16px vertical step discontinuity** at the junction where the sidebar's right border intersects the top navigation header.
 
-Per user instruction, this sprint implements the display of the **Total Direct Materials (Raw Ingredients + Packaging & Materials)** in two complementary, high-visibility locations on the RecipeBuilder screen:
-1. **Pricing & Margin Engine Card (Right Sidebar)**: An integrated subtotal block immediately following Raw Ingredients and Packaging, displaying the combined batch direct material cost and per-unit direct material cost before overhead.
-2. **Consolidated Direct Materials Summary Card (Left Column)**: A dedicated, executive summary card positioned directly below the Recipe Packaging table that bridges the Ingredients and Packaging modules with a dual-ratio breakdown bar and per-unit unit economics.
-
----
-
-## 2. Mathematical Formulations & Data Contracts
-
-### 2.1 Formula Definitions
-$$\text{Raw Ingredients Cost} = \text{result.total\_ingredient\_cost} \lor \text{result.total\_variable\_cost}$$
-$$\text{Packaging Cost} = \text{result.total\_packaging\_cost} \lor 0.0$$
-$$\mathbf{\text{Total Direct Materials (Batch)}} = \text{Raw Ingredients Cost} + \text{Packaging Cost}$$
-$$\mathbf{\text{Direct Materials Cost Per Unit}} = \frac{\text{Total Direct Materials}}{\text{yield\_qty}}$$
-
-### 2.2 Proportional Ratio Breakdown
-$$\text{Ingredients Ratio (\%)} = \text{Total Direct Materials} > 0 \ ? \ \left( \frac{\text{Raw Ingredients Cost}}{\text{Total Direct Materials}} \times 100 \right) : 0$$
-$$\text{Packaging Ratio (\%)} = \text{Total Direct Materials} > 0 \ ? \ (100 - \text{Ingredients Ratio (\%)}) : 0$$
+### Target Architectural Blueprint:
+- Standardize both top containers to an explicit design token height of **`h-20`** (**`80px`** / `5rem`) with `flex items-center` and `shrink-0`.
+- Standardize layout geometry:
+  - In `Sidebar.tsx`: Ensure the logo container has `h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0`.
+  - In `Header.tsx`: Set the header element to `h-20 px-6 flex items-center justify-between border-b border-artisan-border dark:border-slate-800 shrink-0`.
+  - In `Header.tsx`: Clean up responsive wrapping by setting the left breadcrumb cluster to `shrink-0 flex items-center gap-3` and adjusting the command palette hint to `hidden 2xl:flex` to prevent wrapping at 1280px.
+- **Outcome**: Both top containers start at `y = 0` and have an exact `80px` height with `border-b`, positioning their bottom borders at the exact same vertical coordinate (**`y = 80px`**) with **0.00px variance**, creating an uninterrupted, continuous horizontal line across the top of the desktop application.
 
 ---
 
-## 3. Work Breakdown Structure (DAG WBS)
+## 2. Work Breakdown Structure (DAG WBS)
 
 ```
-[Phase 1: Domain Modeling & Formula Verification] ─────────► [DONE]
+[Phase 1: Architectural Blueprint & User Confirmation] ──────► [CURRENT]
                       │
-                      ▼
+                      ▼ (Upon User [YES])
 [Phase 2: UI/UX Implementation] (Assigned to /frontend-uiux-design-expert)
-  ├── Task 2.1: RecipeBuilder.tsx (Pricing & Margin Engine Card)
-  │     ├── Calculate totalDirectMaterials and directMaterialsPerUnit
-  │     └── Author integrated "Total Direct Materials" subtotal row with per-unit callout
-  └── Task 2.2: RecipeBuilder.tsx (Consolidated Direct Materials Card)
-        ├── Position directly below Recipe Packaging table
-        ├── Render 3-column financial card: Ingredients Subtotal, Packaging Subtotal, and Combined Materials Total
-        └── Render dual-ratio proportional bar (Emerald = Ingredients, Amber = Packaging)
+  ├── Task 2.1: Header.tsx Height & Alignment Standardization
+  │     ├── Set header container className to `h-20 px-6 flex items-center justify-between border-b border-artisan-border dark:border-slate-800 shrink-0`
+  │     ├── Prevent wrapping on left breadcrumbs with `shrink-0 flex items-center gap-3 text-xs`
+  │     └── Adjust command palette hint breakpoint to `hidden 2xl:flex` for responsive balance
+  │
+  └── Task 2.2: Sidebar.tsx Logo Header Constraint
+        └── Ensure logo header has `h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0`
                       │
                       ▼
-[Phase 3: Automated Verification] (Assigned to qa-automation-tester)
-  ├── Task 3.1: TypeScript compilation & Vite bundle build (`npm run build`)
-  └── Task 3.2: Full Playwright E2E test suite (21/21 tests)
+[Phase 3: Verification & Regression Testing] (Assigned to qa-automation-tester)
+  ├── Task 3.1: Static type check and production bundling (`npm run build`)
+  └── Task 3.2: Automated Playwright E2E assertion verifying exact pixel bounding box alignment:
+                `headerBox.y === logoBox.y === 0` and `headerBox.height === logoBox.height === 80`
                       │
                       ▼
-[Phase 4: Quality Gatekeeper Review] (Assigned to code-reviewer)
-  └── Task 4.1: Verify zero debug remnants, zero build warnings, clean presentational diff, update .review_strikes.log
+[Phase 4: Strict Quality Gatekeeper Review] (Assigned to code-reviewer)
+  └── Task 4.1: Verify zero debug remnants, zero build warnings, clean visual layout, update `.review_strikes.log`
 ```
 
 ---
 
-## 4. Targeted File Modifications & Visual Specifications
+## 3. Detailed Itemized Deliverables
 
-### Target File: `pricing-calculator/src/pages/RecipeBuilder.tsx`
+### Deliverable A: `pricing-calculator/src/components/Header.tsx`
+| Line Range | Current Implementation | Target Specification | Rationale |
+| :--- | :--- | :--- | :--- |
+| **Lines 18–21** | `<header className="sticky top-0 z-20 print:hidden bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur border-b border-artisan-border dark:border-slate-800 px-6 py-3.5 flex items-center justify-between gap-4" data-purpose="top-navigation">` | `<header className="sticky top-0 z-20 print:hidden bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur border-b border-artisan-border dark:border-slate-800 px-6 h-20 flex items-center justify-between gap-4 shrink-0" data-purpose="top-navigation">` | Fixes height to standard `80px` (`h-20`) to match `Sidebar.tsx` logo header. |
+| **Line 23** | `<div className="flex items-center gap-3 text-xs flex-wrap">` | `<div className="flex items-center gap-3 text-xs shrink-0">` | Prevents multi-line wrapping inside the fixed `h-20` header. |
+| **Line 40** | `<button ... className="hidden xl:flex items-center gap-2 ...">` | `<button ... className="hidden 2xl:flex items-center gap-2 ...">` | Prevents horizontal crowding on standard 1280px laptop screens. |
 
-#### 1. In `Pricing & Margin Engine` Card (Sidebar, lines ~1445–1475):
-- Compute:
-  ```ts
-  const totalDirectMaterials = (result.total_ingredient_cost ?? result.total_variable_cost) + (result.total_packaging_cost || 0);
-  const directMaterialsPerUnit = r.yield_qty > 0 ? totalDirectMaterials / r.yield_qty : 0;
+### Deliverable B: `pricing-calculator/src/components/Sidebar.tsx`
+| Line Range | Current Implementation | Target Specification | Rationale |
+| :--- | :--- | :--- | :--- |
+| **Line 19** | `<div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800">` | `<div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0">` | Retains standard `80px` (`h-20`) and guarantees zero vertical shrink. |
+
+---
+
+## 4. Verification & Testing Protocol
+
+1. **Static Compilation**:
+   - `npm run build` must compile with 0 errors and zero warnings.
+2. **Automated Mathematical Bounding Box Assertion**:
+   - In Playwright, verify:
+     ```ts
+     const headerBox = await header.boundingBox();
+     const logoBox = await logoHeader.boundingBox();
+     expect(headerBox.height).toBe(80);
+     expect(logoBox.height).toBe(80);
+     expect(Math.abs((headerBox.y + headerBox.height) - (logoBox.y + logoBox.height))).toBeLessThanOrEqual(0.5);
+     ```
+3. **Full Regression Gate**:
+   - All 24 Playwright tests must pass with 0 regressions.
+
+---
+
+## 5. Rollback & Anti-Failure Safety Measures
+
+If an abort or rollback is triggered:
+- The system will execute:
+  ```bash
+  git checkout -- pricing-calculator/src/components/Header.tsx \
+                 pricing-calculator/src/components/Sidebar.tsx
   ```
-- Insert a highlighted subtotal box directly below the `Packaging & Materials:` row:
-  - Label: `Total Direct Materials:`
-  - Icon: `PackageCheck`
-  - Values: `fmt(totalDirectMaterials)` and `fmt(directMaterialsPerUnit)/unit`
-  - Visual treatment: Rounded container with subtle emerald/slate translucent background (`bg-slate-50/80 dark:bg-[#121826]/80 border border-slate-200/70 dark:border-slate-800/70`).
-
-#### 2. Below `Recipe Packaging & Presentation` Card (Left Column, lines ~1315):
-- Insert a dedicated **Consolidated Direct Materials Summary Card**:
-  - Header:
-    - Icon: `PackageCheck` in emerald pill
-    - Title: `Total Direct Materials`
-    - Subtitle: `Consolidated Raw Ingredients & Packaging Cost`
-    - Badge: `{fmt(directMaterialsPerUnit)} / Finished Unit`
-  - 3-Column Metric Grid:
-    - Box 1: **Raw Ingredients Subtotal** (`fmt(...)`, item count badge, emerald dot)
-    - Box 2: **Packaging & Materials Subtotal** (`fmt(...)`, item count badge, amber dot)
-    - Box 3: **Total Direct Materials** (`fmt(...)`, prominent emerald tabular typography)
-  - Visual Proportional Ratio Bar:
-    - Emerald segment: `{ingRatio}% Ingredients`
-    - Amber segment: `{pkgRatio}% Packaging`
-  - Tooltip / helper note explaining standard culinary prime cost allocation.
-
----
-
-## 5. Verification Protocol
-
-1. **Static Analysis & Type Gate**:
-   - `npm run build`: Must compile cleanly with 0 TypeScript errors and 0 Vite warnings.
-2. **Playwright E2E Regression**:
-   - Run `npx playwright test` across all 5 test files (`base_unit_conversion_engine`, `ingredients_supplier_sku`, `lrc_perpetual_inventory`, `packaging_management_adversarial`, `recipes_pagination`).
-   - All 21 tests must pass cleanly.
-3. **Visual Confirmation**:
-   - Verify that the combined total is reactive and recalculates instantly when ingredients or packaging are added/removed/updated.
-   - Verify seamless appearance in both light and dark mode.
-
----
-
-## 6. Rollback & Anti-Failure Safety Measures
-
-If aborted or reverted:
-- Command: `git restore pricing-calculator/src/pages/RecipeBuilder.tsx`.
+- Changes are strictly layout styling classes on two navigation header components with zero impact on database schemas or costing formulas.

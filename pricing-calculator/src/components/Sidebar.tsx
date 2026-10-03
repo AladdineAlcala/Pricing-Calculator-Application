@@ -1,12 +1,9 @@
 // Left-side navigation sidebar matching Stitch design specification
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { useApp } from "@/context/AppContext";
 import { BakeIQBrand } from "@/components/BakeIQLogo";
 
 export function Sidebar() {
-  const { state, setTheme } = useApp();
-  const isDark = state.settings.theme === "dark";
 
   return (
     <aside
@@ -16,7 +13,7 @@ export function Sidebar() {
       {/* Top Brand Lockup and Primary Navigation */}
       <div className="flex flex-col">
         {/* Logo Header */}
-        <div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800">
+        <div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0">
           <BakeIQBrand />
         </div>
 
@@ -208,24 +205,9 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Bottom Sidebar Footer with Dark Mode Toggle & Engine Status */}
-      <div className="p-3 border-t border-artisan-border dark:border-slate-800 space-y-2">
-        <button
-          onClick={() => setTheme(isDark ? "light" : "dark")}
-          className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-200 bg-artisan-canvas dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 rounded-lg border border-artisan-border dark:border-slate-800 transition-colors cursor-pointer"
-          type="button"
-          id="theme-toggle-btn"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-sm">{isDark ? "☀️" : "🌙"}</span>
-            <span>Kitchen Dark Mode</span>
-          </div>
-          <span className="text-[10px] bg-espresso-200 dark:bg-slate-700 text-espresso-800 dark:text-slate-200 px-1.5 py-0.5 rounded font-mono font-bold">
-            {isDark ? "ON" : "OFF"}
-          </span>
-        </button>
-
-        <div className="px-2 py-1 flex items-center justify-between text-[11px] text-espresso-400 dark:text-slate-400">
+      {/* Bottom Sidebar Footer with Engine Status */}
+      <div className="h-12 px-4 flex items-center border-t border-artisan-border dark:border-slate-800 shrink-0">
+        <div className="w-full flex items-center justify-between text-[11px] text-espresso-400 dark:text-slate-400">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-culinary-500" />
             v3.2.0 • Real-Time FIFO
