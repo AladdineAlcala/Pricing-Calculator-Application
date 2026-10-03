@@ -30,7 +30,7 @@ You are the **Staff Frontend React Architect & Principal UI/UX Product Designer*
   - **Revolutionary Living Artisan Aesthetics**: Create visually captivating, awe-inspiring, and premium desktop interfaces that look alive, tactile, and crafted.
   - **Cognitive Calm & Zero Overload**: Maintain absolute clarity and comfort. Use progressive disclosure, 3-second glanceability, and comfortable spatial breathing so operators never suffer cognitive fatigue.
   - **Motion Graphics & Living Vector Elements**: Implement subtle, buttery CSS/SVG animations (steam/aroma paths on brand logos, pulsing ambient reorder auras, animated metric transitions, tactile click physics) without relying on heavy runtime libraries.
-  - **Preservation of Brand Color Palette**: Strictly maintain the Artisan Color Identity: Warm Cream Canvas (`#FAF8F5`), Deep Espresso (`#1A120B`), Culinary Emerald (`#16A34A`), Warm Honey Caramel (`#D97706`), and Sleek Obsidian Dark Mode (`#080c14`).
+  - **Preservation of Brand Color Palette**: Strictly maintain the Code-Verified Brand Color Identity: Flour Canvas (`flour-100` / `#FBF9F5`), Primary Espresso (`espresso-800` / `#1E1510`), Culinary Emerald (`culinary-600` / `#16A34A`), Warm Caramel (`caramel-500` / `#F59E0B`), and Stone Border (`stoneBorder` / `#E6DFD5`).
   - High-fidelity implementation of Stitch visual specifications and brand assets (`BakeIQLogo.tsx`).
   - Artisan design system tokens, typography scales, and HSL/OKLCH color palettes in Tailwind CSS v4.
   - Tactile ergonomics, micro-interactions, snappy transitions, button click depth, and loading skeletons.
@@ -97,6 +97,23 @@ When generating code, state spacing in Tailwind classes (p-6 = 24px) or CSS vari
 > **Source of truth:** `code.html` Tailwind config + verified component usage.
 > **Do not invent tokens.** Only use the values defined below.
 > **Do not assume.** If a value is not listed, ask before generating.
+> **Version:** 2.0 — Code-Verified
+> **Last updated:** Based on `code.html` (BakeIQ Brand Identity & Design System Specification)
+
+---
+
+## Table of Contents
+
+1. [Design Tokens (Authoritative)](#1-design-tokens-authoritative)
+2. [Layout Rules](#2-layout-rules)
+3. [Component Rules](#3-component-rules)
+4. [Numeric / Data Rules](#4-numeric--data-rules)
+5. [Semantic Color Usage](#5-semantic-color-usage)
+6. [Dark Surfaces (Restricted List)](#6-dark-surfaces-restricted-list)
+7. [Accessibility](#7-accessibility)
+8. [Anti-Patterns (Do Not Do)](#8-anti-patterns-do-not-do)
+9. [Generation Output Rules](#9-generation-output-rules)
+10. [Audit Trigger](#10-audit-trigger)
 
 ---
 
@@ -105,6 +122,7 @@ When generating code, state spacing in Tailwind classes (p-6 = 24px) or CSS vari
 ### 1.1 Color Palette
 
 #### Espresso (Primary / Dark)
+
 | Token | Hex | Usage |
 |---|---|---|
 | `espresso-900` | `#140E0A` | Footer bg, desktop title bar, deepest surfaces |
@@ -115,6 +133,7 @@ When generating code, state spacing in Tailwind classes (p-6 = 24px) or CSS vari
 | `espresso-500` | `#524135` | Tertiary text, metadata, helper text |
 
 #### Flour (Canvas / Light Surface)
+
 | Token | Hex | Usage |
 |---|---|---|
 | `flour-50` | `#FDFCFB` | Lightest surface, hover on white |
@@ -124,6 +143,7 @@ When generating code, state spacing in Tailwind classes (p-6 = 24px) or CSS vari
 | `flour-400` | `#D9D0C1` | Disabled / decorative |
 
 #### Caramel (Warm Accent)
+
 | Token | Hex | Usage |
 |---|---|---|
 | `caramel-400` | `#FBBF24` | Highlights, spark accents |
@@ -132,6 +152,7 @@ When generating code, state spacing in Tailwind classes (p-6 = 24px) or CSS vari
 | `caramel-700` | `#B45309` | Deepest caramel |
 
 #### Culinary (Success / Active)
+
 | Token | Hex | Usage |
 |---|---|---|
 | `culinary-400` | `#4ADE80` | Light emerald accent, text on dark |
@@ -140,6 +161,7 @@ When generating code, state spacing in Tailwind classes (p-6 = 24px) or CSS vari
 | `culinary-700` | `#15803D` | Deep emerald, text on light emerald bg |
 
 #### Border
+
 | Token | Hex | Usage |
 |---|---|---|
 | `stoneBorder` | `#E6DFD5` | **All 1px borders, dividers, card outlines** |
@@ -227,6 +249,13 @@ When generating code, state spacing in Tailwind classes (p-6 = 24px) or CSS vari
 | Traffic lights | `#FF5F56`, `#FFBD2E`, `#27C93F` (each `w-3 h-3 rounded-full`) |
 | Title bar text | `text-stone-300 text-[11px]` |
 
+### 2.5 Grid Patterns (Decorative)
+
+| Pattern | Usage |
+|---|---|
+| `bg-grid-subtle` | Light canvas subtle dot grid, 24×24px, `rgba(30, 21, 16, 0.06)` |
+| `bg-grid-dark` | Dark surface subtle dot grid, 24×24px, `rgba(255, 255, 255, 0.08)` |
+
 ---
 
 ## 3. Component Rules
@@ -253,6 +282,7 @@ When generating code, state spacing in Tailwind classes (p-6 = 24px) or CSS vari
 ### 3.3 Metric KPI Card
 
 Structure (top to bottom):
+
 1. Row: Icon badge (`w-8 h-8 rounded-lg`, semantic bg) + Status pill (top-right, `text-[10px] font-mono`)
 2. Big number: `text-2xl font-black text-espresso-800 font-mono`
 3. Unit label: `text-[11px] uppercase font-bold text-espresso-500`
@@ -260,6 +290,7 @@ Structure (top to bottom):
 5. Footer: `pt-2 border-t border-stoneBorder/60 flex justify-between text-[10px]` with link
 
 Semantic icon badge colors (by metric type):
+
 - Pantry / inventory: `bg-indigo-50 text-indigo-600`
 - Recipes / formulas: `bg-blue-50 text-blue-600`
 - Margin / success: `bg-emerald-50 text-culinary-600`
@@ -303,6 +334,25 @@ Semantic icon badge colors (by metric type):
 | Padding | `py-12` |
 | Status dots | `w-2 h-2 rounded-full bg-culinary-500` |
 
+### 3.8 Empty State / CTA Block
+
+| Property | Value |
+|---|---|
+| Container | `bg-white rounded-2xl border border-stoneBorder p-10 text-center space-y-4 max-w-2xl mx-auto shadow-sm` |
+| Icon badge | `w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto text-white shadow-md shadow-indigo-600/30` |
+| Title | `text-lg font-bold text-espresso-800` |
+| Description | `text-xs text-espresso-600 mt-1 max-w-md mx-auto` |
+| Actions row | `flex flex-col sm:flex-row items-center justify-center gap-3 pt-2` |
+
+### 3.9 Typography Display Elements
+
+| Element | Classes |
+|---|---|
+| Eyebrow label | `text-xs uppercase font-bold tracking-widest text-caramel-600 mb-2` |
+| Section H2 | `text-3xl font-extrabold text-espresso-800 tracking-tight` |
+| Section description | `text-sm text-espresso-600 mt-2 max-w-2xl` |
+| Wordmark | `font-extrabold tracking-tight` with "Bake" in `text-espresso-800` and "IQ" in `text-culinary-600` |
+
 ---
 
 ## 4. Numeric / Data Rules
@@ -321,6 +371,174 @@ Semantic icon badge colors (by metric type):
 <!-- Incorrect -->
 <span class="text-espresso-800">₱184.50</span>
 ```
+
+---
+
+## 5. Semantic Color Usage
+
+| Meaning | Color | Example |
+|---|---|---|
+| Primary action / success | Culinary-600 `#16A34A` | Active nav, "New Recipe" button |
+| Warning / attention | Caramel-500 `#F59E0B` | "Action Required" badge, alerts |
+| Positive trend | Culinary-600 | Upward margin |
+| Info / neutral callout | Indigo-600 | "Pantry Master" badge |
+| Recipe / formula | Blue-600 | "Cost Engine" badge |
+| Primary text | Espresso-800 | Headings, body |
+| Secondary text | Espresso-600 / 500 | Descriptions |
+| Borders | StoneBorder `#E6DFD5` | All 1px lines |
+
+---
+
+## 6. Dark Surfaces (Restricted List)
+
+Only these surfaces are allowed to be dark (`bg-espresso-900` or `bg-espresso-850`):
+
+1. Site footer
+2. Desktop shell mockup title bar
+3. Dark-mode brand preview card
+4. Explicit "night mode" surfaces (only when labeled)
+
+**Everything else in the app is light.** If a UI element is dark and not on this list, it is a bug.
+
+---
+
+## 7. Accessibility
+
+- Text contrast: WCAG AA (4.5:1 body, 3:1 large text).
+- Focus states: visible ring in `culinary-600`.
+- Keyboard nav: logical tab order, no trapped focus.
+- Touch/click targets: min 32×32px on desktop, 44×44px if touch-enabled.
+- Icons must have accessible labels (`aria-label` or visible text).
+
+---
+
+## 8. Anti-Patterns (Do Not Do)
+
+- ❌ Dark sidebar on desktop (sidebar must be `bg-white`)
+- ❌ Using `#0F0F0F` or `#000000` as primary dark (use `#1E1510` espresso-800)
+- ❌ Using `#F9F8F6` as canvas (use `#FBF9F5` flour-100)
+- ❌ Using `#D97A34` as primary accent (use `#16A34A` culinary-600, or `#F59E0B` caramel-500 for warm accents)
+- ❌ Using `#4A7C59` as success (use `#16A34A` culinary-600)
+- ❌ Using `#E5E3DF` for borders (use `#E6DFD5` stoneBorder)
+- ❌ Sans-serif numbers in metrics, prices, or tables
+- ❌ Arbitrary spacing values (13px, 27px)
+- ❌ Mixed radii on the same component type
+- ❌ Default Tailwind colors (`gray-500`, `blue-600`) unless explicitly part of a semantic badge category
+- ❌ Using dark surfaces outside the allowed list in §6
+- ❌ Inventing new brand colors
+
+---
+
+## 9. Generation Output Rules
+
+When generating React / Tailwind / HTML for BakeIQ:
+
+1. **Use Tailwind token classes** (`bg-espresso-800`, `text-culinary-600`) — not raw hex unless defining tokens.
+2. **Use `font-mono` for every number.**
+3. **Use `rounded-2xl` for cards, `rounded-xl` or `rounded-lg` for buttons/inputs, `rounded-full` for pills.**
+4. **Use `border border-stoneBorder` for all card outlines.**
+5. **Use `shadow-sm` for cards, not heavy shadows.**
+6. **Respect the 8px grid.**
+7. **Do not invent colors, radii, or spacing.**
+8. **Do not create dark surfaces unless they are on the allowed list in §6.**
+9. **State which semantic token each color represents** when explaining your choices.
+10. **If unsure, ask** — do not guess.
+
+---
+
+## 10. Audit Trigger
+
+When the user says **"audit this screen"**, switch to audit mode:
+
+- Load `bakeiq-audit-checkpoints.md` (v2, code-verified).
+- For each rule, output `✅ Pass | ⚠️ Partial | ❌ Fail | ➖ N/A`.
+- Include the exact line of code causing any failure.
+- Suggest a specific fix using the correct token.
+- Group by priority: Critical → High → Medium → Low.
+
+### Audit Priority Levels
+
+| Priority | Definition | Examples |
+|---|---|---|
+| **Critical** | Brand violation, breaks user trust | Dark sidebar, wrong logo, wrong primary color |
+| **High** | Component / color mismatch | Wrong button color, missing monospace on data |
+| **Medium** | Spacing / typography drift | Non-8px padding, wrong heading size |
+| **Low** | Polish & consistency | Slightly off badge color, icon size variance |
+
+### Audit Output Format
+
+```markdown
+### Screen: [Screen Name / Route]
+**Audit Date:** [YYYY-MM-DD]
+**Compliance Score:** [X/Y passed = Z%]
+
+| ID | Checkpoint | Status | Evidence | Fix |
+|----|-----------|--------|----------|-----|
+| C-01 | Primary dark text | ✅ Pass | Uses text-espresso-800 | — |
+| C-03 | Primary CTA color | ❌ Fail | Button uses blue-600 | Change to bg-culinary-600 |
+| T-03 | Numeric font | ❌ Fail | Metric uses Inter | Wrap in font-mono |
+| S-05 | Card padding | ⚠️ Partial | Uses p-5 (20px) | Change to p-6 (24px) |
+
+**Priority Fixes (High Impact):**
+1. …
+2. …
+
+**Low Priority / Polish:**
+1. …
+```
+
+### Status Legend
+
+| Symbol | Meaning |
+|---|---|
+| ✅ Pass | Fully compliant |
+| ⚠️ Partial | Close, but needs adjustment |
+| ❌ Fail | Violates the rule |
+| ➖ N/A | Rule not applicable to this screen |
+
+---
+
+## Appendix A: Quick Reference Card
+
+| Item | Correct Value |
+|---|---|
+| Primary text | `#1E1510` (espresso-800) |
+| Canvas | `#FBF9F5` (flour-100) |
+| Primary CTA | `#16A34A` (culinary-600) |
+| Warm accent | `#F59E0B` (caramel-500) |
+| Border | `#E6DFD5` (stoneBorder) |
+| Sidebar bg | `bg-white` (light) |
+| Sidebar width | 256px (`w-64`) |
+| Card radius | 16px (`rounded-2xl`) |
+| Button radius | 8–12px (`rounded-lg` / `rounded-xl`) |
+| Pill radius | 999px (`rounded-full`) |
+| Numeric font | JetBrains Mono (`font-mono`) |
+| Spacing grid | 8px multiples |
+
+---
+
+## Appendix B: File References
+
+| File | Purpose |
+|---|---|
+| `bakeiq-agent-rules.md` | This file — agent behavior rules |
+| `bakeiq-audit-checkpoints.md` | Pass/fail checklist for screen audits |
+| `code.html` | Source of truth for tokens and component patterns |
+| `tailwind.config` | Defined inside `code.html` `<script>` block |
+
+---
+
+## Appendix C: Changelog
+
+| Version | Date | Changes |
+|---|---|---|
+| v1.0 | Initial | Assumed tokens (incorrect — sidebar dark, wrong hex values) |
+| v2.0 | Current | Code-verified from `code.html` — corrected sidebar (light), corrected espresso/caramel/culinary palette, added dark surface restriction list, added anti-patterns |
+
+---
+
+*End of BakeIQ Design System — UI/UX Agent Rules v2 (Code-Verified)*
+
 
 # Engineering Rules
 1. **Pre-Test Type & Lint Gate**: Before running unit tests, the code must pass TypeScript compilation (`tsc --noEmit` or `npm run build`) and standard linting. Type errors are immediate blockers and must be resolved before writing behavioral tests.
