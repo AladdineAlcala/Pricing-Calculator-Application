@@ -586,11 +586,6 @@ export default function Recipes() {
               const resellerMarkupPct = Math.round(r.reseller_markup_pct > 1 ? r.reseller_markup_pct : r.reseller_markup_pct * 100);
               const isFav = !!favorites[r.recipe_id];
 
-              // Assigned category tags for visual flair matching reference
-              const categoryPills = ["BAKERY & PASTRIES", "DESSERTS & COOKIES", "ARTISAN BREADS"];
-              const categoryPill = categoryPills[idx % categoryPills.length];
-              const skuTag = `SKU-BMB0${r.recipe_id}`;
-
               return (
                 <div
                   key={r.recipe_id}
@@ -602,16 +597,11 @@ export default function Recipes() {
                   transition-all duration-300 ease-out flex flex-col justify-between"
                 >
                   <div>
-                    {/* Card Header: Category & Action Icons */}
+                    {/* Card Header: Formula ID & Action Icons */}
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-amber-50 dark:bg-[#201a14] text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/40">
-                          {categoryPill}
-                        </span>
-                        <span className="text-[10px] font-mono text-slate-400">
-                          {skuTag}
-                        </span>
-                      </div>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/60">
+                        Formula #{r.recipe_id}
+                      </span>
 
                       <div className="flex items-center gap-1">
                         <button
@@ -732,16 +722,6 @@ export default function Recipes() {
                       <span>Open Recipe Calculator</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </Link>
-
-                    <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Formula ID: #{r.recipe_id}</span>
-                      <Link
-                        to={`/recipes/${r.recipe_id}`}
-                        className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium"
-                      >
-                        Quick Edit Ingredients →
-                      </Link>
-                    </div>
                   </div>
                 </div>
               );

@@ -2,7 +2,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
-import { Search, Package, Plus, Bell, RefreshCw } from "lucide-react";
+import { Search, Package, Plus, Bell, Sun, Moon } from "lucide-react";
 
 interface HeaderProps {
   unpricedCount?: number;
@@ -10,7 +10,8 @@ interface HeaderProps {
 }
 
 export function Header({ unpricedCount = 0, onOpenNewRecipe }: HeaderProps) {
-  const { state } = useApp();
+  const { state, setTheme } = useApp();
+  const isDark = state.settings.theme === "dark";
   const navigate = useNavigate();
   const currencySymbol = state.settings.currency_symbol || "₱";
 
@@ -29,11 +30,6 @@ export function Header({ unpricedCount = 0, onOpenNewRecipe }: HeaderProps) {
         <div className="inline-flex items-center gap-1.5 bg-artisan-subtle dark:bg-[#141b2c] text-espresso-700 dark:text-slate-200 border border-artisan-border dark:border-slate-800 px-2.5 py-1 rounded-full font-medium">
           <span className="text-culinary-600 dark:text-emerald-400 font-bold">{currencySymbol}</span>
           <span>PHP ({currencySymbol}) Currency Active</span>
-        </div>
-
-        <div className="hidden lg:inline-flex items-center gap-1.5 text-espresso-400 dark:text-slate-400 font-mono text-[11px]">
-          <RefreshCw className="w-3.5 h-3.5 text-culinary-600 dark:text-emerald-400" />
-          <span>Yield auto-sync active</span>
         </div>
       </div>
 
@@ -95,6 +91,22 @@ export function Header({ unpricedCount = 0, onOpenNewRecipe }: HeaderProps) {
             )}
           </Link>
         </div>
+
+        {/* Dark / Light Mode Toggle */}
+        <button
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          className="p-2 flex items-center justify-center text-espresso-600 dark:text-slate-300 hover:text-espresso-900 dark:hover:text-white bg-artisan-surface dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 border border-artisan-border dark:border-slate-800 rounded-lg transition-colors cursor-pointer"
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          aria-label={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          type="button"
+          id="theme-toggle-btn"
+        >
+          {isDark ? (
+            <Sun className="w-4 h-4 text-amber-400" />
+          ) : (
+            <Moon className="w-4 h-4 text-espresso-600 dark:text-slate-300" />
+          )}
+        </button>
 
         {/* User & Branch Profile Pill */}
         <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-artisan-border dark:border-slate-800">

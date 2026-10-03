@@ -1,9 +1,9 @@
 # Code Review Strikes Log
 STRIKES: 0
-LAST_REVIEW: 2026-10-02T21:22:30+08:00
+LAST_REVIEW: 2026-10-03T08:11:30+08:00
 STATUS: APPROVED
-NOTES: Successfully executed RecipeBuilder Consolidated Direct Materials Display sprint.
-1. Sidebar Pricing & Margin Engine: Integrated prominent "Total Direct Materials" subtotal block directly grouping Raw Ingredients and Packaging & Materials with unit material cost (₱/unit) before Fixed Overhead and Total Batch Cost.
-2. Left Column Direct Materials Summary Card: Implemented an executive Consolidated Direct Materials summary card directly positioned below the Recipe Packaging & Presentation table. Displays 3-column breakdown (Ingredients Subtotal, Packaging Subtotal, and Combined Total Direct Materials), a proportional dual-ratio distribution bar, and finished unit economics.
-3. Verification Gate: Validated with `npm run build` (tsc & vite passed with 0 errors) and all 21 Playwright E2E tests passing cleanly in 35.2s across all test suites.
+NOTES: Successfully executed Header Dark/Light Mode Icon Button Relocation sprint.
+1. Header.tsx: Relocated dark/light mode toggle to header right side between Bell notification and User Profile pill. Converted into an ergonomic, clickable icon button with Sun/Moon icons, proper aria-label/title attributes, and retained id="theme-toggle-btn".
+2. Sidebar.tsx: Removed bulky full-width dark mode toggle button from sidebar footer. Cleaned up unused useApp hook imports and theme state while preserving clean engine status indicator.
+3. Verification Gate: TypeScript compilation and Vite build passed with 0 errors. All 23 Playwright E2E tests (including 2 new tests in e2e/header_theme_toggle.spec.ts) passed cleanly with 0 regressions.
 4. Review Gatekeeper: Zero debug remnants, zero build warnings, clean surgical diff. Strikes remain 0.

@@ -1,12 +1,9 @@
 // System status sticky footer matching Stitch design specification
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { Modal } from "@/components/ui";
 import {
   Scale,
-  FileSpreadsheet,
   Command,
-  ShieldCheck,
   Database,
   Info,
   Layers,
@@ -51,30 +48,20 @@ export function Footer() {
         className="sticky bottom-0 z-30 shrink-0 w-full bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur-md border-t border-artisan-border dark:border-slate-800 px-4 sm:px-6 py-2.5 text-xs text-espresso-500 dark:text-slate-400 flex flex-wrap items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
         data-purpose="system-status-sticky-footer"
       >
-        {/* Left: Engine Status & Telemetry Indicators */}
+        {/* Left: Engine Status */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Active Status Badge */}
           <div className="inline-flex items-center gap-1.5 bg-culinary-50 dark:bg-emerald-950/60 text-culinary-800 dark:text-emerald-300 border border-culinary-200 dark:border-emerald-800/60 px-2.5 py-1 rounded-full text-[11px] font-semibold shadow-2xs">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-culinary-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-culinary-500" />
-            </span>
-            <span>BakeIQ Engine v3.2.0</span>
+            <span className="w-2 h-2 rounded-full bg-culinary-500" />
+            <span>BakeIQ v3.2.0</span>
           </div>
 
           <div className="hidden sm:inline-flex items-center gap-1.5 text-espresso-600 dark:text-slate-400 font-medium">
             <Database className="w-3.5 h-3.5 text-culinary-600 dark:text-emerald-400" />
-            <span>Local SQLite • Real-Time FIFO</span>
+            <span>Local SQLite Database</span>
           </div>
-
-          <span className="hidden md:inline text-espresso-300 dark:text-slate-700">|</span>
-
-          <span className="hidden md:inline text-espresso-400 dark:text-slate-500 text-[11px] font-mono">
-            Deterministic Costing • Zero Float Drift
-          </span>
         </div>
 
-        {/* Right: Interactive Utilities, Modals & Quick Links */}
+        {/* Right: Interactive Utilities & Modals */}
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* Shortcuts Trigger */}
           <button
@@ -99,21 +86,6 @@ export function Footer() {
             <span className="hidden sm:inline">Yield Conversion Tables</span>
             <span className="sm:hidden">Yields</span>
           </button>
-
-          {/* Export Master Specs Link */}
-          <Link
-            to="/ingredients"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-espresso-700 dark:text-slate-200 bg-artisan-canvas dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 border border-artisan-border dark:border-slate-800 transition-all active:scale-[0.98]"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-caramel-600 dark:text-amber-400" />
-            <span>Export Master Specs</span>
-          </Link>
-
-          {/* Security Pill */}
-          <div className="hidden xl:inline-flex items-center gap-1 text-[11px] text-espresso-400 dark:text-slate-500 pl-2 border-l border-artisan-border dark:border-slate-800">
-            <ShieldCheck className="w-3.5 h-3.5 text-culinary-600 dark:text-emerald-400" />
-            <span>Encrypted Local-First</span>
-          </div>
         </div>
       </footer>
 
