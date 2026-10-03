@@ -260,7 +260,7 @@ function getCategoryBadgeClass(category: string) {
     case "Bakery Supplies":
       return "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200/70 dark:border-indigo-800/50";
     default:
-      return "bg-slate-100 dark:bg-[#141b2c] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800";
+      return "bg-flour-200 dark:bg-[#141b2c] text-espresso-700 dark:text-slate-300 border-stoneBorder dark:border-slate-800";
   }
 }
 
@@ -294,7 +294,7 @@ function generateSku(name: string, id: number): string {
 // ── High-Fidelity Shimmer Loading Skeleton ────────────────────────────────────
 function IngredientsSkeleton() {
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-50 dark:bg-[#080c14] min-h-screen text-slate-900 dark:text-slate-100 transition-colors animate-pulse">
+    <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-flour-100 dark:bg-[#080c14] min-h-screen text-espresso-800 dark:text-slate-100 transition-colors animate-pulse">
       {/* Header Skeleton */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="space-y-2.5">
@@ -310,7 +310,7 @@ function IngredientsSkeleton() {
         <div className="flex items-center gap-2.5">
           <div className="h-10 w-32 rounded-xl bg-slate-200 dark:bg-slate-800" />
           <div className="h-10 w-36 rounded-xl bg-slate-200 dark:bg-slate-800" />
-          <div className="h-10 w-40 rounded-xl bg-emerald-600/30 dark:bg-emerald-600/20" />
+          <div className="h-10 w-40 rounded-xl bg-culinary-600/30 dark:bg-culinary-600/20" />
         </div>
       </div>
 
@@ -319,7 +319,7 @@ function IngredientsSkeleton() {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3"
+            className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-stoneBorder/90 dark:border-slate-800/90 shadow-xs space-y-3"
           >
             <div className="flex items-center justify-between">
               <div className="h-3 w-28 rounded bg-slate-200 dark:bg-slate-800" />
@@ -329,13 +329,13 @@ function IngredientsSkeleton() {
               <div className="h-8 w-20 rounded-lg bg-slate-200 dark:bg-slate-800" />
               <div className="h-3 w-16 rounded bg-slate-200/60 dark:bg-slate-800/50" />
             </div>
-            <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800" />
+            <div className="h-2 w-full rounded-full bg-flour-200 dark:bg-slate-800" />
           </div>
         ))}
       </div>
 
       {/* Search & Filter Toolbar Skeleton */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#0d121c] p-3 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#0d121c] p-3 rounded-2xl border border-stoneBorder/90 dark:border-slate-800/80 shadow-xs">
         <div className="h-10 w-72 rounded-xl bg-slate-200/80 dark:bg-slate-800/70" />
         <div className="flex items-center gap-1.5 flex-wrap">
           {[1, 2, 3, 4, 5].map((pill) => (
@@ -346,8 +346,8 @@ function IngredientsSkeleton() {
       </div>
 
       {/* Table Skeleton */}
-      <div className="rounded-3xl bg-white dark:bg-[#0d121c] border border-slate-200/90 dark:border-slate-800/90 shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+      <div className="rounded-2xl bg-white dark:bg-[#0d121c] border border-stoneBorder/90 dark:border-slate-800/90 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-stoneBorder dark:border-slate-800/80 flex items-center justify-between">
           <div className="h-4 w-40 rounded bg-slate-200 dark:bg-slate-800" />
           <div className="h-4 w-28 rounded bg-slate-200/60 dark:bg-slate-800/50" />
         </div>
@@ -865,7 +865,7 @@ export default function Ingredients() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14]">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-flour-100 dark:bg-[#080c14]">
         <Header unpricedCount={unpricedCount} />
         <IngredientsSkeleton />
       </div>
@@ -873,7 +873,7 @@ export default function Ingredients() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-flour-100 dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
       <Header unpricedCount={unpricedCount} />
       <div className="flex-1 p-6 md:p-8 space-y-6">
         {/* ── Toast Notification Banner ── */}
@@ -903,16 +903,16 @@ export default function Ingredients() {
               )}
             </div>
             <div className="flex-1 min-w-0 pr-1">
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
+              <h4 className="text-xs font-bold text-espresso-800 dark:text-white tracking-tight">
                 {notification.title}
               </h4>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+              <p className="text-[11px] text-espresso-600 dark:text-espresso-500 mt-0.5 leading-snug">
                 {notification.message}
               </p>
             </div>
             <button
               onClick={() => setNotification((prev) => (prev ? { ...prev, show: false } : null))}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="text-espresso-500 hover:text-espresso-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-flour-200 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -929,7 +929,7 @@ export default function Ingredients() {
                 <span>Raw Ingredients & Yield Master</span>
               </div>
 
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-[#121624] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 shadow-xs">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-white dark:bg-[#121624] text-espresso-600 dark:text-slate-300 border border-stoneBorder dark:border-slate-800 shadow-xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                 <span>{items.length} Registered</span>
               </div>
@@ -944,10 +944,10 @@ export default function Ingredients() {
                 <span>{unpricedCount} Needs Price</span>
               </div>
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-3xl font-extrabold tracking-tight text-espresso-800 dark:text-white">
               Ingredients & UOM Conversion
             </h1>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-4xl leading-relaxed">
+            <p className="text-xs md:text-sm text-espresso-600 dark:text-espresso-500 mt-1 max-w-4xl leading-relaxed">
               Maintain accurate supplier purchase prices, packaging unit definitions, and culinary recipe yield conversion factors for automated batch recipe costing.
             </p>
           </div>
@@ -957,11 +957,11 @@ export default function Ingredients() {
             <button
               onClick={handleExportCsv}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
-              bg-white dark:bg-[#121826] text-slate-700 dark:text-slate-200
-              border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#182033]
+              bg-white dark:bg-[#121826] text-espresso-700 dark:text-slate-200
+              border border-stoneBorder dark:border-slate-800 hover:bg-flour-100 dark:hover:bg-[#182033]
               shadow-2xs hover:shadow-xs transition-all active:scale-[0.98] active:translate-y-0.5 cursor-pointer"
             >
-              <Download className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              <Download className="w-4 h-4 text-espresso-600 dark:text-espresso-500" />
               <span>Export CSV</span>
             </button>
 
@@ -974,8 +974,8 @@ export default function Ingredients() {
                 setBulkModalOpen(true);
               }}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold
-              bg-white dark:bg-[#121826] text-slate-700 dark:text-slate-200
-              border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-[#182033]
+              bg-white dark:bg-[#121826] text-espresso-700 dark:text-slate-200
+              border border-stoneBorder dark:border-slate-800 hover:bg-flour-100 dark:hover:bg-[#182033]
               shadow-2xs hover:shadow-xs transition-all active:scale-[0.98] active:translate-y-0.5 cursor-pointer"
             >
               <SlidersHorizontal className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -986,7 +986,7 @@ export default function Ingredients() {
               onClick={openCreate}
               id="add-ingredient-btn"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white
-              bg-emerald-600 hover:bg-emerald-700 shadow-md hover:shadow-lg shadow-emerald-600/25 active:shadow-xs
+              bg-culinary-600 hover:bg-emerald-700 shadow-md hover:shadow-lg shadow-emerald-600/25 active:shadow-xs
               transition-all active:scale-[0.98] active:translate-y-0.5 cursor-pointer tracking-wide"
             >
               <Plus className="w-4 h-4" />
@@ -998,21 +998,21 @@ export default function Ingredients() {
         {/* ── 4 Executive KPI Cards (Luminous Light Edition) ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {/* KPI 1: TOTAL INGREDIENTS */}
-          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
+          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-stoneBorder/90 dark:border-slate-800/90 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-espresso-600 dark:text-espresso-500">
                 TOTAL INGREDIENTS
               </span>
-              <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-lg bg-flour-200 dark:bg-slate-800 text-espresso-500 flex items-center justify-center">
                 <Box className="w-3.5 h-3.5" />
               </div>
             </div>
 
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">
+              <span className="text-3xl font-extrabold tracking-tight text-espresso-800 dark:text-white tabular-nums">
                 {items.length}
               </span>
-              <span className="text-xs font-semibold text-slate-400">Active pantry items</span>
+              <span className="text-xs font-semibold text-espresso-500">Active pantry items</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 pt-1 font-medium">
@@ -1022,9 +1022,9 @@ export default function Ingredients() {
           </div>
 
           {/* KPI 2: FULLY COSTED */}
-          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
+          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-stoneBorder/90 dark:border-slate-800/90 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-espresso-600 dark:text-espresso-500">
                 FULLY COSTED
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50">
@@ -1036,12 +1036,12 @@ export default function Ingredients() {
               <span className="text-3xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums">
                 {pricedCount} items
               </span>
-              <span className="text-xs font-semibold text-slate-400">with verified supplier rates</span>
+              <span className="text-xs font-semibold text-espresso-500">with verified supplier rates</span>
             </div>
 
             {/* Progress Bar */}
             <div className="pt-1">
-              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-flour-200 dark:bg-slate-800 rounded-full overflow-hidden">
                 <div
                   style={{ width: `${readyPct}%` }}
                   className="h-full bg-emerald-500 rounded-full transition-all duration-300"
@@ -1051,9 +1051,9 @@ export default function Ingredients() {
           </div>
 
           {/* KPI 3: NEEDS SUPPLIER PRICING */}
-          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
+          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-stoneBorder/90 dark:border-slate-800/90 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-espresso-600 dark:text-espresso-500">
                 NEEDS SUPPLIER PRICING
               </span>
               <div className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
@@ -1065,7 +1065,7 @@ export default function Ingredients() {
               <span className="text-3xl font-extrabold tracking-tight text-amber-600 dark:text-amber-400 tabular-nums">
                 {unpricedCount} items
               </span>
-              <span className="text-xs font-semibold text-slate-400">Pending purchase invoices</span>
+              <span className="text-xs font-semibold text-espresso-500">Pending purchase invoices</span>
             </div>
 
             <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 pt-1 font-medium">
@@ -1075,9 +1075,9 @@ export default function Ingredients() {
           </div>
 
           {/* KPI 4: BENCHMARK NORMALIZED COST */}
-          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-3">
+          <div className="rounded-2xl p-4.5 bg-white dark:bg-[#0f1422] border border-stoneBorder/90 dark:border-slate-800/90 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-espresso-600 dark:text-espresso-500">
                 BENCHMARK NORMALIZED COST
               </span>
               <div className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
@@ -1086,30 +1086,30 @@ export default function Ingredients() {
             </div>
 
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white tabular-nums">
+              <span className="text-3xl font-extrabold tracking-tight text-espresso-800 dark:text-white tabular-nums">
                 {fmt(avgNormalizedCost)}
               </span>
-              <span className="text-xs font-semibold text-slate-400">avg normalized recipe unit</span>
+              <span className="text-xs font-semibold text-espresso-500">avg normalized recipe unit</span>
             </div>
 
-            <div className="text-xs text-slate-500 dark:text-slate-400 pt-1">
+            <div className="text-xs text-espresso-600 dark:text-espresso-500 pt-1">
               <span>Based on {pricedCount} priced raw materials</span>
             </div>
           </div>
         </div>
 
         {/* ── Search, Filter Pills & Sort Controls Row ── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#0d121c] p-3 rounded-2xl border border-slate-200/90 dark:border-slate-800/80 shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white dark:bg-[#0d121c] p-3 rounded-2xl border border-stoneBorder/90 dark:border-slate-800/80 shadow-xs">
           {/* Search Bar */}
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-espresso-500" />
             <input
               type="text"
               placeholder="Search by name, purchase unit, SKU, or..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               id="ingredient-search"
-              className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
+              className="w-full pl-10 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-[#141b2b] border border-stoneBorder dark:border-slate-800 text-espresso-800 dark:text-white placeholder:text-espresso-500 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
             />
           </div>
 
@@ -1118,8 +1118,8 @@ export default function Ingredients() {
             <button
               onClick={() => setSelectedFilter("all")}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "all"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-culinary-600 text-white shadow-xs"
+                : "bg-white dark:bg-[#141b2b] border border-stoneBorder dark:border-slate-800 text-espresso-600 dark:text-slate-300 hover:text-espresso-800 dark:hover:text-white"
                 }`}
             >
               All ({items.length})
@@ -1128,8 +1128,8 @@ export default function Ingredients() {
             <button
               onClick={() => setSelectedFilter("priced")}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "priced"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-culinary-600 text-white shadow-xs"
+                : "bg-white dark:bg-[#141b2b] border border-stoneBorder dark:border-slate-800 text-espresso-600 dark:text-slate-300 hover:text-espresso-800 dark:hover:text-white"
                 }`}
             >
               Fully Priced ({pricedCount})
@@ -1139,7 +1139,7 @@ export default function Ingredients() {
               onClick={() => setSelectedFilter("unpriced")}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "unpriced"
                 ? "bg-amber-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                : "bg-white dark:bg-[#141b2b] border border-stoneBorder dark:border-slate-800 text-espresso-600 dark:text-slate-300 hover:text-espresso-800 dark:hover:text-white"
                 }`}
             >
               Needs Price ({unpricedCount})
@@ -1148,8 +1148,8 @@ export default function Ingredients() {
             <button
               onClick={() => setSelectedFilter("dry")}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "dry"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-culinary-600 text-white shadow-xs"
+                : "bg-white dark:bg-[#141b2b] border border-stoneBorder dark:border-slate-800 text-espresso-600 dark:text-slate-300 hover:text-espresso-800 dark:hover:text-white"
                 }`}
             >
               Dry Goods ({items.filter((i) => inferCategory(i.name) === "Bulk Dry Goods").length})
@@ -1158,8 +1158,8 @@ export default function Ingredients() {
             <button
               onClick={() => setSelectedFilter("refrigerated")}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${selectedFilter === "refrigerated"
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                ? "bg-culinary-600 text-white shadow-xs"
+                : "bg-white dark:bg-[#141b2b] border border-stoneBorder dark:border-slate-800 text-espresso-600 dark:text-slate-300 hover:text-espresso-800 dark:hover:text-white"
                 }`}
             >
               Refrigerated ({items.filter((i) => inferCategory(i.name) === "Refrigerated Dairy").length})
@@ -1171,7 +1171,7 @@ export default function Ingredients() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#141b2b] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-semibold focus:outline-none focus:border-emerald-500 cursor-pointer"
+              className="px-3 py-2 text-xs rounded-xl bg-white dark:bg-[#141b2b] border border-stoneBorder dark:border-slate-800 text-espresso-700 dark:text-slate-200 font-semibold focus:outline-none focus:border-emerald-500 cursor-pointer"
             >
               <option value="name">Sort by: Name (A-Z)</option>
               <option value="price-desc">Sort by: Price (High-Low)</option>
@@ -1182,16 +1182,16 @@ export default function Ingredients() {
         </div>
 
         {/* ── Main Data Table Card ── */}
-        <div className="rounded-3xl border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-[#0c101a] shadow-xs overflow-hidden">
+        <div className="rounded-2xl border border-stoneBorder/90 dark:border-slate-800/90 bg-white dark:bg-[#0c101a] shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/60 dark:bg-[#101626]/50 text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                <tr className="border-b border-stoneBorder dark:border-slate-800/80 bg-flour-100/60 dark:bg-[#101626]/50 text-[10px] uppercase font-bold tracking-wider text-espresso-500">
                   <th className="w-10 py-3.5 px-4 text-center">
                     <button
                       type="button"
                       onClick={handleSelectAll}
-                      className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
+                      className="text-espresso-500 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
                     >
                       {selectedIds.length > 0 && selectedIds.length === paginatedItems.length ? (
                         <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -1209,7 +1209,7 @@ export default function Ingredients() {
                     <div className="inline-flex items-center gap-1 cursor-help justify-end">
                       <span>YIELD FACTOR</span>
                       <Tooltip content="Ratio of purchase unit to recipe yield unit" position="top">
-                        <Info className="w-3 h-3 text-slate-400" />
+                        <Info className="w-3 h-3 text-espresso-500" />
                       </Tooltip>
                     </div>
                   </th>
@@ -1220,7 +1220,7 @@ export default function Ingredients() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                 {paginatedItems.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-16 text-center text-slate-400 dark:text-slate-500">
+                    <td colSpan={9} className="py-16 text-center text-espresso-500 dark:text-espresso-600">
                       <Box className="w-10 h-10 mx-auto mb-2 opacity-30" />
                       <p className="font-bold text-sm">No raw ingredients matched your criteria.</p>
                       <p className="text-xs mt-1">Try clearing your search query or reset category filter.</p>
@@ -1240,7 +1240,7 @@ export default function Ingredients() {
                     return (
                       <tr
                         key={ing.ingredient_id}
-                        className={`group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors ${isChecked ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""
+                        className={`group hover:bg-flour-100/80 dark:hover:bg-slate-800/30 transition-colors ${isChecked ? "bg-emerald-50/40 dark:bg-emerald-950/20" : ""
                           }`}
                       >
                         {/* Checkbox */}
@@ -1248,7 +1248,7 @@ export default function Ingredients() {
                           <button
                             type="button"
                             onClick={() => toggleSelectOne(ing.ingredient_id)}
-                            className="text-slate-300 dark:text-slate-600 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
+                            className="text-slate-300 dark:text-espresso-600 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer"
                           >
                             {isChecked ? (
                               <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -1261,14 +1261,14 @@ export default function Ingredients() {
                         {/* Ingredient Name & SKU */}
                         <td className="py-3.5 pr-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-200 flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
+                            <div className="w-8 h-8 rounded-xl bg-flour-200 dark:bg-slate-800 border border-stoneBorder/80 dark:border-slate-700/80 text-espresso-700 dark:text-slate-200 flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
                               {initial}
                             </div>
                             <div>
-                              <span className="font-bold text-slate-900 dark:text-white text-sm block">
+                              <span className="font-bold text-espresso-800 dark:text-white text-sm block">
                                 {ing.name}
                               </span>
-                              <span className="text-[11px] text-slate-400 font-mono">
+                              <span className="text-[11px] text-espresso-500 font-mono">
                                 ID #{ing.ingredient_id} • SKU: {sku}{ing.supplier ? ` • ${ing.supplier}` : ""}
                               </span>
                             </div>
@@ -1290,15 +1290,15 @@ export default function Ingredients() {
                         <td className="py-3.5 px-3">
                           <div className="flex flex-col">
                             <div className="flex items-center gap-1.5">
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-flour-200 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 text-slate-800 dark:text-slate-200">
                                 <Package className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                                 {ing.package_type || "Package"}
                               </span>
                             </div>
-                            <span className="text-[11px] text-slate-400 dark:text-slate-400 font-medium mt-0.5">
-                              Net: <strong className="text-slate-700 dark:text-slate-200 font-semibold">{ing.net_quantity ?? 1} {ing.net_unit ?? "kg"}</strong>
+                            <span className="text-[11px] text-espresso-500 dark:text-espresso-500 font-medium mt-0.5">
+                              Net: <strong className="text-espresso-700 dark:text-slate-200 font-semibold">{ing.net_quantity ?? 1} {ing.net_unit ?? "kg"}</strong>
                               {isPriced && (ing.net_quantity ?? 0) > 0 && (
-                                <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">
+                                <span className="text-culinary-600 font-mono font-semibold ml-1">
                                   ({fmt(ing.purchase_price / (ing.net_quantity ?? 1))}/{ing.net_unit ?? "kg"})
                                 </span>
                               )}
@@ -1309,7 +1309,7 @@ export default function Ingredients() {
                         {/* Supplier Price (₱) */}
                         <td className="py-3.5 px-3 text-right">
                           {isPriced ? (
-                            <span className="font-extrabold text-sm text-slate-900 dark:text-white tabular-nums tracking-tight">
+                            <span className="font-extrabold font-mono text-sm text-espresso-800 tabular-nums tracking-tight">
                               {fmt(ing.purchase_price)}
                             </span>
                           ) : (
@@ -1323,7 +1323,7 @@ export default function Ingredients() {
                         {/* Recipe Unit */}
                         <td className="py-3.5 px-3 text-center">
                           <div className="flex flex-col items-center gap-0.5">
-                            <span className="font-semibold text-slate-800 dark:text-slate-200">
+                            <span className="font-semibold text-espresso-800">
                               {ing.recipe_unit}
                             </span>
                             <div className="flex items-center gap-1 flex-wrap justify-center">
@@ -1355,13 +1355,13 @@ export default function Ingredients() {
 
                         {/* Yield Factor */}
                         <td className="py-3.5 px-3 text-right tabular-nums">
-                          <div className="font-bold text-slate-900 dark:text-white">
+                          <div className="font-bold text-espresso-800 dark:text-white">
                             {ing.yield_factor.toFixed(2)}{" "}
-                            <span className="text-[11px] text-slate-400 font-normal">
+                            <span className="text-[11px] text-espresso-500 font-normal">
                               {ing.recipe_unit}s/{ing.package_type || "pack"}
                             </span>
                           </div>
-                          <span className="text-[10px] text-slate-400 block font-normal">
+                          <span className="text-[10px] text-espresso-500 block font-normal">
                             1 {ing.package_type || "pack"} yields {ing.yield_factor.toFixed(2)} {ing.recipe_unit}s
                           </span>
                         </td>
@@ -1373,13 +1373,13 @@ export default function Ingredients() {
                               <span className="font-black text-sm text-emerald-700 dark:text-emerald-400">
                                 {fmt(normalized)}
                               </span>
-                              <span className="text-[11px] text-slate-400 font-medium">
+                              <span className="text-[11px] text-espresso-500 font-medium">
                                 {" "}
                                 / {ing.recipe_unit}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-slate-400 text-sm font-bold">—</span>
+                            <span className="text-espresso-500 text-sm font-bold">—</span>
                           )}
                         </td>
 
@@ -1389,7 +1389,7 @@ export default function Ingredients() {
                             <button
                               onClick={() => openEdit(ing)}
                               id={`edit-ingredient-${ing.ingredient_id}`}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:scale-110 active:scale-90 transition-all cursor-pointer"
+                              className="p-1.5 rounded-lg text-espresso-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 hover:scale-110 active:scale-90 transition-all cursor-pointer"
                               title="Edit Ingredient"
                             >
                               <Pencil className="w-3.5 h-3.5" />
@@ -1397,7 +1397,7 @@ export default function Ingredients() {
                             <button
                               onClick={() => setDeleteTarget(ing)}
                               id={`delete-ingredient-${ing.ingredient_id}`}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:scale-110 active:scale-90 transition-all cursor-pointer"
+                              className="p-1.5 rounded-lg text-espresso-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:scale-110 active:scale-90 transition-all cursor-pointer"
                               title="Delete Ingredient"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1413,10 +1413,10 @@ export default function Ingredients() {
           </div>
 
           {/* ── Table Footer & Selection Actions ── */}
-          <div className="p-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0e1320] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 flex-wrap">
+          <div className="p-4 border-t border-stoneBorder dark:border-slate-800/80 bg-flour-100/50 dark:bg-[#0e1320] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3 text-espresso-600 dark:text-espresso-500 flex-wrap">
               <span>
-                Showing <strong className="text-slate-900 dark:text-white">{Math.min(1, filtered.length)} to {Math.min(currentPage * itemsPerPage, filtered.length)}</strong> of <strong className="text-slate-900 dark:text-white">{filtered.length}</strong> ingredients
+                Showing <strong className="text-espresso-800 dark:text-white">{Math.min(1, filtered.length)} to {Math.min(currentPage * itemsPerPage, filtered.length)}</strong> of <strong className="text-espresso-800 dark:text-white">{filtered.length}</strong> ingredients
               </span>
 
               {selectedIds.length > 0 && (
@@ -1429,7 +1429,7 @@ export default function Ingredients() {
                   <button
                     type="button"
                     onClick={() => setBulkModalOpen(true)}
-                    className="font-bold text-slate-700 dark:text-slate-200 hover:text-violet-600 transition-colors cursor-pointer"
+                    className="font-bold text-espresso-700 dark:text-slate-200 hover:text-violet-600 transition-colors cursor-pointer"
                   >
                     Bulk Price Update
                   </button>
@@ -1437,7 +1437,7 @@ export default function Ingredients() {
                   <button
                     type="button"
                     onClick={() => setSelectedIds([])}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    className="text-espresso-500 hover:text-espresso-600 dark:hover:text-slate-200"
                   >
                     Clear Selection
                   </button>
@@ -1450,7 +1450,7 @@ export default function Ingredients() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-white dark:hover:bg-slate-800 transition-colors font-semibold"
+                className="px-3 py-1.5 rounded-lg border border-stoneBorder dark:border-slate-800 text-espresso-700 dark:text-slate-300 disabled:opacity-40 hover:bg-white dark:hover:bg-slate-800 transition-colors font-semibold"
               >
                 Previous
               </button>
@@ -1460,8 +1460,8 @@ export default function Ingredients() {
                   key={page}
                   onClick={() => setCurrentPage(page)}
                   className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${currentPage === page
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
+                    ? "bg-culinary-600 text-white shadow-xs"
+                    : "border border-stoneBorder dark:border-slate-800 text-espresso-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800"
                     }`}
                 >
                   {page}
@@ -1471,7 +1471,7 @@ export default function Ingredients() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-white dark:hover:bg-slate-800 transition-colors font-semibold"
+                className="px-3 py-1.5 rounded-lg border border-stoneBorder dark:border-slate-800 text-espresso-700 dark:text-slate-300 disabled:opacity-40 hover:bg-white dark:hover:bg-slate-800 transition-colors font-semibold"
               >
                 Next
               </button>
@@ -1486,33 +1486,33 @@ export default function Ingredients() {
             onClick={() => setModalOpen(false)}
           >
             <div
-              className="relative z-10 w-full max-w-5xl xl:max-w-6xl rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
+              className="relative z-10 w-full max-w-5xl xl:max-w-6xl rounded-2xl bg-white dark:bg-[#0c101a] border border-stoneBorder/90 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="p-6 md:p-8 pb-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0e1322]/50">
+              <div className="p-6 md:p-8 pb-4 border-b border-stoneBorder dark:border-slate-800/80 bg-flour-100/50 dark:bg-[#0e1322]/50">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
                       <ShoppingBag className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>Inventory &amp; Costing Engine</span>
                     </span>
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    <span className="text-xs font-semibold text-espresso-600 dark:text-espresso-500">
                       Philippine Peso (₱) Active
                     </span>
                   </div>
                   <button
                     onClick={() => setModalOpen(false)}
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-espresso-500 hover:text-espresso-600 dark:hover:text-slate-200 hover:bg-flour-200 dark:hover:bg-slate-800 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                <h2 className="text-2xl font-extrabold tracking-tight text-espresso-800 dark:text-white">
                   {editTarget ? "Edit Ingredient" : "Add New Ingredient"}
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-xs text-espresso-600 dark:text-espresso-500 mt-1">
                   Configure procurement packaging, base unit normalization, and culinary conversion rules to determine exact recipe portion costs.
                 </p>
               </div>
@@ -1523,7 +1523,7 @@ export default function Ingredients() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
                     <div className="sm:col-span-8 space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1">
+                      <label className="text-xs font-bold text-espresso-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-1">
                         <span>INGREDIENT NAME</span> <span className="text-rose-500">*</span>
                       </label>
                       <input
@@ -1532,21 +1532,21 @@ export default function Ingredients() {
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
                         placeholder="e.g., All-Purpose Flour"
                         id="ingredient-name"
-                        className={`w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border ${errors.name ? "border-rose-400" : "border-slate-200 dark:border-slate-800"
-                          } text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium shadow-2xs`}
+                        className={`w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border ${errors.name ? "border-rose-400" : "border-stoneBorder dark:border-slate-800"
+                          } text-espresso-800 dark:text-white placeholder:text-espresso-500 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium shadow-2xs`}
                       />
                       {errors.name && <p className="text-xs text-rose-500 font-medium">{errors.name}</p>}
                     </div>
 
                     <div className="sm:col-span-4 space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                      <label className="text-xs font-bold text-espresso-700 dark:text-slate-300 uppercase tracking-wide">
                         CATEGORY
                       </label>
                       <div className="relative">
                         <select
                           value={form.category}
                           onChange={(e) => setForm({ ...form, category: e.target.value })}
-                          className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer font-medium shadow-2xs"
+                          className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 text-espresso-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all cursor-pointer font-medium shadow-2xs"
                         >
                           {STANDARD_CATEGORIES.map((c) => (
                             <option key={c} value={c}>
@@ -1554,7 +1554,7 @@ export default function Ingredients() {
                             </option>
                           ))}
                         </select>
-                        <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
+                        <ChevronDown className="w-4 h-4 text-espresso-500 dark:text-espresso-600 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
                       </div>
                     </div>
                   </div>
@@ -1563,10 +1563,10 @@ export default function Ingredients() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        <label className="text-xs font-bold text-espresso-700 dark:text-slate-300 uppercase tracking-wide">
                           SUPPLIER / BRAND
                         </label>
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-[#182033] px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-semibold text-espresso-500 dark:text-espresso-600 uppercase tracking-wider bg-flour-200 dark:bg-[#182033] px-2 py-0.5 rounded-full">
                           Optional
                         </span>
                       </div>
@@ -1575,16 +1575,16 @@ export default function Ingredients() {
                         value={form.supplier}
                         onChange={(e) => setForm({ ...form, supplier: e.target.value })}
                         placeholder="e.g., San Miguel Mills / Metro Mart"
-                        className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium shadow-2xs"
+                        className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 text-espresso-800 dark:text-white placeholder:text-espresso-500 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium shadow-2xs"
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                        <label className="text-xs font-bold text-espresso-700 dark:text-slate-300 uppercase tracking-wide">
                           SKU / STORAGE LOCATION
                         </label>
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider bg-slate-100 dark:bg-[#182033] px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-semibold text-espresso-500 dark:text-espresso-600 uppercase tracking-wider bg-flour-200 dark:bg-[#182033] px-2 py-0.5 rounded-full">
                           Optional
                         </span>
                       </div>
@@ -1593,7 +1593,7 @@ export default function Ingredients() {
                         value={form.sku}
                         onChange={(e) => setForm({ ...form, sku: e.target.value })}
                         placeholder="e.g., DRY-BIN-04"
-                        className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium shadow-2xs"
+                        className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 text-espresso-800 dark:text-white placeholder:text-espresso-500 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium shadow-2xs"
                       />
                     </div>
                   </div>
@@ -1602,19 +1602,19 @@ export default function Ingredients() {
                 {/* Section B: Balanced Two-Column Procurement & Economic Engine Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-1">
                   {/* Left Column: Commercial Purchase Packaging & Net Usable Mass */}
-                  <div className="lg:col-span-7 space-y-4 rounded-2xl p-5 bg-slate-50/70 dark:bg-[#111726]/70 border border-slate-200/80 dark:border-slate-800/80">
-                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-200/80 dark:border-slate-800/80">
+                  <div className="lg:col-span-7 space-y-4 rounded-2xl p-5 bg-flour-100/70 dark:bg-[#111726]/70 border border-stoneBorder/80 dark:border-slate-800/80">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-stoneBorder/80 dark:border-slate-800/80">
                       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                         <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         <span>PURCHASE PACKAGING &amp; NET USABLE CONTENT</span>
                       </div>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Bulk Invoicing Basis</span>
+                      <span className="text-[11px] text-espresso-600 dark:text-espresso-500 font-medium">Bulk Invoicing Basis</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
                       {/* Package Container */}
                       <div className="sm:col-span-5 space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
+                        <label className="text-xs font-bold text-espresso-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
                           <span>PACKAGE CONTAINER</span> <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative">
@@ -1626,7 +1626,7 @@ export default function Ingredients() {
                               setForm({ ...form, packageType: newType, purchaseUnit: formatted });
                             }}
                             id="package-type"
-                            className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer shadow-2xs"
+                            className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-700 text-espresso-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer shadow-2xs"
                           >
                             {PACKAGE_CONTAINERS.map((c) => (
                               <option key={c} value={c}>
@@ -1634,14 +1634,14 @@ export default function Ingredients() {
                               </option>
                             ))}
                           </select>
-                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
+                          <ChevronDown className="w-4 h-4 text-espresso-500 dark:text-espresso-600 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
                         </div>
-                        <p className="text-[11px] text-slate-400">e.g. Bag, Box, Sack, Tub</p>
+                        <p className="text-[11px] text-espresso-500">e.g. Bag, Box, Sack, Tub</p>
                       </div>
 
                       {/* Net Quantity */}
                       <div className="sm:col-span-4 space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
+                        <label className="text-xs font-bold text-espresso-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
                           <span>NET QUANTITY</span> <span className="text-rose-500">*</span>
                         </label>
                         <input
@@ -1656,14 +1656,14 @@ export default function Ingredients() {
                             setForm({ ...form, netQuantity: val, purchaseUnit: formatted });
                           }}
                           id="net-quantity"
-                          className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-2xs"
+                          className="w-full h-[42px] px-3.5 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-700 text-espresso-800 dark:text-white font-bold tabular-nums focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all shadow-2xs"
                         />
-                        <p className="text-[11px] text-slate-400">Net physical amount</p>
+                        <p className="text-[11px] text-espresso-500">Net physical amount</p>
                       </div>
 
                       {/* Net Unit (Secondary UOM) */}
                       <div className="sm:col-span-3 space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
+                        <label className="text-xs font-bold text-espresso-700 dark:text-slate-300 flex items-center gap-1 uppercase tracking-wide">
                           <span>UNIT (UOM)</span> <span className="text-rose-500">*</span>
                         </label>
                         <div className="relative">
@@ -1675,7 +1675,7 @@ export default function Ingredients() {
                               setForm({ ...form, netUnit: newUnit, purchaseUnit: formatted });
                             }}
                             id="net-unit"
-                            className="w-full h-[42px] appearance-none pl-3.5 pr-8 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer shadow-2xs"
+                            className="w-full h-[42px] appearance-none pl-3.5 pr-8 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-700 text-espresso-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer shadow-2xs"
                           >
                             {NET_CONTENT_UNITS.map((u) => (
                               <option key={u.value} value={u.value}>
@@ -1683,24 +1683,24 @@ export default function Ingredients() {
                               </option>
                             ))}
                           </select>
-                          <ChevronDown className="w-4 h-4 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                          <ChevronDown className="w-4 h-4 text-espresso-500 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
                         </div>
-                        <p className="text-[11px] text-slate-400">kg, g, L, ml</p>
+                        <p className="text-[11px] text-espresso-500">kg, g, L, ml</p>
                       </div>
                     </div>
 
                     {/* Container Purchase Price */}
                     <div className="space-y-1.5 pt-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                        <label className="text-xs font-bold text-espresso-700 dark:text-slate-300 flex items-center gap-1">
                           <span>CONTAINER PURCHASE PRICE (₱)</span> <span className="text-rose-500">*</span>
                         </label>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">
+                        <span className="text-[10px] text-espresso-600 dark:text-espresso-500 font-semibold uppercase">
                           Invoice Price per 1 {form.packageType}
                         </span>
                       </div>
-                      <div className="flex h-[42px] items-center rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c] shadow-2xs">
-                        <span className="h-full px-3.5 flex items-center justify-center text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-slate-50 dark:bg-[#182033] border-r border-slate-200 dark:border-slate-700 shrink-0 select-none">
+                      <div className="flex h-[42px] items-center rounded-xl border border-stoneBorder dark:border-slate-700 overflow-hidden focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all bg-white dark:bg-[#141b2c] shadow-2xs">
+                        <span className="h-full px-3.5 flex items-center justify-center text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-flour-100 dark:bg-[#182033] border-r border-stoneBorder dark:border-slate-700 shrink-0 select-none">
                           ₱
                         </span>
                         <input
@@ -1711,10 +1711,10 @@ export default function Ingredients() {
                           placeholder="0.00"
                           onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0 })}
                           id="purchase-price"
-                          className="min-w-0 flex-1 h-full px-3 text-sm bg-transparent text-slate-900 dark:text-white font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="min-w-0 flex-1 h-full px-3 text-sm bg-transparent text-espresso-800 dark:text-white font-bold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <span
-                          className="h-full px-3.5 flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-700 shrink-0 whitespace-nowrap"
+                          className="h-full px-3.5 flex items-center text-xs font-bold text-espresso-600 dark:text-espresso-500 bg-flour-100 dark:bg-[#182033] border-l border-stoneBorder dark:border-slate-700 shrink-0 whitespace-nowrap"
                           title={`Cost in Philippine Pesos per ${form.packageType}`}
                         >
                           PHP / {form.packageType}
@@ -1739,7 +1739,7 @@ export default function Ingredients() {
                       {/* Canonical Base Unit Selector */}
                       <div className="space-y-1.5 mt-3.5">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                          <label className="text-xs font-bold text-espresso-700 dark:text-slate-300 uppercase tracking-wide">
                             CANONICAL BASE UNIT (NORMALIZED COST BASIS)
                           </label>
                         </div>
@@ -1751,7 +1751,7 @@ export default function Ingredients() {
                               setForm({ ...form, base_unit_id: val });
                             }}
                             id="base-unit-selector"
-                            className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer shadow-2xs"
+                            className="w-full h-[42px] appearance-none pl-3.5 pr-10 text-sm rounded-xl bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-700 text-espresso-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all font-semibold cursor-pointer shadow-2xs"
                           >
                             <option value="">Auto-detected standard base unit</option>
                             {units
@@ -1762,30 +1762,30 @@ export default function Ingredients() {
                                 </option>
                               ))}
                           </select>
-                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
+                          <ChevronDown className="w-4 h-4 text-espresso-500 dark:text-espresso-600 pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors" />
                         </div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                        <p className="text-[11px] text-espresso-600 dark:text-espresso-500 leading-relaxed">
                           Reference base ({units.filter(u => u.is_base).map(u => `${u.code}`).join(", ") || "g, ml, pcs"}) used by the cost engine to normalize recipe quantities.
                         </p>
                       </div>
                     </div>
 
                     {/* Live Cost Rate Card */}
-                    <div className="mt-3 p-3.5 rounded-xl bg-white/80 dark:bg-[#141b2c]/80 border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                    <div className="mt-3 p-3.5 rounded-xl bg-white/80 dark:bg-[#141b2c]/80 border border-stoneBorder/80 dark:border-slate-800 shadow-2xs">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-500 dark:text-slate-400">Effective Net Rate:</span>
+                        <span className="font-semibold text-espresso-600 dark:text-espresso-500">Effective Net Rate:</span>
                         <div className="flex items-baseline gap-1">
                           <span className="text-base font-black text-emerald-700 dark:text-emerald-400 tabular-nums">
                             {fmt(calculatedCostPerNetUnit)}
                           </span>
-                          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                          <span className="text-xs font-bold text-espresso-600 dark:text-espresso-500">
                             / {form.netUnit}
                           </span>
                         </div>
                       </div>
-                      <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                      <div className="mt-1.5 pt-1.5 border-t border-stoneBorder dark:border-slate-800 text-[11px] text-espresso-600 dark:text-espresso-500 flex items-center justify-between">
                         <span>Pack Definition:</span>
-                        <span className="font-bold text-slate-700 dark:text-slate-300">
+                        <span className="font-bold text-espresso-700 dark:text-slate-300">
                           1 {form.packageType} = {form.netQuantity} {form.netUnit}
                         </span>
                       </div>
@@ -1795,13 +1795,13 @@ export default function Ingredients() {
 
                 {/* Section C: RECIPE USAGE & MULTI-UNIT CONVERSIONS (Master-Detail Inline Sub-Grid) */}
                 <div className="space-y-3 pt-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-stoneBorder dark:border-slate-800 gap-2">
                     <div>
                       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                         <Scale className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         <span>RECIPE USAGE &amp; MULTI-UNIT CONVERSIONS</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
+                      <p className="text-[11px] text-espresso-500 mt-0.5">
                         Configure recipe measurement units (e.g., cup, grams, tablespoons) and base-unit conversion factors.
                       </p>
                     </div>
@@ -1818,7 +1818,7 @@ export default function Ingredients() {
                       <button
                         type="button"
                         onClick={handleAddConversionRule}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-600 transition-all cursor-pointer shadow-2xs active:scale-95"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-700 text-espresso-700 dark:text-slate-200 hover:border-emerald-500 hover:text-emerald-600 transition-all cursor-pointer shadow-2xs active:scale-95"
                       >
                         <Plus className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span>+ Add Conversion Rule</span>
@@ -1827,10 +1827,10 @@ export default function Ingredients() {
                   </div>
 
                   {/* Sub-grid: Inline Editable Conversion Rules Table */}
-                  <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
+                  <div className="overflow-x-auto rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
                     <table className="w-full text-xs border-collapse">
                       <thead>
-                        <tr className="bg-slate-50 dark:bg-[#182033] border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        <tr className="bg-flour-100 dark:bg-[#182033] border-b border-stoneBorder dark:border-slate-800 text-[10px] font-bold text-espresso-600 dark:text-espresso-500 uppercase tracking-wider">
                           <th className="py-3 px-4 text-left w-[24%] min-w-[170px]">Kitchen Recipe Unit</th>
                           <th className="py-3 px-4 text-left w-[25%] min-w-[200px]">Conversion Factor (Base Qty)</th>
                           <th className="py-3 px-4 text-left w-[25%] min-w-[200px]">Yield Factor (Derived)</th>
@@ -1850,7 +1850,7 @@ export default function Ingredients() {
                           return (
                             <tr
                               key={idx}
-                              className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                              className="hover:bg-flour-100/80 dark:hover:bg-slate-800/40 transition-colors"
                             >
                               {/* Kitchen Recipe Unit */}
                               <td className="py-3 px-4">
@@ -1861,7 +1861,7 @@ export default function Ingredients() {
                                       onChange={(e) =>
                                         handleUpdateConversionRule(idx, "recipe_unit", e.target.value)
                                       }
-                                      className="w-full appearance-none pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#141b2c] font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 text-xs cursor-pointer shadow-2xs"
+                                      className="w-full appearance-none pl-3 pr-8 py-2 rounded-xl border border-stoneBorder dark:border-slate-700 bg-white dark:bg-[#141b2c] font-semibold text-espresso-800 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 text-xs cursor-pointer shadow-2xs"
                                     >
                                       {RECIPE_UNITS.map((u) => (
                                         <option key={u.value} value={u.value}>
@@ -1869,7 +1869,7 @@ export default function Ingredients() {
                                         </option>
                                       ))}
                                     </select>
-                                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
+                                    <ChevronDown className="w-3.5 h-3.5 text-espresso-500 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
                                   </div>
                                   {idx === 0 && (
                                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 shrink-0">
@@ -1882,7 +1882,7 @@ export default function Ingredients() {
                               {/* Conversion Factor (Base Qty) */}
                               <td className="py-3 px-4">
                                 <div className="flex items-center">
-                                  <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-[#141b2c] focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 shadow-2xs">
+                                  <div className="flex items-center rounded-xl border border-stoneBorder dark:border-slate-700 overflow-hidden bg-white dark:bg-[#141b2c] focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 shadow-2xs">
                                     <input
                                       type="number"
                                       min="0.0001"
@@ -1897,9 +1897,9 @@ export default function Ingredients() {
                                           parseFloat(e.target.value) || 0
                                         )
                                       }
-                                      className="w-24 px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white tabular-nums bg-transparent focus:outline-none"
+                                      className="w-24 px-3 py-1.5 text-xs font-bold text-espresso-800 dark:text-white tabular-nums bg-transparent focus:outline-none"
                                     />
-                                    <span className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-700 whitespace-nowrap select-none">
+                                    <span className="px-2.5 py-1.5 text-[11px] font-semibold text-espresso-600 dark:text-espresso-500 bg-flour-100 dark:bg-[#182033] border-l border-stoneBorder dark:border-slate-700 whitespace-nowrap select-none">
                                       {baseCode} / {conv.recipe_unit}
                                     </span>
                                   </div>
@@ -1909,7 +1909,7 @@ export default function Ingredients() {
                               {/* Yield Factor (Derived) */}
                               <td className="py-3 px-4">
                                 <div className="flex items-center">
-                                  <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-[#141b2c] focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 shadow-2xs">
+                                  <div className="flex items-center rounded-xl border border-stoneBorder dark:border-slate-700 overflow-hidden bg-white dark:bg-[#141b2c] focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/10 shadow-2xs">
                                     <input
                                       type="number"
                                       min="0.0001"
@@ -1923,9 +1923,9 @@ export default function Ingredients() {
                                           parseFloat(e.target.value) || 0
                                         )
                                       }
-                                      className="w-24 px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white tabular-nums bg-transparent focus:outline-none"
+                                      className="w-24 px-3 py-1.5 text-xs font-bold text-espresso-800 dark:text-white tabular-nums bg-transparent focus:outline-none"
                                     />
-                                    <span className="px-2.5 py-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#182033] border-l border-slate-200 dark:border-slate-700 whitespace-nowrap select-none">
+                                    <span className="px-2.5 py-1.5 text-[11px] font-semibold text-espresso-600 dark:text-espresso-500 bg-flour-100 dark:bg-[#182033] border-l border-stoneBorder dark:border-slate-700 whitespace-nowrap select-none">
                                       {conv.recipe_unit}s / {form.packageType}
                                     </span>
                                   </div>
@@ -1936,7 +1936,7 @@ export default function Ingredients() {
                               <td className="py-3 px-4 text-right">
                                 <div className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400 tabular-nums">
                                   {fmt(microCost)}
-                                  <span className="text-[11px] font-normal text-slate-400 dark:text-slate-500 ml-1">
+                                  <span className="text-[11px] font-normal text-espresso-500 dark:text-espresso-600 ml-1">
                                     / {conv.recipe_unit}
                                   </span>
                                 </div>
@@ -1948,7 +1948,7 @@ export default function Ingredients() {
                                   type="button"
                                   disabled={form.conversions.length <= 1}
                                   onClick={() => handleDeleteConversionRule(idx)}
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                                  className="p-1.5 rounded-lg text-espresso-500 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
                                   title={
                                     form.conversions.length <= 1
                                       ? "At least one conversion rule is required"
@@ -1970,8 +1970,8 @@ export default function Ingredients() {
 
                   {/* Quick Presets Toolbar */}
                   <div className="pt-2">
-                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2">
-                      <span className="font-bold text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center justify-between text-xs text-espresso-600 dark:text-espresso-500 mb-2">
+                      <span className="font-bold text-espresso-700 dark:text-slate-300">
                         ⚡ Quick Package &amp; Culinary Conversion Presets:
                       </span>
                     </div>
@@ -2000,7 +2000,7 @@ export default function Ingredients() {
                               ],
                             });
                           }}
-                          className="text-[11px] font-semibold px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 dark:bg-[#141b2c] dark:hover:bg-emerald-950/70 dark:text-slate-300 dark:hover:text-emerald-300 transition-colors border border-slate-200/80 dark:border-slate-800 cursor-pointer shadow-2xs"
+                          className="text-[11px] font-semibold px-3 py-1.5 rounded-xl bg-flour-200 hover:bg-emerald-50 text-espresso-700 hover:text-emerald-700 dark:bg-[#141b2c] dark:hover:bg-emerald-950/70 dark:text-slate-300 dark:hover:text-emerald-300 transition-colors border border-stoneBorder/80 dark:border-slate-800 cursor-pointer shadow-2xs"
                           title={p.hint}
                         >
                           {p.label}
@@ -2011,16 +2011,16 @@ export default function Ingredients() {
                 </div>
 
                 {/* Section D: Summary Hero Ribbon */}
-                <div className="rounded-2xl p-5 bg-gradient-to-r from-slate-50 via-emerald-50/20 to-slate-50 dark:from-[#111726] dark:via-emerald-950/10 dark:to-[#111726] border border-slate-200/90 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
+                <div className="rounded-2xl p-5 bg-gradient-to-r from-slate-50 via-emerald-50/20 to-slate-50 dark:from-[#111726] dark:via-emerald-950/10 dark:to-[#111726] border border-stoneBorder/90 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
                   <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white font-black text-base flex items-center justify-center shadow-md shadow-emerald-600/20 shrink-0">
+                    <div className="w-11 h-11 rounded-2xl bg-culinary-600 text-white font-black text-base flex items-center justify-center shadow-md shadow-emerald-600/20 shrink-0">
                       ₱
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                      <h4 className="text-xs font-bold text-espresso-800 dark:text-white uppercase tracking-wider">
                         Calculated Recipe Cost
                       </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      <p className="text-xs text-espresso-600 dark:text-espresso-500 mt-0.5">
                         {form.conversions.length} active conversion rule(s) mapped to recipe builders
                       </p>
                     </div>
@@ -2029,11 +2029,11 @@ export default function Ingredients() {
                   <div className="text-left sm:text-right">
                     <div className="text-2xl font-black tracking-tight text-emerald-700 dark:text-emerald-400 tabular-nums">
                       {fmt(calculatedModalCost)}
-                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 ml-1">
+                      <span className="text-xs font-semibold text-espresso-600 dark:text-espresso-500 ml-1">
                         / {form.recipeUnit || "unit"}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                    <p className="text-xs text-espresso-600 dark:text-espresso-500 font-medium mt-0.5">
                       {form.yieldFactor > 0
                         ? `Primary: 1 ${form.packageType} (${form.netQuantity} ${form.netUnit}) = ${form.yieldFactor} ${form.recipeUnit}s`
                         : ""}
@@ -2048,10 +2048,10 @@ export default function Ingredients() {
                       <ShoppingBag className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       <span>PURCHASE RECORDS &amp; SUPPLIER HISTORY</span>
                     </div>
-                    <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
+                    <div className="overflow-x-auto rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#121826] shadow-2xs">
                       <table className="w-full text-xs border-collapse">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-[#182033] border-b border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          <tr className="bg-flour-100 dark:bg-[#182033] border-b border-stoneBorder dark:border-slate-800 text-[10px] font-bold text-espresso-600 dark:text-espresso-500 uppercase tracking-wider">
                             <th className="py-2.5 px-4 text-left">Supplier</th>
                             <th className="py-2.5 px-4 text-left">Package Quantity</th>
                             <th className="py-2.5 px-4 text-right">Purchase Price</th>
@@ -2060,17 +2060,17 @@ export default function Ingredients() {
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                           {editTarget.purchases.map((p) => (
-                            <tr key={p.purchase_id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                              <td className="py-2.5 px-4 font-semibold text-slate-900 dark:text-white">
+                            <tr key={p.purchase_id} className="hover:bg-flour-100/70 dark:hover:bg-slate-800/40 transition-colors">
+                              <td className="py-2.5 px-4 font-semibold text-espresso-800 dark:text-white">
                                 {p.supplier_name || "Primary Supplier"}
                               </td>
-                              <td className="py-2.5 px-4 text-slate-600 dark:text-slate-300">
+                              <td className="py-2.5 px-4 text-espresso-600 dark:text-slate-300">
                                 {p.package_quantity} {form.packageType}
                               </td>
                               <td className="py-2.5 px-4 text-right font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                                 {fmt(p.purchase_price)}
                               </td>
-                              <td className="py-2.5 px-4 text-right text-slate-400 text-[11px]">
+                              <td className="py-2.5 px-4 text-right text-espresso-500 text-[11px]">
                                 {new Date(p.purchase_date).toLocaleDateString()}
                               </td>
                             </tr>
@@ -2083,12 +2083,12 @@ export default function Ingredients() {
               </div>
 
               {/* Modal Actions Footer */}
-              <div className="p-6 md:p-8 pt-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-[#0e1320] flex items-center justify-end gap-3">
+              <div className="p-6 md:p-8 pt-4 border-t border-stoneBorder dark:border-slate-800 bg-flour-100/80 dark:bg-[#0e1320] flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
                   disabled={saving}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 active:scale-[0.98] transition-all shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 text-espresso-700 dark:text-slate-200 hover:bg-flour-100 dark:hover:bg-slate-800/60 active:scale-[0.98] transition-all shadow-2xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -2110,7 +2110,7 @@ export default function Ingredients() {
                   onClick={() => handleSave(false)}
                   disabled={saving}
                   id="save-ingredient-btn"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] active:translate-y-0.5 shadow-md hover:shadow-lg shadow-emerald-600/25 active:shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-extrabold text-white bg-culinary-600 hover:bg-emerald-700 active:scale-[0.98] active:translate-y-0.5 shadow-md hover:shadow-lg shadow-emerald-600/25 active:shadow-sm transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {saving ? (
                     <>
@@ -2136,33 +2136,33 @@ export default function Ingredients() {
             onClick={() => setBulkModalOpen(false)}
           >
             <div
-              className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200"
+              className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0c101a] border border-stoneBorder dark:border-slate-800 p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-stoneBorder dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-[#0c1f1a] text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                     <SlidersHorizontal className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    <h3 className="text-sm font-bold text-espresso-800 dark:text-white">
                       Bulk Price Adjustment
                     </h3>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-espresso-500">
                       Apply percentage change across {selectedIds.length > 0 ? selectedIds.length : pricedCount} items
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setBulkModalOpen(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="p-1 rounded-lg text-espresso-500 hover:text-espresso-600 dark:hover:text-slate-200"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="space-y-4 text-xs">
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                <p className="text-espresso-600 dark:text-slate-300 leading-relaxed">
                   Adjust supplier purchase prices to simulate inflation, supplier contract updates, or currency exchange variations:
                 </p>
 
@@ -2172,9 +2172,9 @@ export default function Ingredients() {
                     step="0.5"
                     value={bulkAdjustmentPct}
                     onChange={(e) => setBulkAdjustmentPct(parseFloat(e.target.value) || 0)}
-                    className="w-24 px-3 py-2 text-sm rounded-xl bg-slate-50 dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold text-center tabular-nums"
+                    className="w-24 px-3 py-2 text-sm rounded-xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 text-espresso-800 dark:text-white font-bold text-center tabular-nums"
                   />
-                  <span className="font-bold text-slate-700 dark:text-slate-300">% Adjustment</span>
+                  <span className="font-bold text-espresso-700 dark:text-slate-300">% Adjustment</span>
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-1">
@@ -2183,7 +2183,7 @@ export default function Ingredients() {
                       key={pct}
                       type="button"
                       onClick={() => setBulkAdjustmentPct(pct)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#182033] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-semibold hover:border-violet-400 transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-flour-200 dark:bg-[#182033] border border-stoneBorder dark:border-slate-800 text-espresso-700 dark:text-slate-300 font-semibold hover:border-violet-400 transition-colors"
                     >
                       {pct > 0 ? `+${pct}%` : `${pct}%`}
                     </button>
@@ -2191,11 +2191,11 @@ export default function Ingredients() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-stoneBorder dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setBulkModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 text-espresso-700 dark:text-slate-300"
                 >
                   Cancel
                 </button>
@@ -2203,7 +2203,7 @@ export default function Ingredients() {
                   type="button"
                   onClick={handleBulkUpdate}
                   disabled={saving}
-                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-culinary-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
                 >
                   Apply Updates
                 </button>
@@ -2219,7 +2219,7 @@ export default function Ingredients() {
             onClick={() => setDeleteTarget(null)}
           >
             <div
-              className="w-full max-w-md rounded-3xl bg-white dark:bg-[#0c101a] border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4"
+              className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0c101a] border border-stoneBorder dark:border-slate-800 p-6 shadow-2xl space-y-4"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 flex items-center justify-center">
@@ -2227,18 +2227,18 @@ export default function Ingredients() {
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                <h3 className="text-lg font-bold text-espresso-800 dark:text-white">
                   Delete Ingredient
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-                  Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{deleteTarget.name}</strong>? This will remove it from any recipe formulas currently referencing it.
+                <p className="text-xs text-espresso-600 dark:text-espresso-500 mt-1 leading-relaxed">
+                  Are you sure you want to delete <strong className="text-espresso-800 dark:text-white">{deleteTarget.name}</strong>? This will remove it from any recipe formulas currently referencing it.
                 </p>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
                 <button
                   onClick={() => setDeleteTarget(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#141b2c] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 text-espresso-700 dark:text-slate-300 hover:bg-flour-100 transition-colors"
                 >
                   Cancel
                 </button>

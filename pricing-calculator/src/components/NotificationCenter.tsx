@@ -124,7 +124,7 @@ export function NotificationCenter({ unpricedCount = 0 }: NotificationCenterProp
       {/* Bell Trigger Button */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="p-2 relative flex items-center justify-center text-espresso-600 dark:text-slate-300 hover:text-espresso-900 dark:hover:text-white bg-artisan-surface dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 border border-artisan-border dark:border-slate-800 rounded-lg transition-colors cursor-pointer"
+        className="p-2 relative flex items-center justify-center text-espresso-600 dark:text-slate-300 hover:text-espresso-900 dark:hover:text-white bg-white dark:bg-[#141b2c] hover:bg-flour-100 dark:hover:bg-slate-800 border border-stoneBorder dark:border-slate-800 rounded-lg transition-colors cursor-pointer"
         title={
           unreadCount > 0
             ? `${unreadCount} active notification(s) • ${unreadAlertsCount} action alert(s)`
@@ -160,11 +160,11 @@ export function NotificationCenter({ unpricedCount = 0 }: NotificationCenterProp
       {/* Popover Dropdown */}
       {isOpen && (
         <div
-          className="absolute right-0 top-full mt-2 w-96 max-w-[calc(100vw-2rem)] z-50 rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface/98 dark:bg-[#0c101a]/98 backdrop-blur-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+          className="absolute right-0 top-full mt-2 w-96 max-w-[calc(100vw-2rem)] z-50 rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white/98 dark:bg-[#0c101a]/98 backdrop-blur-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
           data-purpose="notification-popover"
         >
           {/* Header */}
-          <div className="p-4 border-b border-artisan-border dark:border-slate-800 flex items-center justify-between gap-2">
+          <div className="p-4 border-b border-stoneBorder dark:border-slate-800 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-espresso-900 dark:text-white">
                 Notifications &amp; Alerts
@@ -188,13 +188,13 @@ export function NotificationCenter({ unpricedCount = 0 }: NotificationCenterProp
           </div>
 
           {/* Filter Tabs */}
-          <div className="px-3 pt-2.5 pb-2 border-b border-artisan-border dark:border-slate-800 flex items-center gap-1.5 text-xs bg-artisan-canvas/50 dark:bg-[#141b2c]/40">
+          <div className="px-3 pt-2.5 pb-2 border-b border-stoneBorder dark:border-slate-800 flex items-center gap-1.5 text-xs bg-flour-100/50 dark:bg-[#141b2c]/40">
             <button
               onClick={() => setActiveFilter("all")}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
                 activeFilter === "all"
                   ? "bg-espresso-800 text-white dark:bg-slate-700 shadow-2xs"
-                  : "text-espresso-600 dark:text-slate-400 hover:bg-artisan-subtle dark:hover:bg-slate-800"
+                  : "text-espresso-600 dark:text-slate-400 hover:bg-flour-100 dark:hover:bg-slate-800"
               }`}
               type="button"
             >
@@ -217,7 +217,7 @@ export function NotificationCenter({ unpricedCount = 0 }: NotificationCenterProp
               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1 cursor-pointer ${
                 activeFilter === "notifications"
                   ? "bg-culinary-600 text-white dark:bg-emerald-700 shadow-2xs"
-                  : "text-espresso-600 dark:text-slate-400 hover:bg-artisan-subtle dark:hover:bg-slate-800"
+                  : "text-espresso-600 dark:text-slate-400 hover:bg-flour-100 dark:hover:bg-slate-800"
               }`}
               type="button"
             >
@@ -227,7 +227,7 @@ export function NotificationCenter({ unpricedCount = 0 }: NotificationCenterProp
           </div>
 
           {/* Hierarchical Scrollable List */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-artisan-border dark:divide-slate-800">
+          <div className="max-h-[380px] overflow-y-auto divide-y divide-stoneBorder dark:divide-slate-800">
             {totalDisplayed === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center text-espresso-400 dark:text-slate-500">
                 <CheckCheck className="w-8 h-8 text-culinary-500 dark:text-emerald-400 mb-2 stroke-[1.5]" />
@@ -291,7 +291,7 @@ export function NotificationCenter({ unpricedCount = 0 }: NotificationCenterProp
                       <div
                         key={item.id}
                         onClick={() => handleSelectNotification(item)}
-                        className="p-3 rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-[#141b2c]/60 hover:bg-artisan-subtle dark:hover:bg-slate-800/80 transition-all cursor-pointer group shadow-2xs space-y-1.5"
+                        className="p-3 rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-[#141b2c]/60 hover:bg-flour-100 dark:hover:bg-slate-800/80 transition-all cursor-pointer group shadow-2xs space-y-1.5"
                         data-purpose="notification-card-item"
                       >
                         <div className="flex items-start justify-between gap-2">

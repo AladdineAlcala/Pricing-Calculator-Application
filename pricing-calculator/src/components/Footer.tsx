@@ -45,18 +45,18 @@ export function Footer() {
   return (
     <>
       <footer
-        className="sticky bottom-0 z-30 shrink-0 w-full h-12 bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur-md border-t border-artisan-border dark:border-slate-800 px-4 sm:px-6 text-xs text-espresso-500 dark:text-slate-400 flex items-center justify-between gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+        className="sticky bottom-0 z-30 shrink-0 w-full h-12 bg-espresso-900 backdrop-blur-md border-t border-espresso-800 px-4 sm:px-6 text-xs text-stone-400 flex items-center justify-between gap-3"
         data-purpose="system-status-sticky-footer"
       >
         {/* Left: Engine Status */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <div className="inline-flex items-center gap-1.5 bg-culinary-50 dark:bg-emerald-950/60 text-culinary-800 dark:text-emerald-300 border border-culinary-200 dark:border-emerald-800/60 px-2.5 py-1 rounded-full text-[11px] font-semibold shadow-2xs">
+          <div className="inline-flex items-center gap-1.5 bg-culinary-700/30 text-culinary-400 border border-culinary-700/40 px-2.5 py-1 rounded-full text-[11px] font-semibold">
             <span className="w-2 h-2 rounded-full bg-culinary-500" />
             <span>BakeIQ v3.2.0</span>
           </div>
 
-          <div className="hidden sm:inline-flex items-center gap-1.5 text-espresso-600 dark:text-slate-400 font-medium">
-            <Database className="w-3.5 h-3.5 text-culinary-600 dark:text-emerald-400" />
+          <div className="hidden sm:inline-flex items-center gap-1.5 text-stone-400 font-medium">
+            <Database className="w-3.5 h-3.5 text-culinary-400" />
             <span>Local SQLite Database</span>
           </div>
         </div>
@@ -66,11 +66,11 @@ export function Footer() {
           {/* Shortcuts Trigger */}
           <button
             onClick={() => setShowShortcuts(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-espresso-700 dark:text-slate-200 bg-artisan-canvas dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 border border-artisan-border dark:border-slate-800 hover:border-espresso-300 dark:hover:border-slate-700 transition-all cursor-pointer active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-stone-300 bg-espresso-800 hover:bg-espresso-700 border border-espresso-700 transition-all cursor-pointer active:scale-[0.98]"
             title="Keyboard Shortcuts (?)"
             type="button"
           >
-            <kbd className="font-mono bg-artisan-surface dark:bg-slate-800 border border-artisan-border dark:border-slate-700 px-1.5 py-0.2 rounded text-[10px] text-espresso-700 dark:text-slate-300 font-bold">
+            <kbd className="font-mono bg-espresso-900 border border-espresso-700 px-1.5 py-0.2 rounded text-[10px] text-stone-400 font-bold">
               ⌘
             </kbd>
             <span>Shortcuts</span>
@@ -79,10 +79,10 @@ export function Footer() {
           {/* Yield Conversion Reference */}
           <button
             onClick={() => setShowYieldTables(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-espresso-700 dark:text-slate-200 bg-artisan-canvas dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 border border-artisan-border dark:border-slate-800 hover:border-espresso-300 dark:hover:border-slate-700 transition-all cursor-pointer active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-stone-300 bg-espresso-800 hover:bg-espresso-700 border border-espresso-700 transition-all cursor-pointer active:scale-[0.98]"
             type="button"
           >
-            <Scale className="w-3.5 h-3.5 text-culinary-600 dark:text-emerald-400" />
+            <Scale className="w-3.5 h-3.5 text-culinary-400" />
             <span className="hidden sm:inline">Yield Conversion Tables</span>
             <span className="sm:hidden">Yields</span>
           </button>
@@ -98,43 +98,43 @@ export function Footer() {
           size="md"
         >
           <div className="space-y-2.5 py-2 text-xs">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800">
               <span className="font-semibold text-espresso-850 dark:text-slate-200">
                 Pantry Quick Search
               </span>
-              <kbd className="px-2.5 py-1 rounded-lg bg-artisan-surface dark:bg-slate-800 border border-artisan-border dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
+              <kbd className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-stoneBorder dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
                 ⌘K
               </kbd>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800">
               <span className="font-semibold text-espresso-850 dark:text-slate-200">
                 Close Active Modal / Drawer
               </span>
-              <kbd className="px-2.5 py-1 rounded-lg bg-artisan-surface dark:bg-slate-800 border border-artisan-border dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
+              <kbd className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-stoneBorder dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
                 Esc
               </kbd>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800">
               <span className="font-semibold text-espresso-850 dark:text-slate-200">
                 Form Field Navigation
               </span>
-              <kbd className="px-2.5 py-1 rounded-lg bg-artisan-surface dark:bg-slate-800 border border-artisan-border dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
+              <kbd className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-stoneBorder dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
                 Tab / Shift+Tab
               </kbd>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800">
               <span className="font-semibold text-espresso-850 dark:text-slate-200">
                 Toggle Shortcuts Modal
               </span>
-              <kbd className="px-2.5 py-1 rounded-lg bg-artisan-surface dark:bg-slate-800 border border-artisan-border dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
+              <kbd className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-stoneBorder dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
                 ?
               </kbd>
             </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800">
               <span className="font-semibold text-espresso-850 dark:text-slate-200">
                 Submit Modal / Confirm Action
               </span>
-              <kbd className="px-2.5 py-1 rounded-lg bg-artisan-surface dark:bg-slate-800 border border-artisan-border dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
+              <kbd className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-stoneBorder dark:border-slate-700 font-mono text-[11px] font-bold text-espresso-700 dark:text-slate-200 shadow-2xs">
                 Enter
               </kbd>
             </div>
@@ -155,7 +155,7 @@ export function Footer() {
               Standard commercial volume-to-weight conversions applied in BakeIQ recipe formulas and UOM normalizers:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 font-mono">
-              <div className="p-3.5 rounded-2xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 space-y-1.5 shadow-2xs">
+              <div className="p-3.5 rounded-2xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 space-y-1.5 shadow-2xs">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-culinary-700 dark:text-emerald-400 block font-sans">
                   All-Purpose / Bread Flour
                 </span>
@@ -169,7 +169,7 @@ export function Footer() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 space-y-1.5 shadow-2xs">
+              <div className="p-3.5 rounded-2xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 space-y-1.5 shadow-2xs">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-caramel-700 dark:text-amber-400 block font-sans">
                   Unsalted Butter
                 </span>
@@ -183,7 +183,7 @@ export function Footer() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 space-y-1.5 shadow-2xs">
+              <div className="p-3.5 rounded-2xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 space-y-1.5 shadow-2xs">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-espresso-800 dark:text-slate-300 block font-sans">
                   Granulated Cane Sugar
                 </span>
@@ -197,7 +197,7 @@ export function Footer() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 space-y-1.5 shadow-2xs">
+              <div className="p-3.5 rounded-2xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 space-y-1.5 shadow-2xs">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-culinary-700 dark:text-emerald-400 block font-sans">
                   Fresh Whole Milk
                 </span>
@@ -211,7 +211,7 @@ export function Footer() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 space-y-1.5 shadow-2xs">
+              <div className="p-3.5 rounded-2xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 space-y-1.5 shadow-2xs">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-caramel-800 dark:text-amber-300 block font-sans">
                   Cocoa Powder
                 </span>
@@ -225,7 +225,7 @@ export function Footer() {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 space-y-1.5 shadow-2xs">
+              <div className="p-3.5 rounded-2xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 space-y-1.5 shadow-2xs">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-espresso-800 dark:text-slate-300 block font-sans">
                   Large Fresh Eggs
                 </span>

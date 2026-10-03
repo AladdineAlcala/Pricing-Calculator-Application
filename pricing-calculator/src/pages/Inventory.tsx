@@ -230,7 +230,7 @@ export default function Inventory() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-flour-100 dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
       <Header unpricedCount={unpricedCount} />
       <main className="flex-1 p-6 md:p-8 space-y-6 w-full">
         {/* Page Header */}
@@ -247,7 +247,7 @@ export default function Inventory() {
             <h1 className="text-2xl md:text-3xl font-extrabold text-espresso-900 dark:text-white tracking-tight mt-1">
               Inventory Ledger
             </h1>
-            <p className="text-xs md:text-sm text-espresso-500 dark:text-slate-400 mt-1">
+            <p className="text-xs md:text-sm text-espresso-500 dark:text-espresso-500 mt-1">
               {activeTab === "ingredients"
                 ? "Physical bulk ingredients decoupled from recipe margins with automatic inflation protection"
                 : "Bakery packaging materials, boxes, liners, and containers tracked in discrete units"}
@@ -258,7 +258,7 @@ export default function Inventory() {
             <button
               onClick={() => loadLedgers()}
               disabled={loading || packagingLoading}
-              className="p-2.5 rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#141b2c] text-espresso-600 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-2.5 rounded-xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#141b2c] text-espresso-600 dark:text-slate-300 hover:bg-flour-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title="Refresh ledger"
             >
               <RefreshCw className={`w-4 h-4 ${loading || packagingLoading ? "animate-spin" : ""}`} />
@@ -267,7 +267,7 @@ export default function Inventory() {
             {activeTab === "ingredients" ? (
               <button
                 onClick={() => handleOpenReceiveModal()}
-                className="px-4 py-2.5 rounded-xl bg-culinary-600 hover:bg-culinary-700 active:scale-[0.98] text-white font-bold text-xs shadow-artisan-glow flex items-center gap-2 transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-culinary-600 hover:bg-culinary-700 active:scale-[0.98] text-white font-bold text-xs shadow-sm flex items-center gap-2 transition-all cursor-pointer"
               >
                 <Truck className="w-4 h-4" />
                 <span>+ Receive Delivery</span>
@@ -285,7 +285,7 @@ export default function Inventory() {
         </div>
 
         {/* ── Seamless Segmented Navigation Tabs ── */}
-        <div className="flex items-center gap-1 p-1 bg-artisan-subtle dark:bg-slate-900/80 rounded-2xl border border-artisan-border dark:border-slate-800 w-fit">
+        <div className="flex items-center gap-1 p-1 bg-flour-100 dark:bg-slate-900/80 rounded-2xl border border-stoneBorder dark:border-slate-800 w-fit">
           <button
             type="button"
             onClick={() => {
@@ -295,8 +295,8 @@ export default function Inventory() {
             }}
             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "ingredients"
-                ? "bg-artisan-surface dark:bg-slate-800 text-espresso-900 dark:text-white shadow-artisan-card"
-                : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-slate-200"
+                ? "bg-white dark:bg-slate-800 text-espresso-900 dark:text-white shadow-sm"
+                : "text-espresso-500 dark:text-espresso-500 hover:text-espresso-800 dark:hover:text-slate-200"
             }`}
           >
             <Layers className="w-4 h-4 text-culinary-600 dark:text-culinary-400" />
@@ -315,8 +315,8 @@ export default function Inventory() {
             }}
             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === "packaging"
-                ? "bg-artisan-surface dark:bg-slate-800 text-espresso-900 dark:text-white shadow-artisan-card"
-                : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-slate-200"
+                ? "bg-white dark:bg-slate-800 text-espresso-900 dark:text-white shadow-sm"
+                : "text-espresso-500 dark:text-espresso-500 hover:text-espresso-800 dark:hover:text-slate-200"
             }`}
           >
             <Box className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -362,9 +362,9 @@ export default function Inventory() {
         {/* Executive KPI Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* KPI 1: Total Inventory Value */}
-          <div className="p-5 rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0f1422] shadow-artisan-subtle flex flex-col justify-between">
+          <div className="p-5 rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0f1422] shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-espresso-500 dark:text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-bold text-espresso-500 dark:text-espresso-500 uppercase tracking-wider">
                 {activeTab === "ingredients" ? "Ingredient Value" : "Packaging Value"}
               </span>
               <div
@@ -385,7 +385,7 @@ export default function Inventory() {
                   maximumFractionDigits: 2,
                 })}
               </div>
-              <p className="text-[11px] text-espresso-400 dark:text-slate-500 mt-1">
+              <p className="text-[11px] text-espresso-400 dark:text-espresso-600 mt-1">
                 {activeTab === "ingredients"
                   ? "Capital tied up in raw bakery stock"
                   : "Capital invested in containers, boxes, and liners"}
@@ -395,14 +395,14 @@ export default function Inventory() {
 
           {/* KPI 2: Low Stock Alerts */}
           <div
-            className={`p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-artisan-subtle ${
+            className={`p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-sm ${
               activeKpis.lowStockCount > 0
                 ? "border-rose-300 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30"
-                : "border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0f1422]"
+                : "border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0f1422]"
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-espresso-500 dark:text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-bold text-espresso-500 dark:text-espresso-500 uppercase tracking-wider">
                 Low Stock Alerts
               </span>
               <div
@@ -425,7 +425,7 @@ export default function Inventory() {
               >
                 {activeKpis.lowStockCount}
               </div>
-              <p className="text-[11px] text-espresso-400 dark:text-slate-500 mt-1">
+              <p className="text-[11px] text-espresso-400 dark:text-espresso-600 mt-1">
                 {activeKpis.lowStockCount > 0
                   ? "Items at or below reorder floor"
                   : "All tracked inventory levels healthy"}
@@ -434,12 +434,12 @@ export default function Inventory() {
           </div>
 
           {/* KPI 3: Tracked Items */}
-          <div className="p-5 rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0f1422] shadow-artisan-subtle flex flex-col justify-between">
+          <div className="p-5 rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0f1422] shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-espresso-500 dark:text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-bold text-espresso-500 dark:text-espresso-500 uppercase tracking-wider">
                 {activeTab === "ingredients" ? "Tracked Ingredients" : "Tracked Packaging"}
               </span>
-              <div className="w-8 h-8 rounded-xl bg-artisan-subtle dark:bg-slate-800 flex items-center justify-center text-espresso-600 dark:text-slate-300">
+              <div className="w-8 h-8 rounded-xl bg-flour-100 dark:bg-slate-800 flex items-center justify-center text-espresso-600 dark:text-slate-300">
                 {activeTab === "ingredients" ? (
                   <Boxes className="w-4 h-4" />
                 ) : (
@@ -451,7 +451,7 @@ export default function Inventory() {
               <div className="text-2xl font-black text-espresso-900 dark:text-white font-mono tabular-nums tracking-tight">
                 {activeKpis.totalCount}
               </div>
-              <p className="text-[11px] text-espresso-400 dark:text-slate-500 mt-1">
+              <p className="text-[11px] text-espresso-400 dark:text-espresso-600 mt-1">
                 {activeTab === "ingredients"
                   ? "Active commodities in bakery catalog"
                   : "Active packaging SKU configurations"}
@@ -460,9 +460,9 @@ export default function Inventory() {
           </div>
 
           {/* KPI 4: Invariant Guard */}
-          <div className="p-5 rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0f1422] shadow-artisan-subtle flex flex-col justify-between">
+          <div className="p-5 rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0f1422] shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-espresso-500 dark:text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-bold text-espresso-500 dark:text-espresso-500 uppercase tracking-wider">
                 {activeTab === "ingredients" ? "LRC Margin Guard" : "Perpetual Audit"}
               </span>
               <div className="w-8 h-8 rounded-xl bg-culinary-100 dark:bg-culinary-950/80 text-culinary-700 dark:text-culinary-400 flex items-center justify-center">
@@ -474,7 +474,7 @@ export default function Inventory() {
                 <span className="w-2 h-2 rounded-full bg-culinary-500 animate-pulse" />
                 <span>{activeTab === "ingredients" ? "Replacement Cost" : "Atomic Ledger"}</span>
               </div>
-              <p className="text-[11px] text-espresso-400 dark:text-slate-500 mt-1">
+              <p className="text-[11px] text-espresso-400 dark:text-espresso-600 mt-1">
                 {activeTab === "ingredients"
                   ? "Zero margin lag on supplier price hikes"
                   : "Audit trails on stock-in & production stock-out"}
@@ -484,10 +484,10 @@ export default function Inventory() {
         </div>
 
         {/* Filter and Search Controls */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0f1422]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0f1422]">
           {/* Search Box */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-espresso-400 dark:text-slate-500 pointer-events-none" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-espresso-400 dark:text-espresso-600 pointer-events-none" />
             <input
               type="text"
               placeholder={
@@ -497,7 +497,7 @@ export default function Inventory() {
               }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas dark:bg-[#141b2c] text-espresso-900 dark:text-white placeholder:text-espresso-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-culinary-500"
+              className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100 dark:bg-[#141b2c] text-espresso-900 dark:text-white placeholder:text-espresso-400 dark:placeholder:text-espresso-600 focus:outline-none focus:border-culinary-500"
             />
           </div>
 
@@ -510,7 +510,7 @@ export default function Inventory() {
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   pkgTypeFilter === "all"
                     ? "bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200"
-                    : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-white"
+                    : "text-espresso-500 dark:text-espresso-500 hover:text-espresso-800 dark:hover:text-white"
                 }`}
               >
                 All Types
@@ -523,7 +523,7 @@ export default function Inventory() {
                   className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                     pkgTypeFilter === type
                       ? "bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200"
-                      : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-white"
+                      : "text-espresso-500 dark:text-espresso-500 hover:text-espresso-800 dark:hover:text-white"
                   }`}
                 >
                   {type}
@@ -533,13 +533,13 @@ export default function Inventory() {
           )}
 
           {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1 bg-artisan-canvas dark:bg-[#141b2c] p-1 rounded-xl border border-artisan-border dark:border-slate-800 shrink-0">
+          <div className="flex items-center gap-1 bg-flour-100 dark:bg-[#141b2c] p-1 rounded-xl border border-stoneBorder dark:border-slate-800 shrink-0">
             <button
               onClick={() => setStatusFilter("all")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 statusFilter === "all"
-                  ? "bg-artisan-surface dark:bg-slate-800 text-espresso-900 dark:text-white shadow-xs"
-                  : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-white"
+                  ? "bg-white dark:bg-slate-800 text-espresso-900 dark:text-white shadow-xs"
+                  : "text-espresso-500 dark:text-espresso-500 hover:text-espresso-800 dark:hover:text-white"
               }`}
             >
               All ({activeTab === "ingredients" ? ledger.length : packagingLedger.length})
@@ -549,7 +549,7 @@ export default function Inventory() {
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 statusFilter === "low"
                   ? "bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 shadow-xs font-bold"
-                  : "text-espresso-500 dark:text-slate-400 hover:text-rose-600"
+                  : "text-espresso-500 dark:text-espresso-500 hover:text-rose-600"
               }`}
             >
               <span>⚠️ Low Stock</span>
@@ -561,8 +561,8 @@ export default function Inventory() {
               onClick={() => setStatusFilter("healthy")}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 statusFilter === "healthy"
-                  ? "bg-artisan-surface dark:bg-slate-800 text-espresso-900 dark:text-white shadow-xs"
-                  : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-white"
+                  ? "bg-white dark:bg-slate-800 text-espresso-900 dark:text-white shadow-xs"
+                  : "text-espresso-500 dark:text-espresso-500 hover:text-espresso-800 dark:hover:text-white"
               }`}
             >
               Healthy
@@ -572,21 +572,21 @@ export default function Inventory() {
 
         {/* ── Data Grid: Ingredients or Packaging ── */}
         {activeTab === "ingredients" ? (
-          <div className="rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0f1422] shadow-artisan-subtle overflow-hidden">
+          <div className="rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0f1422] shadow-sm overflow-hidden">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3 text-espresso-400 dark:text-slate-500">
+              <div className="flex flex-col items-center justify-center py-20 gap-3 text-espresso-400 dark:text-espresso-600">
                 <Spinner className="w-8 h-8 text-culinary-600" />
                 <span className="text-xs font-semibold">Loading perpetual inventory ledger...</span>
               </div>
             ) : displayedIngredientItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="w-12 h-12 rounded-2xl bg-artisan-subtle dark:bg-slate-800 flex items-center justify-center text-espresso-400 dark:text-slate-500 mb-3">
+                <div className="w-12 h-12 rounded-2xl bg-flour-100 dark:bg-slate-800 flex items-center justify-center text-espresso-400 dark:text-espresso-600 mb-3">
                   <Package className="w-6 h-6" />
                 </div>
                 <h3 className="text-sm font-bold text-espresso-800 dark:text-slate-200">
                   No inventory records found
                 </h3>
-                <p className="text-xs text-espresso-400 dark:text-slate-500 max-w-sm mt-1">
+                <p className="text-xs text-espresso-400 dark:text-espresso-600 max-w-sm mt-1">
                   {search
                     ? "No items match your search filter."
                     : "Start by receiving deliveries to track perpetual stock."}
@@ -603,7 +603,7 @@ export default function Inventory() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-[#141b2c]/50 text-espresso-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                    <tr className="border-b border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-[#141b2c]/50 text-espresso-500 dark:text-espresso-500 font-bold uppercase tracking-wider">
                       <th className="py-3 px-4">
                         <button
                           onClick={() => {
@@ -628,9 +628,9 @@ export default function Inventory() {
                           <ArrowUpDown className="w-3 h-3" />
                         </button>
                       </th>
-                      <th className="py-3 px-4">Reorder Floor</th>
-                      <th className="py-3 px-4">Active LRC Price</th>
-                      <th className="py-3 px-4">
+                      <th className="py-3 px-4 text-right">Reorder Floor</th>
+                      <th className="py-3 px-4 text-right">Active LRC Price</th>
+                      <th className="py-3 px-4 text-right">
                         <button
                           onClick={() => {
                             setSortBy("value");
@@ -657,14 +657,14 @@ export default function Inventory() {
                       <th className="py-3 px-4 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-artisan-border dark:divide-slate-800/60">
+                  <tbody className="divide-y divide-stoneBorder dark:divide-slate-800/60">
                     {displayedIngredientItems.map((item) => (
                       <tr
                         key={item.ingredient_id}
                         className={`transition-colors ${
                           item.is_low_stock
                             ? "bg-rose-50/70 dark:bg-rose-950/25 hover:bg-rose-100/70 dark:hover:bg-rose-900/30"
-                            : "hover:bg-artisan-canvas/50 dark:hover:bg-[#141b2c]/50"
+                            : "hover:bg-flour-100/50 dark:hover:bg-[#141b2c]/50"
                         }`}
                       >
                         <td className="py-3 px-4">
@@ -672,13 +672,13 @@ export default function Inventory() {
                             <span className="font-bold text-espresso-900 dark:text-white text-sm">
                               {item.name}
                             </span>
-                            <span className="text-[11px] text-espresso-400 dark:text-slate-400 font-mono">
+                            <span className="text-[11px] text-espresso-400 dark:text-espresso-500 font-mono">
                               Bulk Packaging: {item.purchase_unit}
                             </span>
                           </div>
                         </td>
 
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 text-right">
                           <div className="flex items-baseline gap-1.5 font-mono">
                             <span
                               className={`text-sm font-bold ${
@@ -689,13 +689,13 @@ export default function Inventory() {
                             >
                               {item.current_stock_qty.toFixed(2)}
                             </span>
-                            <span className="text-[11px] text-espresso-400 dark:text-slate-500 font-sans">
+                            <span className="text-[11px] text-espresso-400 dark:text-espresso-600 font-sans">
                               {item.purchase_unit}
                             </span>
                           </div>
                         </td>
 
-                        <td className="py-3 px-4 font-mono text-espresso-600 dark:text-slate-300">
+                        <td className="py-3 px-4 font-mono text-espresso-600 text-right">
                           {item.reorder_threshold.toFixed(2)} {item.purchase_unit}
                         </td>
 
@@ -703,12 +703,12 @@ export default function Inventory() {
                           <span className="font-mono font-semibold text-espresso-900 dark:text-white">
                             {currency}{item.purchase_price.toFixed(2)}
                           </span>
-                          <span className="text-[10px] text-espresso-400 dark:text-slate-500 block">
+                          <span className="text-[10px] text-espresso-400 dark:text-espresso-600 block">
                             per {item.purchase_unit}
                           </span>
                         </td>
 
-                        <td className="py-3 px-4 font-mono font-bold text-espresso-900 dark:text-white">
+                        <td className="py-3 px-4 font-mono font-bold text-espresso-800 text-right">
                           {currency}{item.total_value.toFixed(2)}
                         </td>
 
@@ -720,7 +720,7 @@ export default function Inventory() {
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-culinary-600" />
                               <span>✓ In Stock</span>
                             </span>
                           )}
@@ -748,7 +748,7 @@ export default function Inventory() {
             )}
 
             {!loading && displayedIngredientItems.length > 0 && (
-              <div className="p-4 border-t border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-[#141b2c]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-espresso-500 dark:text-slate-400">
+              <div className="p-4 border-t border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-[#141b2c]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-espresso-500 dark:text-espresso-500">
                 <div className="flex items-center gap-3 flex-wrap">
                   <span>
                     Showing <strong className="text-espresso-900 dark:text-white font-bold">{displayedIngredientItems.length}</strong> of{" "}
@@ -768,9 +768,9 @@ export default function Inventory() {
           </div>
         ) : (
           /* ── Packaging Materials Ledger Table ── */
-          <div className="rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0f1422] shadow-artisan-subtle overflow-hidden">
+          <div className="rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0f1422] shadow-sm overflow-hidden">
             {packagingLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3 text-espresso-400 dark:text-slate-500">
+              <div className="flex flex-col items-center justify-center py-20 gap-3 text-espresso-400 dark:text-espresso-600">
                 <Spinner className="w-8 h-8 text-amber-600" />
                 <span className="text-xs font-semibold">Loading packaging materials ledger...</span>
               </div>
@@ -782,7 +782,7 @@ export default function Inventory() {
                 <h3 className="text-sm font-bold text-espresso-800 dark:text-slate-200">
                   No packaging materials found
                 </h3>
-                <p className="text-xs text-espresso-400 dark:text-slate-500 max-w-sm mt-1">
+                <p className="text-xs text-espresso-400 dark:text-espresso-600 max-w-sm mt-1">
                   {search
                     ? "No packaging materials match your search."
                     : "Track containers, clamshells, boxes, and liners in discrete inventory units."}
@@ -799,7 +799,7 @@ export default function Inventory() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-[#141b2c]/50 text-espresso-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                    <tr className="border-b border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-[#141b2c]/50 text-espresso-500 dark:text-espresso-500 font-bold uppercase tracking-wider">
                       <th className="py-3 px-4">
                         <button
                           onClick={() => {
@@ -825,9 +825,9 @@ export default function Inventory() {
                           <ArrowUpDown className="w-3 h-3" />
                         </button>
                       </th>
-                      <th className="py-3 px-4">Reorder Floor</th>
-                      <th className="py-3 px-4">Unit Cost</th>
-                      <th className="py-3 px-4">
+                      <th className="py-3 px-4 text-right">Reorder Floor</th>
+                      <th className="py-3 px-4 text-right">Unit Cost</th>
+                      <th className="py-3 px-4 text-right">
                         <button
                           onClick={() => {
                             setSortBy("value");
@@ -854,14 +854,14 @@ export default function Inventory() {
                       <th className="py-3 px-4 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-artisan-border dark:divide-slate-800/60">
+                  <tbody className="divide-y divide-stoneBorder dark:divide-slate-800/60">
                     {displayedPackagingItems.map((item) => (
                       <tr
                         key={item.packaging_id}
                         className={`transition-colors ${
                           item.is_low_stock
                             ? "bg-amber-50/60 dark:bg-amber-950/20 hover:bg-amber-100/60 dark:hover:bg-amber-900/30"
-                            : "hover:bg-artisan-canvas/50 dark:hover:bg-[#141b2c]/50"
+                            : "hover:bg-flour-100/50 dark:hover:bg-[#141b2c]/50"
                         }`}
                       >
                         {/* Name & Code */}
@@ -870,7 +870,7 @@ export default function Inventory() {
                             <span className="font-bold text-espresso-900 dark:text-white text-sm">
                               {item.name}
                             </span>
-                            <span className="text-[11px] text-espresso-400 dark:text-slate-400 font-mono">
+                            <span className="text-[11px] text-espresso-400 dark:text-espresso-500 font-mono">
                               SKU: {item.packaging_code}
                             </span>
                           </div>
@@ -905,7 +905,7 @@ export default function Inventory() {
                               >
                                 {item.current_stock_qty}
                               </span>
-                              <span className="text-[11px] text-espresso-400 dark:text-slate-400 font-sans">
+                              <span className="text-[11px] text-espresso-400 dark:text-espresso-500 font-sans">
                                 {item.unit}s
                               </span>
                             </div>
@@ -913,22 +913,22 @@ export default function Inventory() {
                         </td>
 
                         {/* Reorder Floor */}
-                        <td className="py-3 px-4 font-mono text-espresso-600 dark:text-slate-300">
+                        <td className="py-3 px-4 font-mono text-espresso-600 text-right">
                           {item.reorder_threshold} {item.unit}s
                         </td>
 
                         {/* Unit Cost */}
-                        <td className="py-3 px-4">
-                          <span className="font-mono font-semibold text-espresso-900 dark:text-white">
+                        <td className="py-3 px-4 text-right">
+                          <span className="font-mono font-semibold text-espresso-900">
                             {currency}{item.current_unit_cost.toFixed(2)}
                           </span>
-                          <span className="text-[10px] text-espresso-400 dark:text-slate-500 block">
+                          <span className="text-[10px] text-espresso-400 block">
                             per {item.unit}
                           </span>
                         </td>
 
                         {/* Total Asset Value */}
-                        <td className="py-3 px-4 font-mono font-bold text-amber-700 dark:text-amber-400">
+                        <td className="py-3 px-4 font-mono font-bold text-amber-700 text-right">
                           {currency}{item.total_value.toFixed(2)}
                         </td>
 
@@ -941,7 +941,7 @@ export default function Inventory() {
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-culinary-600" />
                               <span>✓ Healthy Stock</span>
                             </span>
                           )}
@@ -966,7 +966,7 @@ export default function Inventory() {
             )}
 
             {!packagingLoading && displayedPackagingItems.length > 0 && (
-              <div className="p-4 border-t border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-[#141b2c]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-espresso-500 dark:text-slate-400">
+              <div className="p-4 border-t border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-[#141b2c]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-espresso-500 dark:text-espresso-500">
                 <div className="flex items-center gap-3 flex-wrap">
                   <span>
                     Showing <strong className="text-espresso-900 dark:text-white font-bold">{displayedPackagingItems.length}</strong> of{" "}

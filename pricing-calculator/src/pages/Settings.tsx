@@ -35,14 +35,14 @@ export default function Settings() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-flour-100 dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
       <Header />
       <div className="flex-1 p-6 md:p-8 space-y-6 max-w-4xl">
         <div className="mb-2">
           <h1 className="text-3xl font-extrabold tracking-tight text-espresso-900 dark:text-white">
             Settings &amp; Configuration
           </h1>
-          <p className="text-sm text-espresso-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-sm text-espresso-500 dark:text-espresso-500 mt-1 max-w-2xl leading-relaxed">
             Configure application display preferences, active currency symbols, and database backup routines.
           </p>
         </div>
@@ -58,17 +58,17 @@ export default function Settings() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-espresso-850 dark:text-slate-200">Interface Theme</p>
-                  <p className="text-xs text-espresso-400 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-espresso-400 dark:text-espresso-500 mt-0.5">
                     Select between Luminous Light and Nocturne Dark themes
                   </p>
                 </div>
-                <div className="flex rounded-xl border border-artisan-border dark:border-slate-800 overflow-hidden bg-artisan-canvas dark:bg-[#141b2c] p-1 shrink-0">
+                <div className="flex rounded-xl border border-stoneBorder dark:border-slate-800 overflow-hidden bg-flour-100 dark:bg-[#141b2c] p-1 shrink-0">
                   <button
                     onClick={() => setTheme("light")}
                     className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                       s.theme === "light"
-                        ? "bg-white dark:bg-slate-800 text-espresso-900 dark:text-white shadow-artisan-subtle"
-                        : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-slate-200"
+                        ? "bg-white dark:bg-slate-800 text-espresso-900 dark:text-white shadow-sm"
+                        : "text-espresso-500 dark:text-espresso-500 hover:text-espresso-800 dark:hover:text-slate-200"
                     }`}
                     id="theme-light-btn"
                   >
@@ -78,8 +78,8 @@ export default function Settings() {
                     onClick={() => setTheme("dark")}
                     className={`px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                       s.theme === "dark"
-                        ? "bg-slate-800 text-white shadow-artisan-subtle"
-                        : "text-espresso-500 dark:text-slate-400 hover:text-espresso-800 dark:hover:text-slate-200"
+                        ? "bg-slate-800 text-white shadow-sm"
+                        : "text-espresso-500 dark:text-espresso-500 hover:text-espresso-800 dark:hover:text-slate-200"
                     }`}
                     id="theme-dark-btn"
                   >
@@ -109,8 +109,8 @@ export default function Settings() {
                     id="currency-symbol"
                   />
                 </div>
-                <div className="sm:mt-5 rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-subtle dark:bg-[#141b2c] px-5 py-2.5 shrink-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-espresso-400 dark:text-slate-400">Preview</p>
+                <div className="sm:mt-5 rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100 dark:bg-[#141b2c] px-5 py-2.5 shrink-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-espresso-400 dark:text-espresso-500">Preview</p>
                   <p className="text-xl font-black font-mono text-culinary-600 dark:text-emerald-400 mt-0.5">
                     {s.currency_symbol}1,234.56
                   </p>
@@ -147,7 +147,7 @@ export default function Settings() {
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                   <div>
-                    <p className="text-xs text-espresso-500 dark:text-slate-400">
+                    <p className="text-xs text-espresso-500 dark:text-espresso-500">
                       Last backup:{" "}
                       <span className="font-semibold text-espresso-900 dark:text-slate-200">
                         {s.last_backup
@@ -155,7 +155,7 @@ export default function Settings() {
                           : "Never"}
                       </span>
                     </p>
-                    <p className="text-[11px] text-espresso-400 dark:text-slate-500 mt-0.5">
+                    <p className="text-[11px] text-espresso-400 dark:text-espresso-600 mt-0.5">
                       Creates a timestamped snapshot of your SQLite database
                     </p>
                   </div>
@@ -187,24 +187,24 @@ export default function Settings() {
               <h2 className="text-sm font-bold text-espresso-900 dark:text-white">About BakeIQ Engine</h2>
             </CardHeader>
             <CardBody>
-              <div className="text-xs flex flex-col gap-2 text-espresso-600 dark:text-slate-400">
-                <div className="flex justify-between py-1.5 border-b border-artisan-border/60 dark:border-slate-800/60">
+              <div className="text-xs flex flex-col gap-2 text-espresso-600 dark:text-espresso-500">
+                <div className="flex justify-between py-1.5 border-b border-stoneBorder/60 dark:border-slate-800/60">
                   <span>Application</span>
                   <span className="font-bold text-espresso-900 dark:text-white">
                     BakeIQ Pricing Calculator
                   </span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-artisan-border/60 dark:border-slate-800/60">
+                <div className="flex justify-between py-1.5 border-b border-stoneBorder/60 dark:border-slate-800/60">
                   <span>Version</span>
                   <span className="font-mono font-semibold text-espresso-900 dark:text-white">v0.1.0</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-artisan-border/60 dark:border-slate-800/60">
+                <div className="flex justify-between py-1.5 border-b border-stoneBorder/60 dark:border-slate-800/60">
                   <span>Tech Stack</span>
                   <span className="font-medium text-espresso-900 dark:text-white">
                     Tauri v2 + React 19 + TypeScript + SQLite
                   </span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-artisan-border/60 dark:border-slate-800/60">
+                <div className="flex justify-between py-1.5 border-b border-stoneBorder/60 dark:border-slate-800/60">
                   <span>Architecture</span>
                   <span className="font-medium text-espresso-900 dark:text-white">Local-First Desktop Engine</span>
                 </div>

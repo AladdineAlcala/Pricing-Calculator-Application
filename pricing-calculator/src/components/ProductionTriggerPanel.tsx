@@ -60,7 +60,7 @@ export function ProductionTriggerPanel({
 
   return (
     <div
-      className="p-4 rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#121826] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4"
+      className="p-4 rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#121826] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4"
       data-purpose="production-trigger-panel"
     >
       {/* Left: Description & Info */}
@@ -86,7 +86,7 @@ export function ProductionTriggerPanel({
       {/* Right: Multiplier Controls & Trigger Button */}
       <div className="flex items-center gap-3 flex-wrap">
         {/* Preset Multipliers */}
-        <div className="flex items-center rounded-xl border border-artisan-border dark:border-slate-800 p-1 bg-artisan-canvas/50 dark:bg-[#141b2c]/50 text-xs">
+        <div className="flex items-center rounded-xl border border-stoneBorder dark:border-slate-800 p-1 bg-flour-100/50 dark:bg-[#141b2c]/50 text-xs">
           {PRESET_MULTIPLIERS.map((mult) => (
             <button
               key={mult}
@@ -118,7 +118,7 @@ export function ProductionTriggerPanel({
               const val = parseFloat(e.target.value);
               setBatches(isNaN(val) ? 0 : val);
             }}
-            className="w-16 px-2.5 py-1 text-xs font-bold font-mono rounded-lg border border-artisan-border dark:border-slate-800 bg-artisan-canvas dark:bg-[#141b2c] text-espresso-900 dark:text-white text-center focus:outline-none focus:border-culinary-500"
+            className="w-16 px-2.5 py-1 text-xs font-bold font-mono rounded-lg border border-stoneBorder dark:border-slate-800 bg-flour-100 dark:bg-[#141b2c] text-espresso-900 dark:text-white text-center focus:outline-none focus:border-culinary-500"
           />
         </div>
 
@@ -127,7 +127,7 @@ export function ProductionTriggerPanel({
           type="button"
           onClick={handleProduce}
           disabled={isProducing || disabled || batches <= 0}
-          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-culinary-600 hover:bg-culinary-700 active:scale-[0.98] rounded-xl shadow-artisan-glow transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-culinary-600 hover:bg-culinary-700 active:scale-[0.98] rounded-xl shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isProducing ? (
             <>

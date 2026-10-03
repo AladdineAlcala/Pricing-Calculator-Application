@@ -33,13 +33,13 @@ export function NotificationDetailModal({
       data-purpose="notification-detail-backdrop"
     >
       <div
-        className="relative w-full max-w-lg rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0c101a] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-lg rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0c101a] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
         data-purpose="notification-detail-modal"
       >
         {/* Modal Header */}
         <div
-          className={`p-6 border-b border-artisan-border dark:border-slate-800 flex items-start justify-between gap-4 ${
+          className={`p-6 border-b border-stoneBorder dark:border-slate-800 flex items-start justify-between gap-4 ${
             isAlert
               ? "bg-caramel-50/50 dark:bg-amber-950/20"
               : "bg-culinary-50/30 dark:bg-emerald-950/10"
@@ -71,7 +71,7 @@ export function NotificationDetailModal({
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-espresso-400 hover:text-espresso-700 dark:text-slate-400 dark:hover:text-white hover:bg-artisan-subtle dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-espresso-400 hover:text-espresso-700 dark:text-slate-400 dark:hover:text-white hover:bg-flour-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Close and dismiss"
             aria-label="Close and dismiss"
             type="button"
@@ -96,7 +96,7 @@ export function NotificationDetailModal({
               <span className="text-[10px] font-bold uppercase tracking-wider text-espresso-400 dark:text-slate-500">
                 Operational Context &amp; Details
               </span>
-              <div className="p-3.5 rounded-xl bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 text-xs text-espresso-700 dark:text-slate-300 leading-relaxed space-y-1 shadow-2xs">
+              <div className="p-3.5 rounded-xl bg-flour-100 dark:bg-[#141b2c] border border-stoneBorder dark:border-slate-800 text-xs text-espresso-700 dark:text-slate-300 leading-relaxed space-y-1 shadow-2xs">
                 <p>{notification.details}</p>
               </div>
             </div>
@@ -104,7 +104,7 @@ export function NotificationDetailModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 sm:p-5 border-t border-artisan-border dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-artisan-canvas/40 dark:bg-[#0c101a]">
+        <div className="p-4 sm:p-5 border-t border-stoneBorder dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-flour-100/40 dark:bg-[#0c101a]">
           <span className="text-[11px] text-espresso-400 dark:text-slate-500 italic">
             Closing automatically removes this alert from unread lists.
           </span>
@@ -112,7 +112,7 @@ export function NotificationDetailModal({
           <div className="flex items-center gap-2 justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-300 bg-artisan-surface dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 border border-artisan-border dark:border-slate-800 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-300 bg-white dark:bg-[#141b2c] hover:bg-flour-100 dark:hover:bg-slate-800 border border-stoneBorder dark:border-slate-800 rounded-xl transition-colors cursor-pointer"
               type="button"
             >
               Acknowledge &amp; Close
@@ -126,7 +126,7 @@ export function NotificationDetailModal({
                   }
                   onClose();
                 }}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white rounded-xl shadow-artisan-glow transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white rounded-xl shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer ${
                   isAlert
                     ? "bg-caramel-600 hover:bg-caramel-700"
                     : "bg-culinary-600 hover:bg-culinary-700"

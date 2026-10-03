@@ -131,11 +131,11 @@ export function ReceiveDeliveryModal({
       onClick={onClose}
     >
       <div
-        className="relative z-10 w-full max-w-xl rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0f1422] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative z-10 w-full max-w-xl rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0f1422] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-[#141b2c]/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-[#141b2c]/50">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-culinary-100 dark:bg-culinary-950/80 border border-culinary-200 dark:border-culinary-800/80 flex items-center justify-center text-culinary-700 dark:text-culinary-400">
               <Truck className="w-5 h-5" />
@@ -151,7 +151,7 @@ export function ReceiveDeliveryModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-espresso-400 hover:text-espresso-700 dark:text-slate-400 dark:hover:text-white hover:bg-artisan-subtle dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-espresso-400 hover:text-espresso-700 dark:text-slate-400 dark:hover:text-white hover:bg-flour-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -186,11 +186,11 @@ export function ReceiveDeliveryModal({
                     placeholder="Search ingredient by name or unit..."
                     value={searchFilter}
                     onChange={(e) => setSearchFilter(e.target.value)}
-                    className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas dark:bg-[#141b2c] text-espresso-900 dark:text-white focus:outline-none focus:border-culinary-500 transition-colors"
+                    className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100 dark:bg-[#141b2c] text-espresso-900 dark:text-white focus:outline-none focus:border-culinary-500 transition-colors"
                   />
                 </div>
 
-                <div className="max-h-40 overflow-y-auto rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas/30 dark:bg-[#141b2c]/30 divide-y divide-artisan-border dark:divide-slate-800/60">
+                <div className="max-h-40 overflow-y-auto rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100/30 dark:bg-[#141b2c]/30 divide-y divide-stoneBorder dark:divide-slate-800/60">
                   {filteredIngredients.length === 0 ? (
                     <div className="p-3 text-center text-xs text-espresso-400 dark:text-slate-500">
                       No matching ingredients found
@@ -206,7 +206,7 @@ export function ReceiveDeliveryModal({
                           className={`w-full px-3.5 py-2.5 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
                             isSelected
                               ? "bg-culinary-50 dark:bg-culinary-950/60 text-culinary-900 dark:text-culinary-200 font-semibold"
-                              : "hover:bg-artisan-subtle dark:hover:bg-slate-800/60 text-espresso-800 dark:text-slate-200"
+                              : "hover:bg-flour-100 dark:hover:bg-slate-800/60 text-espresso-800 dark:text-slate-200"
                           }`}
                         >
                           <div className="flex flex-col">
@@ -216,7 +216,7 @@ export function ReceiveDeliveryModal({
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-artisan-subtle dark:bg-slate-800 text-espresso-700 dark:text-slate-300">
+                            <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-flour-100 dark:bg-slate-800 text-espresso-700 dark:text-slate-300">
                               Stock: {ing.current_stock_qty || 0}
                             </span>
                             {isSelected && <Check className="w-4 h-4 text-culinary-600 dark:text-culinary-400" />}
@@ -232,7 +232,7 @@ export function ReceiveDeliveryModal({
 
           {/* Active Selection Details Card */}
           {selectedIngredient && (
-            <div className="p-3 rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-[#141b2c]/50 flex items-center justify-between text-xs">
+            <div className="p-3 rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-[#141b2c]/50 flex items-center justify-between text-xs">
               <div>
                 <span className="text-espresso-400 dark:text-slate-400">Target Item:</span>{" "}
                 <span className="font-bold text-espresso-900 dark:text-white">
@@ -271,7 +271,7 @@ export function ReceiveDeliveryModal({
                   placeholder="0.00"
                   value={addedQty}
                   onChange={(e) => setAddedQty(e.target.value)}
-                  className="w-full pl-3.5 pr-20 py-2.5 text-sm font-semibold rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas dark:bg-[#141b2c] text-espresso-900 dark:text-white focus:outline-none focus:border-culinary-500 focus:ring-4 focus:ring-culinary-500/10 font-mono"
+                  className="w-full pl-3.5 pr-20 py-2.5 text-sm font-semibold rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100 dark:bg-[#141b2c] text-espresso-900 dark:text-white focus:outline-none focus:border-culinary-500 focus:ring-4 focus:ring-culinary-500/10 font-mono"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-espresso-400 dark:text-slate-500 pointer-events-none truncate max-w-[70px]">
                   {selectedIngredient ? selectedIngredient.purchase_unit : "units"}
@@ -298,7 +298,7 @@ export function ReceiveDeliveryModal({
                   placeholder="0.00"
                   value={newInvoicePrice}
                   onChange={(e) => setNewInvoicePrice(e.target.value)}
-                  className="w-full pl-8 pr-3.5 py-2.5 text-sm font-semibold rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas dark:bg-[#141b2c] text-espresso-900 dark:text-white focus:outline-none focus:border-culinary-500 focus:ring-4 focus:ring-culinary-500/10 font-mono"
+                  className="w-full pl-8 pr-3.5 py-2.5 text-sm font-semibold rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100 dark:bg-[#141b2c] text-espresso-900 dark:text-white focus:outline-none focus:border-culinary-500 focus:ring-4 focus:ring-culinary-500/10 font-mono"
                 />
               </div>
               <p className="text-[11px] text-espresso-400 dark:text-slate-500">
@@ -336,18 +336,18 @@ export function ReceiveDeliveryModal({
           )}
 
           {/* Modal Footer Actions */}
-          <div className="pt-3 border-t border-artisan-border dark:border-slate-800 flex items-center justify-end gap-3">
+          <div className="pt-3 border-t border-stoneBorder dark:border-slate-800 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-300 hover:bg-flour-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !selectedId || !addedQty}
-              className="px-5 py-2 text-xs font-bold text-white bg-culinary-600 hover:bg-culinary-700 active:scale-[0.98] rounded-xl shadow-artisan-glow transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2 text-xs font-bold text-white bg-culinary-600 hover:bg-culinary-700 active:scale-[0.98] rounded-xl shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

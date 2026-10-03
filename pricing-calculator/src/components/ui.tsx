@@ -14,15 +14,15 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    "bg-culinary-600 hover:bg-culinary-700 text-white font-bold shadow-artisan-glow hover:scale-[1.01] active:scale-[0.99]",
+    "bg-culinary-600 hover:bg-culinary-700 text-white font-bold shadow-sm hover:scale-[1.01] active:scale-[0.99]",
   secondary:
-    "bg-artisan-surface dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-800 dark:text-slate-100 border border-artisan-border dark:border-slate-800 shadow-artisan-subtle font-semibold hover:scale-[1.01] active:scale-[0.99]",
+    "bg-white border border-stoneBorder text-espresso-700 font-semibold hover:bg-flour-50 shadow-sm hover:scale-[1.01] active:scale-[0.99]",
   ghost:
-    "hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-700 dark:text-slate-300 hover:text-espresso-900 dark:hover:text-white font-medium",
+    "text-culinary-600 hover:underline font-bold",
   destructive:
     "bg-rose-600 text-white hover:bg-rose-700 font-bold shadow-sm active:scale-[0.99]",
   outline:
-    "border border-artisan-border dark:border-slate-800 bg-transparent hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-800 dark:text-slate-200 font-semibold",
+    "border border-stoneBorder bg-transparent hover:bg-flour-100 text-espresso-800 font-semibold",
 };
 
 const buttonSizes: Record<ButtonSize, string> = {
@@ -83,13 +83,13 @@ export function Input({ label, error, suffix, tooltip, className = "", id, ...pr
       <div className="relative flex items-center">
         <input
           id={inputId}
-          className={`w-full rounded-xl border border-artisan-border dark:border-slate-800
-            bg-artisan-surface dark:bg-[#141b2c] px-3.5 py-2 text-sm text-espresso-900 dark:text-white
-            placeholder:text-espresso-400 dark:placeholder:text-slate-500
-            focus:outline-none focus:border-culinary-500 focus:ring-4 focus:ring-culinary-500/10
-            transition-all disabled:opacity-50
+          className={`w-full rounded-lg border border-stoneBorder
+            bg-white px-3 py-2 text-sm text-espresso-800
+            placeholder:text-espresso-400
+            focus:outline-none focus:border-culinary-600 focus:ring-1 focus:ring-culinary-600
+            transition-all disabled:bg-flour-200 disabled:text-espresso-500 disabled:cursor-not-allowed disabled:opacity-50
             ${suffix ? "pr-10" : ""}
-            ${error ? "border-rose-400" : ""}
+            ${error ? "border-red-400 focus:border-red-500" : ""}
             ${className}`}
           {...props}
         />
@@ -113,8 +113,8 @@ interface CardProps {
 export function Card({ children, className = "" }: CardProps) {
   return (
     <div
-      className={`rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0c101a]
-        text-espresso-900 dark:text-slate-100 shadow-artisan-card ${className}`}
+      className={`rounded-2xl border border-stoneBorder bg-white
+        text-espresso-800 shadow-sm ${className}`}
     >
       {children}
     </div>
@@ -122,7 +122,7 @@ export function Card({ children, className = "" }: CardProps) {
 }
 
 export function CardHeader({ children, className = "" }: CardProps) {
-  return <div className={`px-6 py-4 border-b border-artisan-border dark:border-slate-800 ${className}`}>{children}</div>;
+  return <div className={`px-6 py-4 border-b border-stoneBorder ${className}`}>{children}</div>;
 }
 
 export function CardBody({ children, className = "" }: CardProps) {
@@ -139,16 +139,16 @@ interface BadgeProps {
 }
 
 const badgeVariants: Record<BadgeVariant, string> = {
-  default: "bg-artisan-subtle dark:bg-[#141b2c] text-espresso-700 dark:text-slate-300 border border-artisan-border dark:border-slate-800",
-  success: "bg-culinary-50 dark:bg-emerald-950/70 text-culinary-700 dark:text-emerald-300 border border-culinary-200 dark:border-emerald-800/60",
-  warning: "bg-caramel-50 dark:bg-amber-950/70 text-caramel-700 dark:text-amber-300 border border-caramel-200 dark:border-amber-800/60",
-  destructive: "bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60",
+  default: "bg-flour-200 text-espresso-700",
+  success: "bg-emerald-100 text-culinary-700",
+  warning: "bg-amber-100 text-caramel-700",
+  destructive: "bg-rose-50 text-rose-700",
 };
 
 export function Badge({ variant = "default", children, className = "" }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-mono font-semibold
         ${badgeVariants[variant]} ${className}`}
     >
       {children}
