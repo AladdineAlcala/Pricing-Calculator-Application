@@ -1761,9 +1761,9 @@ export default function RecipeBuilder() {
             </div>
 
             {/* Quick Markup Simulations */}
-            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="space-y-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold text-slate-600 dark:text-slate-400">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
                   Quick Markup Simulation:
                 </span>
                 {optimalMarkupPct > 0 && (
@@ -1773,12 +1773,42 @@ export default function RecipeBuilder() {
                 )}
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              {/* Standard Industry Presets (20%, 30%, 40%, 50%, 60%, 75%, 100%) */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Standard Presets
+                </span>
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
+                  {[20, 30, 40, 50, 60, 75, 100].map((pct) => {
+                    const isActive = Math.round(r.target_markup_pct) === pct;
+                    return (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => handleQuickMarkup(pct)}
+                        className={`py-1.5 px-1.5 rounded-xl text-[11px] font-bold text-center border transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs font-extrabold ring-1 ring-emerald-500/50"
+                            : "bg-white dark:bg-[#121826] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400"
+                        }`}
+                        title={`Simulate +${pct}% markup`}
+                        data-purpose={`quick-markup-preset-${pct}`}
+                      >
+                        +{pct}%
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Dynamic Objective Tiers: Current & Benchmark Optimal */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
                   onClick={() => handleQuickMarkup(r.target_markup_pct)}
                   className="py-1.5 px-2 rounded-xl text-[11px] font-bold text-center border transition-all cursor-pointer
-                    bg-emerald-50 dark:bg-emerald-950/80 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 shadow-2xs"
+                    bg-emerald-50/70 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 shadow-2xs hover:bg-emerald-100 dark:hover:bg-emerald-900/60"
+                  data-purpose="quick-markup-current"
                 >
                   +{r.target_markup_pct.toFixed(0)}% (Current)
                 </button>
@@ -1789,19 +1819,10 @@ export default function RecipeBuilder() {
                   disabled={optimalMarkupPct === 0}
                   className="py-1.5 px-2 rounded-xl text-[11px] font-bold text-center border transition-all cursor-pointer
                     bg-white dark:bg-[#121826] border-slate-200 dark:border-slate-800 hover:border-emerald-500
-                    text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-50"
+                    text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+                  data-purpose="quick-markup-optimal"
                 >
                   +{optimalMarkupPct}% (Optimal)
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickMarkup(Math.max(75, Math.round(r.target_markup_pct + 25)))}
-                  className="py-1.5 px-2 rounded-xl text-[11px] font-bold text-center border transition-all cursor-pointer
-                    bg-white dark:bg-[#121826] border-slate-200 dark:border-slate-800 hover:border-emerald-500
-                    text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400"
-                >
-                  +{Math.max(75, Math.round(r.target_markup_pct + 25))}% (Premium)
                 </button>
               </div>
             </div>

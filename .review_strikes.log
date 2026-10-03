@@ -1,10 +1,8 @@
 # Code Review Strikes Log
 STRIKES: 0
-LAST_REVIEW: 2026-10-03T10:14:00+08:00
+LAST_REVIEW: 2026-10-03T12:06:00+08:00
 STATUS: APPROVED
-NOTES: Successfully executed SQLite Persistence Migration Sprint for Alerts & Notification Center.
-1. Database Layer (db.rs): Created app_notifications table with primary key, indexed on (is_dismissed, created_at DESC). Implemented seed_notifications for initial seed items.
-2. Rust Models & Commands (models.rs, commands.rs, lib.rs): Authored DbNotification & CreateNotificationInput DTOs. Implemented get_active_notifications, create_notification, dismiss_notification, and clear_all_notifications with zero unwrap()/expect() calls. Registered commands in tauri invoke_handler.
-3. TypeScript API Bridge (api.ts): Exposed strongly typed wrappers getActiveNotifications, createDbNotification, dismissDbNotification, and clearAllDbNotifications.
-4. React State Synchronization (AppContext.tsx): Migrated notifications store from localStorage to SQLite backend. Implemented optimistic UI state updates synchronized with asynchronous Tauri IPC commands and automatic legacy localStorage cleanup.
-5. Verification Gate: cargo check --tests passed with 0 errors. npm run build compiled with 0 errors. Playwright test suite passed 31/31 tests (including new SQLite persistence test TC-NOTIF-06). Zero debug remnants found. Strikes remain 0.
+NOTES: Successfully executed Quick Markup Simulation Presets Sprint (20%, 30%, 40%, 50%, 60%, 75%, 100%).
+1. RecipeBuilder.tsx: Expanded Quick Markup Simulation section in Card 3 (Channel Pricing & Target Margins) to render a clean standard preset grid with all 7 requested figures (20%, 30%, 40%, 50%, 60%, 75%, 100%).
+2. Visual Ergonomics & Active State: The preset matching the active target_markup_pct receives an emerald active highlight with subtle ring indicator. Dynamic (Current) and (Optimal) benchmark calculation buttons are preserved with polished contrast.
+3. Verification Gate: npm run build compiled with 0 errors. Authored dedicated Playwright E2E suite (e2e/quick_markup_simulation.spec.ts) with 4/4 passing tests. Project-wide regression suite passed 35/35 tests. Zero debug remnants found. Strikes remain 0.
