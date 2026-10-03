@@ -2,7 +2,8 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
-import { Search, Package, Plus, Bell, Sun, Moon } from "lucide-react";
+import { Search, Package, Plus, Sun, Moon } from "lucide-react";
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 interface HeaderProps {
   unpricedCount?: number;
@@ -78,19 +79,8 @@ export function Header({ unpricedCount = 0, onOpenNewRecipe }: HeaderProps) {
           </Link>
         )}
 
-        {/* Alert / Bell Notification */}
-        <div className="relative">
-          <Link
-            to="/ingredients"
-            className="p-2 flex items-center justify-center text-espresso-600 dark:text-slate-300 hover:text-espresso-900 dark:hover:text-white bg-artisan-surface dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 border border-artisan-border dark:border-slate-800 rounded-lg transition-colors cursor-pointer"
-            title={unpricedCount > 0 ? `${unpricedCount} pending price notice(s)` : "All pantry items costed"}
-          >
-            <Bell className="w-4 h-4" />
-            {unpricedCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-caramel-500 rounded-full ring-2 ring-white dark:ring-[#0c101a]" />
-            )}
-          </Link>
-        </div>
+        {/* Alert / Bell Notification Center */}
+        <NotificationCenter unpricedCount={unpricedCount} />
 
         {/* Dark / Light Mode Toggle */}
         <button

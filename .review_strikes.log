@@ -1,10 +1,10 @@
 # Code Review Strikes Log
 STRIKES: 0
-LAST_REVIEW: 2026-10-03T09:07:30+08:00
+LAST_REVIEW: 2026-10-03T10:14:00+08:00
 STATUS: APPROVED
-NOTES: Successfully executed Global Header & Sidebar BakeIQLogo Bottom Border Alignment sprint.
-1. Header.tsx: Standardized top navigation header container to h-20 (80px) with flex items-center justify-between and shrink-0. Standardized left breadcrumb indicators to shrink-0 and command palette hint to hidden 2xl:flex to ensure smooth single-row alignment.
-2. Sidebar.tsx: Standardized BakeIQLogo brand header container to h-20 (80px) with shrink-0 and border-b.
-3. Geometric Alignment: Eliminates vertical step discontinuity across the horizontal top border seam. Bottom borders of both the Sidebar logo header and Header.tsx sit at exactly y = 80px with 0px variance.
-4. Verification Gate: TypeScript compilation passed with 0 errors. All 25 Playwright E2E tests (including TC-THEME-04 header bottom border alignment assertion) passed cleanly with 0 regressions.
-5. Review Gatekeeper: Zero debug remnants, zero build warnings, clean surgical diff. Strikes remain 0.
+NOTES: Successfully executed SQLite Persistence Migration Sprint for Alerts & Notification Center.
+1. Database Layer (db.rs): Created app_notifications table with primary key, indexed on (is_dismissed, created_at DESC). Implemented seed_notifications for initial seed items.
+2. Rust Models & Commands (models.rs, commands.rs, lib.rs): Authored DbNotification & CreateNotificationInput DTOs. Implemented get_active_notifications, create_notification, dismiss_notification, and clear_all_notifications with zero unwrap()/expect() calls. Registered commands in tauri invoke_handler.
+3. TypeScript API Bridge (api.ts): Exposed strongly typed wrappers getActiveNotifications, createDbNotification, dismissDbNotification, and clearAllDbNotifications.
+4. React State Synchronization (AppContext.tsx): Migrated notifications store from localStorage to SQLite backend. Implemented optimistic UI state updates synchronized with asynchronous Tauri IPC commands and automatic legacy localStorage cleanup.
+5. Verification Gate: cargo check --tests passed with 0 errors. npm run build compiled with 0 errors. Playwright test suite passed 31/31 tests (including new SQLite persistence test TC-NOTIF-06). Zero debug remnants found. Strikes remain 0.

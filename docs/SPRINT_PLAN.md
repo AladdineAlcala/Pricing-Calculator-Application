@@ -1,105 +1,212 @@
-# Sprint Plan: Global Header & Sidebar BakeIQLogo Bottom Border Alignment
+# Sprint Plan: SQLite Persistence Migration for Alerts & Notification Center
 
-**Lead Architect**: `/solution-architect-business-planner`  
-**Assigned UI/UX Specialist**: `/frontend-uiux-design-expert`  
-**QA Specialist**: `qa-automation-tester`  
-**Quality Gatekeeper**: `code-reviewer`  
-**Sprint Status**: `[COMPLETED & APPROVED]` ✅  
-
----
-
-## 1. Executive Summary & Root Cause Analysis
-
-Following the successful alignment of the application footers, the user requested the exact same alignment for the top horizontal borders: aligning the bottom border of the top navigation header (`Header.tsx`) with the bottom border of the BakeIQLogo header container (`Sidebar.tsx`).
-
-### Geometric Root Cause:
-1. **Asymmetric Rendered Heights**:
-   - In `Sidebar.tsx`, the brand lockup header container has an explicit height of `h-20` (**`80px`** / `5rem`).
-   - In `Header.tsx`, the top navigation bar lacked a fixed height, relying on `py-3.5` with internal buttons (~34px). At standard 1280px desktop resolution, internal `flex-wrap` caused the mode indicators to wrap, expanding the computed header height to **`93px`** (or `~64px` un-wrapped).
-2. **Horizontal Border Seam Discontinuity**:
-   - Both `Sidebar` and `Header` originate at `y = 0` (top of the viewport).
-   - In `Sidebar.tsx`, the bottom border of the logo container is situated at `y = 80px`.
-   - In `Header.tsx`, the bottom border sat at `y = 93px` (or `y = 64px`).
-   - This produced a visible **13px to 16px vertical step discontinuity** at the junction where the sidebar's right border intersects the top navigation header.
-
-### Target Architectural Blueprint:
-- Standardize both top containers to an explicit design token height of **`h-20`** (**`80px`** / `5rem`) with `flex items-center` and `shrink-0`.
-- Standardize layout geometry:
-  - In `Sidebar.tsx`: Ensure the logo container has `h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0`.
-  - In `Header.tsx`: Set the header element to `h-20 px-6 flex items-center justify-between border-b border-artisan-border dark:border-slate-800 shrink-0`.
-  - In `Header.tsx`: Clean up responsive wrapping by setting the left breadcrumb cluster to `shrink-0 flex items-center gap-3` and adjusting the command palette hint to `hidden 2xl:flex` to prevent wrapping at 1280px.
-- **Outcome**: Both top containers start at `y = 0` and have an exact `80px` height with `border-b`, positioning their bottom borders at the exact same vertical coordinate (**`y = 80px`**) with **0.00px variance**, creating an uninterrupted, continuous horizontal line across the top of the desktop application.
+**Lead Architect & Orchestrator**: `/solution-architect-business-planner`  
+**Assigned Full-Stack Specialist**: `/bakeiq-fullstack-engineer` (SQLite Schema, Rust Models, Tauri IPC, TS API Bridge)  
+**Assigned UI/UX Specialist**: `/frontend-uiux-design-expert` (AppContext Integration, Optimistic State, UI Polish)  
+**Assigned QA Specialist**: `qa-automation-tester` (Adversarial E2E Suite, Persistence Verification)  
+**Strict Quality Gatekeeper**: `code-reviewer`  
+**Sprint Status**: `[COMPLETED & APPROVED] ✅`  
 
 ---
 
-## 2. Work Breakdown Structure (DAG WBS)
+## 1. Executive Summary & Architectural Motivation
 
-```
-[Phase 1: Architectural Blueprint & User Confirmation] ──────► [CURRENT]
-                      │
-                      ▼ (Upon User [YES])
-[Phase 2: UI/UX Implementation] (Assigned to /frontend-uiux-design-expert)
-  ├── Task 2.1: Header.tsx Height & Alignment Standardization
-  │     ├── Set header container className to `h-20 px-6 flex items-center justify-between border-b border-artisan-border dark:border-slate-800 shrink-0`
-  │     ├── Prevent wrapping on left breadcrumbs with `shrink-0 flex items-center gap-3 text-xs`
-  │     └── Adjust command palette hint breakpoint to `hidden 2xl:flex` for responsive balance
-  │
-  └── Task 2.2: Sidebar.tsx Logo Header Constraint
-        └── Ensure logo header has `h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0`
-                      │
-                      ▼
-[Phase 3: Verification & Regression Testing] (Assigned to qa-automation-tester)
-  ├── Task 3.1: Static type check and production bundling (`npm run build`)
-  └── Task 3.2: Automated Playwright E2E assertion verifying exact pixel bounding box alignment:
-                `headerBox.y === logoBox.y === 0` and `headerBox.height === logoBox.height === 80`
-                      │
-                      ▼
-[Phase 4: Strict Quality Gatekeeper Review] (Assigned to code-reviewer)
-  └── Task 4.1: Verify zero debug remnants, zero build warnings, clean visual layout, update `.review_strikes.log`
+The notification system currently stores active alerts and informational updates in the browser's `localStorage` (`bakeiq_notifications`). While performant, `localStorage` has architectural limitations:
+1. **Excluded from Database Backups**: Notifications and operational alerts are omitted when creating a database backup file (`pricing_calculator_{timestamp}.db`).
+2. **Lack of Relational Audit Trail**: Dismissed notifications are discarded with no historical logging or queryable state.
+3. **Session Fragility**: Clearing browser cache or switching contexts clears all active alerts.
+
+### Target Architectural State (To-Be)
+Migrate notification storage to the core **SQLite relational database** (`pricing_calculator.db`), maintaining sub-millisecond perceived UI responsiveness through optimistic local React updates synchronized with strongly typed Tauri IPC commands.
+
+---
+
+## 2. Technical Contracts & Domain Architecture
+
+### A. SQLite Relational Schema (`src-tauri/src/db.rs`)
+```sql
+CREATE TABLE IF NOT EXISTS app_notifications (
+    id                TEXT PRIMARY KEY,
+    notification_type TEXT NOT NULL,         -- 'alert' | 'notification'
+    severity          TEXT NOT NULL,         -- 'critical' | 'warning' | 'info' | 'success'
+    title             TEXT NOT NULL,
+    message           TEXT NOT NULL,
+    details           TEXT,
+    action_label      TEXT,
+    action_url        TEXT,
+    created_at        TEXT NOT NULL,         -- ISO 8601 string
+    is_read           INTEGER NOT NULL DEFAULT 0,
+    is_dismissed      INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_notifs_active 
+ON app_notifications (is_dismissed, created_at DESC);
 ```
 
+### B. Rust Domain Models & DTOs (`src-tauri/src/models.rs`)
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DbNotification {
+    pub id: String,
+    pub notification_type: String, // 'alert' | 'notification'
+    pub severity: String,          // 'critical' | 'warning' | 'info' | 'success'
+    pub title: String,
+    pub message: String,
+    pub details: Option<String>,
+    pub action_label: Option<String>,
+    pub action_url: Option<String>,
+    pub created_at: String,
+    pub is_read: bool,
+    pub is_dismissed: bool,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CreateNotificationInput {
+    pub id: Option<String>,
+    pub notification_type: String,
+    pub severity: String,
+    pub title: String,
+    pub message: String,
+    pub details: Option<String>,
+    pub action_label: Option<String>,
+    pub action_url: Option<String>,
+}
+```
+
+### C. Tauri IPC Commands (`src-tauri/src/commands.rs` & `src-tauri/src/lib.rs`)
+1. `get_active_notifications(state: State<DbState>) -> Result<Vec<DbNotification>, String>`:
+   - Queries `SELECT ... FROM app_notifications WHERE is_dismissed = 0 ORDER BY created_at DESC`.
+2. `create_notification(state: State<DbState>, input: CreateNotificationInput) -> Result<String, String>`:
+   - Inserts or replaces a notification into `app_notifications`. Generates UUID if `id` is not provided.
+3. `dismiss_notification(state: State<DbState>, id: String) -> Result<(), String>`:
+   - Updates `is_dismissed = 1` for the given ID.
+4. `clear_all_notifications(state: State<DbState>) -> Result<(), String>`:
+   - Updates `is_dismissed = 1` across all active notifications.
+5. Command registration in `lib.rs`.
+
+### D. TypeScript API Bridge (`src/lib/api.ts`)
+```typescript
+export interface DbNotification {
+  id: string;
+  notification_type: 'alert' | 'notification';
+  severity: 'critical' | 'warning' | 'info' | 'success';
+  title: string;
+  message: string;
+  details?: string | null;
+  action_label?: string | null;
+  action_url?: string | null;
+  created_at: string;
+  is_read: boolean;
+  is_dismissed: boolean;
+}
+
+export interface CreateNotificationInput {
+  id?: string;
+  notification_type: 'alert' | 'notification';
+  severity: 'critical' | 'warning' | 'info' | 'success';
+  title: string;
+  message: string;
+  details?: string;
+  action_label?: string;
+  action_url?: string;
+}
+
+export async function getActiveNotifications(): Promise<DbNotification[]>;
+export async function createDbNotification(input: CreateNotificationInput): Promise<string>;
+export async function dismissDbNotification(id: string): Promise<void>;
+export async function clearAllDbNotifications(): Promise<void>;
+```
+
+### E. Frontend State Synchronization (`src/context/AppContext.tsx`)
+- On initial mount: Fetch active notifications asynchronously from `getActiveNotifications()` into `state.notifications`.
+- One-Time LocalStorage Migration: If `localStorage.getItem("bakeiq_notifications")` has records, ingest them into SQLite via `createDbNotification`, then remove the localStorage key.
+- Optimistic UI updates: Mutate React state immediately for snappy interactions, then execute IPC commands in background with rollback on error.
+
 ---
 
-## 3. Detailed Itemized Deliverables
+## 3. Work Breakdown Structure (DAG WBS)
 
-### Deliverable A: `pricing-calculator/src/components/Header.tsx`
-| Line Range | Current Implementation | Target Specification | Rationale |
-| :--- | :--- | :--- | :--- |
-| **Lines 18–21** | `<header className="sticky top-0 z-20 print:hidden bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur border-b border-artisan-border dark:border-slate-800 px-6 py-3.5 flex items-center justify-between gap-4" data-purpose="top-navigation">` | `<header className="sticky top-0 z-20 print:hidden bg-artisan-surface/95 dark:bg-[#0c101a]/95 backdrop-blur border-b border-artisan-border dark:border-slate-800 px-6 h-20 flex items-center justify-between gap-4 shrink-0" data-purpose="top-navigation">` | Fixes height to standard `80px` (`h-20`) to match `Sidebar.tsx` logo header. |
-| **Line 23** | `<div className="flex items-center gap-3 text-xs flex-wrap">` | `<div className="flex items-center gap-3 text-xs shrink-0">` | Prevents multi-line wrapping inside the fixed `h-20` header. |
-| **Line 40** | `<button ... className="hidden xl:flex items-center gap-2 ...">` | `<button ... className="hidden 2xl:flex items-center gap-2 ...">` | Prevents horizontal crowding on standard 1280px laptop screens. |
-
-### Deliverable B: `pricing-calculator/src/components/Sidebar.tsx`
-| Line Range | Current Implementation | Target Specification | Rationale |
-| :--- | :--- | :--- | :--- |
-| **Line 19** | `<div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800">` | `<div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0">` | Retains standard `80px` (`h-20`) and guarantees zero vertical shrink. |
+```
+[Phase 1: Database Migration & Schema] (Assigned to /bakeiq-fullstack-engineer)
+  ├── Task 1.1: Add `app_notifications` table & index in `src-tauri/src/db.rs`
+  └── Task 1.2: Seed default notifications in `db.rs` if table is empty
+                │
+                ▼
+[Phase 2: Rust Domain & IPC Commands] (Assigned to /bakeiq-fullstack-engineer)
+  ├── Task 2.1: Author `DbNotification` & `CreateNotificationInput` in `models.rs`
+  ├── Task 2.2: Implement `get_active_notifications`, `create_notification`, `dismiss_notification`, `clear_all_notifications` in `commands.rs`
+  ├── Task 2.3: Register new commands in `src-tauri/src/lib.rs`
+  └── Task 2.4: Validate backend with `cargo check --tests`
+                │
+                ▼
+[Phase 3: Frontend API & AppContext Migration] (Assigned to /bakeiq-fullstack-engineer & /frontend-uiux-design-expert)
+  ├── Task 3.1: Expose typed API wrappers in `src/lib/api.ts`
+  ├── Task 3.2: Update `AppContext.tsx` to initialize notifications from SQLite IPC
+  ├── Task 3.3: Wire `addNotification`, `dismissNotification`, `clearAllNotifications` to IPC with optimistic local state
+  └── Task 3.4: Remove `localStorage` read/write loops in `AppContext.tsx`
+                │
+                ▼
+[Phase 4: Adversarial E2E Verification] (Assigned to qa-automation-tester)
+  ├── Task 4.1: Extend Playwright mock IPC handlers in `e2e/notification_center.spec.ts` for SQLite commands
+  ├── Task 4.2: Verify notifications persist and reload cleanly from backend
+  ├── Task 4.3: Verify dismiss auto-removes notification in SQLite (`is_dismissed = 1`)
+  └── Task 4.4: Execute full regression test suite (all 30 tests must pass)
+                │
+                ▼
+[Phase 5: Strict Quality Gatekeeper Review] (Assigned to code-reviewer)
+  └── Task 5.1: Zero debug remnants, zero unwrap/expect in Rust, type symmetry between Rust and TS, update `.review_strikes.log`
+```
 
 ---
 
 ## 4. Verification & Testing Protocol
 
-1. **Static Compilation**:
-   - `npm run build` must compile with 0 errors and zero warnings.
-2. **Automated Mathematical Bounding Box Assertion**:
-   - In Playwright, verify:
-     ```ts
-     const headerBox = await header.boundingBox();
-     const logoBox = await logoHeader.boundingBox();
-     expect(headerBox.height).toBe(80);
-     expect(logoBox.height).toBe(80);
-     expect(Math.abs((headerBox.y + headerBox.height) - (logoBox.y + logoBox.height))).toBeLessThanOrEqual(0.5);
-     ```
-3. **Full Regression Gate**:
-   - All 24 Playwright tests must pass with 0 regressions.
+1. **Backend Verification**:
+   - `cargo check --tests` passes with 0 errors.
+   - Idempotent migration tested on existing database.
+2. **Frontend Build & Types**:
+   - `npm run build` compiles with 0 errors and zero warnings.
+3. **Playwright E2E Suite**:
+   - Run `npx playwright test e2e/notification_center.spec.ts`.
+   - Run full regression suite `npx playwright test` (all 30 tests passing).
+4. **Data Integrity & Backup Verification**:
+   - Creating a database backup includes the `app_notifications` table and its records.
 
 ---
 
-## 5. Rollback & Anti-Failure Safety Measures
+## 5. Rollback Safety Plan
 
-If an abort or rollback is triggered:
-- The system will execute:
-  ```bash
-  git checkout -- pricing-calculator/src/components/Header.tsx \
-                 pricing-calculator/src/components/Sidebar.tsx
+If abort or rollback is triggered:
+- Revert modified files:
+  ```powershell
+  git restore src-tauri/src/db.rs src-tauri/src/models.rs src-tauri/src/commands.rs src-tauri/src/lib.rs pricing-calculator/src/lib/api.ts pricing-calculator/src/context/AppContext.tsx pricing-calculator/e2e/notification_center.spec.ts
   ```
-- Changes are strictly layout styling classes on two navigation header components with zero impact on database schemas or costing formulas.
+- Because SQLite table creation uses `CREATE TABLE IF NOT EXISTS`, existing user data is protected against destructive alterations.
+
+---
+
+## 6. Delivery & Verification Sign-Off
+
+- [x] **Phase 1: SQLite Schema & Migrations (`db.rs`)**:
+  - `app_notifications` table created with columns `id`, `notification_type`, `severity`, `title`, `message`, `details`, `action_label`, `action_url`, `created_at`, `is_read`, `is_dismissed`.
+  - Composite index `idx_app_notifs_active` on `(is_dismissed, created_at DESC)`.
+  - Safe seeding with default alert and activity items.
+- [x] **Phase 2: Rust Domain Models & Tauri IPC Commands (`models.rs`, `commands.rs`, `lib.rs`)**:
+  - `DbNotification` and `CreateNotificationInput` models created.
+  - Implemented `get_active_notifications`, `create_notification`, `dismiss_notification`, and `clear_all_notifications` with zero `unwrap()` or `expect()`.
+  - Registered commands in Tauri's `invoke_handler`.
+- [x] **Phase 3: Frontend TypeScript API & React Context (`api.ts`, `AppContext.tsx`)**:
+  - Strongly typed API bridge wrappers authored in `src/lib/api.ts`.
+  - Migrated `AppContext.tsx` from `localStorage` to SQLite queries and mutations with optimistic local UI state.
+  - Automatic migration and cleanup of legacy `localStorage` entries.
+- [x] **Phase 4: Adversarial E2E Verification (`qa-automation-tester`)**:
+  - Extended Playwright mock backend in `e2e/notification_center.spec.ts`.
+  - Added `TC-NOTIF-06` verifying SQLite persistence across dismiss and create operations.
+  - 6/6 notification center tests passed.
+  - 31/31 project-wide regression tests passed cleanly.
+- [x] **Phase 5: Quality Gatekeeper Sign-Off (`code-reviewer`)**:
+  - Backend `cargo check --tests` passed with 0 errors.
+  - Frontend `npm run build` compiled with 0 errors.
+  - Zero debug remnants (`console.log`, `debugger`, `dbg!`).
+  - `.review_strikes.log` approved with 0 strikes.
+

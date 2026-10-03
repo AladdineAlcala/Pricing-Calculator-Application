@@ -2108,3 +2108,112 @@ pub fn get_packaging_transactions(
 
     Ok(items)
 }
+
+// ── Notifications (v2.2: Persistent SQLite Notification Center) ──────────────
+
+#[tauri::command]
+pub fn get_active_notifications(state: State<DbState>) -> Result<Vec<DbNotification>, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, notification_type, severity, title, message, details, action_label, action_url, created_at, is_read, is_dismissed 
+             FROM app_notifications 
+             WHERE is_dismissed = 0 
+             ORDER BY created_at DESC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let items = stmt
+        .query_map([], |row| {
+            let is_read_int: i64 = row.get(9)?;
+            let is_dismissed_int: i64 = row.get(10)?;
+            Ok(DbNotification {
+                id: row.get(0)?,
+                notification_type: row.get(1)?,
+                severity: row.get(2)?,
+                title: row.get(3)?,
+                message: row.get(4)?,
+                details: row.get(5)?,
+                action_label: row.get(6)?,
+                action_url: row.get(7)?,
+                created_at: row.get(8)?,
+                is_read: is_read_int != 0,
+                is_dismissed: is_dismissed_int != 0,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(items)
+}
+
+#[tauri::command]
+pub fn create_notification(
+    state: State<DbState>,
+    input: CreateNotificationInput,
+) -> Result<String, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    let id = match input.id {
+        Some(custom_id) if !custom_id.trim().is_empty() => custom_id,
+        _ => {
+            let nanos = match chrono::Utc::now().timestamp_nanos_opt() {
+                Some(n) => n,
+                None => chrono::Utc::now().timestamp_millis() * 1_000_000,
+            };
+            format!("notif-{}", nanos)
+        }
+    };
+    let now = chrono::Utc::now().to_rfc3339();
+
+    conn.execute(
+        "INSERT INTO app_notifications 
+         (id, notification_type, severity, title, message, details, action_label, action_url, created_at, is_read, is_dismissed)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 0, 0)
+         ON CONFLICT(id) DO UPDATE SET
+            notification_type = excluded.notification_type,
+            severity = excluded.severity,
+            title = excluded.title,
+            message = excluded.message,
+            details = excluded.details,
+            action_label = excluded.action_label,
+            action_url = excluded.action_url,
+            is_dismissed = 0",
+        params![
+            id,
+            input.notification_type,
+            input.severity,
+            input.title,
+            input.message,
+            input.details,
+            input.action_label,
+            input.action_url,
+            now
+        ],
+    )
+    .map_err(|e| e.to_string())?;
+
+    Ok(id)
+}
+
+#[tauri::command]
+pub fn dismiss_notification(state: State<DbState>, id: String) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE app_notifications SET is_dismissed = 1 WHERE id = ?1",
+        params![id],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn clear_all_notifications(state: State<DbState>) -> Result<(), String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE app_notifications SET is_dismissed = 1 WHERE is_dismissed = 0",
+        [],
+    )
+    .map_err(|e| e.to_string())?;
+    Ok(())
+}

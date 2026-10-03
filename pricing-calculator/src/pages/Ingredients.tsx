@@ -380,7 +380,7 @@ function IngredientsSkeleton() {
 }
 
 export default function Ingredients() {
-  const { fmt } = useApp();
+  const { fmt, addNotification } = useApp();
   const [items, setItems] = useState<Ingredient[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -645,6 +645,15 @@ export default function Ingredients() {
           `"${ingredientName}" (${formattedPurchaseUnit}, ${form.conversions.length} unit conversion rules) has been saved and synchronized with the costing engine.`,
           "success"
         );
+        addNotification({
+          type: "notification",
+          severity: "info",
+          title: "Ingredient Updated",
+          message: `Ingredient '${ingredientName}' specifications updated.`,
+          details: `Updated purchase specifications and unit conversions synchronized with the costing engine.`,
+          actionLabel: "View in Pantry",
+          actionUrl: "/ingredients",
+        });
       } else {
         await createIngredient(payload);
         showToast(
@@ -652,6 +661,15 @@ export default function Ingredients() {
           `"${ingredientName}" (${formattedPurchaseUnit}, ${form.conversions.length} unit conversion rules) has been added to your Pantry Master.`,
           "success"
         );
+        addNotification({
+          type: "notification",
+          severity: "success",
+          title: "New Ingredient Created",
+          message: `A new ingredient '${ingredientName}' has been created.`,
+          details: `Added to pantry master catalog with unit of measure (${formattedPurchaseUnit}) and synchronized with the costing engine.`,
+          actionLabel: "View in Pantry",
+          actionUrl: "/ingredients",
+        });
       }
 
       await load();

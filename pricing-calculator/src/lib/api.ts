@@ -393,3 +393,41 @@ export const getInventoryLedger = () =>
 export const produceBatchWithValidation = (payload: ProduceBatchPayload) =>
   invoke<ProduceBatchSuccess>("produce_batch_with_validation", { payload });
 
+// ── Notifications (v2.2: Persistent SQLite Notification Center) ──────────────
+export interface DbNotification {
+  id: string;
+  notification_type: 'alert' | 'notification';
+  severity: 'critical' | 'warning' | 'info' | 'success';
+  title: string;
+  message: string;
+  details?: string | null;
+  action_label?: string | null;
+  action_url?: string | null;
+  created_at: string;
+  is_read: boolean;
+  is_dismissed: boolean;
+}
+
+export interface CreateNotificationInput {
+  id?: string;
+  notification_type: 'alert' | 'notification';
+  severity: 'critical' | 'warning' | 'info' | 'success';
+  title: string;
+  message: string;
+  details?: string;
+  action_label?: string;
+  action_url?: string;
+}
+
+export const getActiveNotifications = () =>
+  invoke<DbNotification[]>("get_active_notifications");
+
+export const createDbNotification = (input: CreateNotificationInput) =>
+  invoke<string>("create_notification", { input });
+
+export const dismissDbNotification = (id: string) =>
+  invoke<void>("dismiss_notification", { id });
+
+export const clearAllDbNotifications = () =>
+  invoke<void>("clear_all_notifications");
+
