@@ -659,10 +659,10 @@ export default function RecipeBuilder() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#F9F8F6] text-[#0F0F0F] transition-colors">
         <Header unpricedCount={unpricedCount} />
         <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-          <Spinner className="w-10 h-10 text-emerald-600" />
+          <Spinner className="w-10 h-10 text-[#D97A34]" />
         </div>
       </div>
     );
@@ -670,13 +670,13 @@ export default function RecipeBuilder() {
 
   if (!result) {
     return (
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#F9F8F6] text-[#0F0F0F] transition-colors">
         <Header unpricedCount={unpricedCount} />
         <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Recipe formula not found.</p>
+          <p className="text-[#6B6B6B] font-medium">Recipe formula not found.</p>
           <button
             onClick={() => navigate("/recipes")}
-            className="text-emerald-600 dark:text-emerald-400 font-bold hover:underline cursor-pointer"
+            className="text-[#D97A34] font-bold hover:underline cursor-pointer"
           >
             ← Return to Recipe Master
           </button>
@@ -726,32 +726,32 @@ export default function RecipeBuilder() {
   const skuCode = `SKU-BNB0${r.recipe_id}`;
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#F9F8F6] text-[#0F0F0F] transition-colors">
       <Header unpricedCount={unpricedCount} />
       <div className="flex-1 p-6 md:p-8 space-y-6 print:p-4 w-full" ref={printRef}>
         {/* ── Top Breadcrumb & Status Bar ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-slate-200/80 dark:border-slate-800/80 pb-4 print:hidden">
-        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-[#E5E3DF] pb-4 print:hidden">
+        <div className="flex items-center gap-2 text-[#6B6B6B] flex-wrap">
           <button
             onClick={() => navigate("/recipes")}
-            className="flex items-center gap-1.5 hover:text-emerald-600 dark:hover:text-emerald-400 font-semibold transition-colors group"
+            className="flex items-center gap-1.5 hover:text-[#D97A34] font-semibold transition-colors group"
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             <span>Back to Recipes</span>
           </button>
           <span>/</span>
-          <span className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+          <span className="hover:text-[#0F0F0F] transition-colors">
             Recipe Formulas & Pricing
           </span>
           <span>/</span>
-          <span className="font-bold text-slate-900 dark:text-white">
+          <span className="font-bold text-[#0F0F0F]">
             {r.name} ({skuCode})
           </span>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/70 dark:border-emerald-800/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30">
+            <span className="w-2 h-2 rounded-full bg-[#4A7C59] animate-pulse" />
             <span>Production Active</span>
           </span>
         </div>
@@ -761,26 +761,26 @@ export default function RecipeBuilder() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 print:hidden">
         <div>
           <div className="flex items-center gap-3 flex-wrap mb-2">
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
+            <h1 className="text-4xl md:text-5xl font-black text-[#0F0F0F] tracking-tight uppercase">
               {r.name}
             </h1>
           </div>
 
           {/* Meta Info Bar */}
-          <div className="flex items-center gap-2 flex-wrap text-xs text-slate-600 dark:text-slate-300">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <Layers className="w-3.5 h-3.5 text-slate-400" />
-              <span>Yield: <strong className="font-bold text-slate-900 dark:text-white">{r.yield_qty} units</strong></span>
+          <div className="flex items-center gap-2 flex-wrap text-xs text-[#6B6B6B]">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E5E3DF] shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+              <Layers className="w-3.5 h-3.5 text-[#6B6B6B]" />
+              <span>Yield: <strong className="font-mono font-bold text-[#0F0F0F]">{r.yield_qty} units</strong></span>
             </span>
 
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <User className="w-3.5 h-3.5 text-slate-400" />
-              <span>Allocated Labor: <strong className="font-bold text-slate-900 dark:text-white">{fmt(r.labor_cost)}</strong></span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E5E3DF] shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+              <User className="w-3.5 h-3.5 text-[#6B6B6B]" />
+              <span>Allocated Labor: <strong className="font-mono font-bold text-[#0F0F0F]">{fmt(r.labor_cost)}</strong></span>
             </span>
 
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-2xs">
-              <Zap className="w-3.5 h-3.5 text-slate-400" />
-              <span>Electricity & Gas: <strong className="font-bold text-slate-900 dark:text-white">{fmt(r.electricity_cost)}</strong></span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E5E3DF] shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+              <Zap className="w-3.5 h-3.5 text-[#6B6B6B]" />
+              <span>Electricity & Gas: <strong className="font-mono font-bold text-[#0F0F0F]">{fmt(r.electricity_cost)}</strong></span>
             </span>
           </div>
         </div>
@@ -790,36 +790,30 @@ export default function RecipeBuilder() {
           <button
             onClick={handleExportCsv}
             id="export-csv-btn"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold
-              bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800
-              text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white
-              hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold
+              bg-transparent border border-[#0F0F0F] text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all shadow-[0_2px_4px_rgba(0,0,0,0.02)] cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5 text-slate-400" />
+            <Download className="w-3.5 h-3.5 text-[#6B6B6B]" />
             <span>Export CSV</span>
           </button>
 
           <button
             onClick={handlePrint}
             id="print-btn"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold
-              bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800
-              text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white
-              hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold
+              bg-transparent border border-[#0F0F0F] text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all shadow-[0_2px_4px_rgba(0,0,0,0.02)] cursor-pointer"
           >
-            <Printer className="w-3.5 h-3.5 text-slate-400" />
+            <Printer className="w-3.5 h-3.5 text-[#6B6B6B]" />
             <span>Print Spec Sheet</span>
           </button>
 
           <button
             onClick={openEdit}
             id="edit-recipe-btn"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold
-              bg-white dark:bg-[#121826] border border-slate-200 dark:border-slate-800
-              text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white
-              hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-all shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold
+              bg-transparent border border-[#0F0F0F] text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all shadow-[0_2px_4px_rgba(0,0,0,0.02)] cursor-pointer"
           >
-            <Pencil className="w-3.5 h-3.5 text-slate-400" />
+            <Pencil className="w-3.5 h-3.5 text-[#6B6B6B]" />
             <span>Edit Recipe</span>
           </button>
 
@@ -829,9 +823,9 @@ export default function RecipeBuilder() {
               setAddModalOpen(true);
             }}
             id="add-ingredient-to-recipe-btn"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white
-              bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800
-              shadow-sm shadow-emerald-600/20 hover:-translate-y-0.5
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white
+              bg-[#D97A34] hover:bg-[#c26827] active:bg-[#a6541b]
+              shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:-translate-y-0.5
               active:translate-y-0 transition-all duration-200 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
@@ -842,20 +836,20 @@ export default function RecipeBuilder() {
 
       {/* ── Target Gap Alert Banner ── */}
       {result.profit_alert_triggered && !alertDismissed && (
-        <div className="relative overflow-hidden rounded-2xl p-4 bg-amber-50/95 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-600/40 shadow-xs print:hidden">
+        <div className="relative overflow-hidden rounded-2xl p-4 bg-amber-50/95 border border-amber-200 shadow-xs print:hidden">
           <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
                 <AlertTriangle className="w-4 h-4" />
               </div>
               <div className="text-xs">
-                <p className="font-extrabold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+                <p className="font-extrabold uppercase tracking-wide text-amber-800">
                   TARGET GAP ALERT • Batch Profitability Below Benchmark
                 </p>
-                <p className="text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed">
-                  Gross profit (<strong className="text-slate-900 dark:text-white font-bold">{fmt(result.gross_profit_per_batch)}/batch</strong>) is{" "}
-                  <strong className="text-amber-700 dark:text-amber-400 font-bold">{fmt(profitGap)} below</strong> the target threshold of{" "}
-                  <strong className="text-slate-900 dark:text-white font-bold">{fmt(r.desired_profit_alert)}</strong>. Consider increasing retail markup to ≥{optimalMarkupPct}% or negotiating supplier bulk pricing.
+                <p className="text-[#6B6B6B] mt-0.5 leading-relaxed">
+                  Gross profit (<strong className="text-[#0F0F0F] font-mono font-bold">{fmt(result.gross_profit_per_batch)}/batch</strong>) is{" "}
+                  <strong className="text-amber-700 font-mono font-bold">{fmt(profitGap)} below</strong> the target threshold of{" "}
+                  <strong className="text-[#0F0F0F] font-mono font-bold">{fmt(r.desired_profit_alert)}</strong>. Consider increasing retail markup to ≥{optimalMarkupPct}% or negotiating supplier bulk pricing.
                 </p>
               </div>
             </div>
@@ -869,7 +863,7 @@ export default function RecipeBuilder() {
               </button>
               <button
                 onClick={() => setAlertDismissed(true)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                className="p-1.5 text-[#6B6B6B] hover:text-[#0F0F0F] transition-colors cursor-pointer"
                 title="Dismiss alert"
               >
                 <X className="w-4 h-4" />
@@ -903,23 +897,23 @@ export default function RecipeBuilder() {
         {/* ── Left Column: Ingredients Table + Prep Spec (Col Span 7 / 8) ── */}
         <div className="xl:col-span-8 space-y-6">
           {/* Card: Recipe Ingredients */}
-          <div className="relative overflow-hidden rounded-3xl p-6 bg-white/90 dark:bg-[#0c101a] backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 shadow-xs">
+          <div className="relative overflow-hidden rounded-2xl p-6 bg-white border border-[#E5E3DF] shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-xs">
+                <div className="w-10 h-10 rounded-lg bg-[#4A7C59]/10 border border-[#4A7C59]/30 text-[#4A7C59] flex items-center justify-center shadow-xs">
                   <Layers className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                    <h2 className="text-base font-bold text-[#0F0F0F] tracking-tight">
                       Recipe Ingredients
                     </h2>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30">
                       {result.line_items.length} items
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-[#6B6B6B] mt-0.5">
                     Raw materials yield calculation & variable input costs
                   </p>
                 </div>
@@ -929,7 +923,7 @@ export default function RecipeBuilder() {
                 <button
                   onClick={openAddModal}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold
-                    text-white bg-emerald-600 hover:bg-emerald-500 shadow-xs active:scale-95 transition-all cursor-pointer"
+                    text-white bg-[#D97A34] hover:bg-[#c26827] shadow-[0_2px_4px_rgba(0,0,0,0.05)] active:scale-95 transition-all cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Ingredient</span>
@@ -942,10 +936,9 @@ export default function RecipeBuilder() {
                     )
                   }
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
-                    bg-slate-50 dark:bg-[#121826] border border-slate-200 dark:border-slate-800
-                    text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                    bg-transparent border border-[#0F0F0F] text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-colors cursor-pointer"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#6B6B6B]" />
                   <span>Sort {ingSortBy !== "default" ? `(${ingSortBy})` : ""}</span>
                 </button>
               </div>
@@ -953,26 +946,26 @@ export default function RecipeBuilder() {
 
             {/* Ingredients Table */}
             <div className="overflow-x-auto -mx-6 px-6">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800/80 text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                    <th className="text-left py-3 pr-4">Ingredient</th>
+                  <tr className="border-b border-[#E5E3DF] bg-[#F9F8F6] text-[11px] font-semibold text-[#6B6B6B]">
+                    <th className="text-left py-3 px-3">Ingredient</th>
                     <th className="text-right py-3 px-3">Purchase Price</th>
                     <th className="text-right py-3 px-3">Base &amp; Unit Cost</th>
                     <th className="text-center py-3 px-3">Recipe Qty</th>
-                    <th className="text-right py-3 pl-3">Line Cost</th>
-                    <th className="w-8 py-3 pl-2 print:hidden" />
+                    <th className="text-right py-3 px-3">Line Cost</th>
+                    <th className="w-8 py-3 px-2 print:hidden" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                <tbody className="divide-y divide-[#E5E3DF]">
                   {displayItems.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400 dark:text-slate-500">
-                        <Box className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                        <p className="font-semibold text-sm">No raw ingredients added yet.</p>
+                      <td colSpan={6} className="py-12 text-center text-[#6B6B6B]">
+                        <Box className="w-8 h-8 mx-auto mb-2 opacity-30 text-[#0F0F0F]" />
+                        <p className="font-semibold text-sm text-[#0F0F0F]">No raw ingredients added yet.</p>
                         <button
                           onClick={openAddModal}
-                          className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-sm active:scale-95 transition-all cursor-pointer"
+                          className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-[#D97A34] hover:bg-[#c26827] shadow-sm active:scale-95 transition-all cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           <span>Add First Ingredient</span>
@@ -983,31 +976,31 @@ export default function RecipeBuilder() {
                     displayItems.map((li) => (
                       <tr
                         key={li.id}
-                        className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"
+                        className="min-h-[48px] h-12 even:bg-[#F9F8F6] odd:bg-white hover:bg-[#F9F8F6]/80 transition-colors group"
                       >
                         {/* Ingredient Name & Source category */}
-                        <td className="py-3.5 pr-4">
+                        <td className="py-3 px-3">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-slate-900 dark:text-white text-sm">
+                            <span className="font-bold text-[#0F0F0F] text-sm">
                               {li.ingredient_name}
                             </span>
                             {li.is_orphaned_conversion && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700 animate-pulse">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 animate-pulse">
                                 ⚠️ Unit configuration missing. Please reselect.
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80" />
+                          <div className="flex items-center gap-1.5 text-[11px] text-[#6B6B6B] mt-0.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#4A7C59]" />
                             <span>
                               {li.purchase_unit || (li.package_type ? `${li.package_type} (${li.net_quantity} ${li.net_unit})` : "Package")}
                               {li.yield_factor > 0 && (
-                                <span className="text-slate-400 dark:text-slate-500 ml-1 font-medium">
+                                <span className="text-[#6B6B6B] ml-1 font-medium">
                                   • {li.yield_factor.toFixed(1)} {li.recipe_unit}s/pack
                                 </span>
                               )}
                               {li.net_quantity && li.net_quantity > 0 && li.purchase_price > 0 && (
-                                <span className="text-emerald-600 dark:text-emerald-400 font-semibold ml-1">
+                                <span className="text-[#4A7C59] font-mono font-semibold ml-1">
                                   ({fmt(li.purchase_price / li.net_quantity)}/{li.net_unit || "unit"})
                                 </span>
                               )}
@@ -1016,29 +1009,29 @@ export default function RecipeBuilder() {
                         </td>
 
                         {/* Purchase Price */}
-                        <td className="py-3.5 px-3 text-right font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
+                        <td className="py-3 px-3 text-right font-mono font-semibold text-[#0F0F0F] tabular-nums">
                           {fmt(li.purchase_price)}
                         </td>
 
                         {/* Base & Unit Cost */}
-                        <td className="py-3.5 px-3 text-right tabular-nums">
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                        <td className="py-3 px-3 text-right tabular-nums">
+                          <span className="font-mono font-bold text-[#0F0F0F]">
                             {fmt(li.normalized_unit_cost)}
                           </span>
-                          <span className="text-[11px] text-slate-400 block">/{li.recipe_unit}</span>
+                          <span className="text-[11px] text-[#6B6B6B] block">/{li.recipe_unit}</span>
                           {li.base_unit_cost != null && li.base_unit_code && (
-                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block font-semibold mt-0.5">
+                            <span className="text-[10px] font-mono text-[#4A7C59] block font-semibold mt-0.5">
                               Base: {fmt(li.base_unit_cost)}/{li.base_unit_code}
                             </span>
                           )}
                         </td>
 
                         {/* Recipe Qty (Inline Input) */}
-                        <td className="py-3.5 px-3 text-center">
-                          <div className={`inline-flex items-center rounded-xl border overflow-hidden transition-all ${
+                        <td className="py-3 px-3 text-center">
+                          <div className={`inline-flex items-center rounded-lg border overflow-hidden transition-all ${
                             li.is_orphaned_conversion
-                              ? "border-amber-400 dark:border-amber-600 bg-amber-50/20 dark:bg-amber-950/20"
-                              : "border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121826] focus-within:border-emerald-500"
+                              ? "border-amber-400 bg-amber-50/20"
+                              : "border-[#E5E3DF] bg-white focus-within:border-[#D97A34]"
                           }`}>
                             <input
                               type="number"
@@ -1053,7 +1046,7 @@ export default function RecipeBuilder() {
                                    (e.target as HTMLInputElement).blur();
                                 }
                               }}
-                              className="w-16 px-2.5 py-1 text-xs text-center bg-transparent font-bold text-slate-900 dark:text-white focus:outline-none tabular-nums"
+                              className="w-16 px-2.5 py-1 text-xs text-center bg-transparent font-mono font-bold text-[#0F0F0F] focus:outline-none tabular-nums"
                               id={`batch-qty-${li.id}`}
                             />
                             {(() => {
@@ -1061,7 +1054,7 @@ export default function RecipeBuilder() {
                               const availableConvs = parent?.conversions || [];
                               if (availableConvs.length > 1 || li.is_orphaned_conversion) {
                                 return (
-                                  <div className="relative border-l border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#182030]">
+                                  <div className="relative border-l border-[#E5E3DF] bg-[#F9F8F6]">
                                     <select
                                       value={li.conversion_id ?? ""}
                                       onChange={(e) => {
@@ -1073,8 +1066,8 @@ export default function RecipeBuilder() {
                                       title="Change formula recipe unit"
                                       className={`px-2 py-1 pr-6 text-[11px] font-semibold bg-transparent appearance-none focus:outline-none cursor-pointer ${
                                         li.is_orphaned_conversion
-                                          ? "text-amber-700 dark:text-amber-400 font-bold"
-                                          : "text-slate-600 dark:text-slate-300"
+                                          ? "text-amber-700 font-bold"
+                                          : "text-[#0F0F0F]"
                                       }`}
                                     >
                                       {li.is_orphaned_conversion && (
@@ -1085,40 +1078,40 @@ export default function RecipeBuilder() {
                                           (otherLi) => otherLi.id !== li.id && otherLi.ingredient_id === li.ingredient_id && otherLi.conversion_id === c.conversion_id
                                         );
                                         return (
-                                          <option key={c.conversion_id} value={c.conversion_id} disabled={isUsedByOtherRow} className="text-slate-900 dark:text-white bg-white dark:bg-[#121826]">
+                                          <option key={c.conversion_id} value={c.conversion_id} disabled={isUsedByOtherRow} className="text-[#0F0F0F] bg-white">
                                             {c.recipe_unit} {isUsedByOtherRow ? "(in use)" : ""}
                                           </option>
                                         );
                                       })}
                                     </select>
-                                    <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                    <ChevronDown className="w-3 h-3 text-[#6B6B6B] absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                                   </div>
                                 );
                               }
                               return (
-                                <span className="px-2 py-1 text-[11px] font-semibold text-slate-400 bg-slate-50 dark:bg-[#182030] border-l border-slate-200 dark:border-slate-800">
+                                <span className="px-2 py-1 text-[11px] font-semibold text-[#6B6B6B] bg-[#F9F8F6] border-l border-[#E5E3DF]">
                                   {li.recipe_unit}
                                 </span>
                               );
                             })()}
                           </div>
                           {li.normalized_quantity != null && li.base_unit_code && (
-                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 block font-medium mt-0.5" title="Normalized canonical base quantity used for costing">
+                            <span className="text-[10px] text-[#6B6B6B] block font-mono font-medium mt-0.5" title="Normalized canonical base quantity used for costing">
                               ≈ {li.normalized_quantity.toFixed(1)} {li.base_unit_code}
                             </span>
                           )}
                         </td>
 
                         {/* Line Cost */}
-                        <td className="py-3.5 pl-3 text-right font-extrabold text-sm text-slate-900 dark:text-white tabular-nums">
+                        <td className="py-3 px-3 text-right font-mono font-extrabold text-sm text-[#0F0F0F] tabular-nums">
                           {fmt(li.line_item_cost)}
                         </td>
 
                         {/* Remove Action */}
-                        <td className="py-3.5 pl-2 text-right print:hidden">
+                        <td className="py-3 px-2 text-right print:hidden">
                           <button
                             onClick={() => handleRemoveIngredient(li.id)}
-                            className="p-1 rounded-lg text-slate-300 dark:text-slate-600 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                            className="p-1 rounded-lg text-[#6B6B6B] hover:text-rose-600 hover:bg-rose-50 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
                             title="Remove ingredient"
                             id={`remove-li-${li.id}`}
                           >
@@ -1133,23 +1126,23 @@ export default function RecipeBuilder() {
             </div>
 
             {/* Bottom Row / Add another row & Subtotals */}
-            <div className="pt-5 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <div className="pt-5 mt-4 border-t border-[#E5E3DF] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-[#6B6B6B]">
+                <span className="w-2 h-2 rounded-full bg-[#4A7C59]" />
                 <span>All line items calculated with standard culinary recipe yields.</span>
               </div>
 
               <div className="flex items-center gap-4 flex-wrap">
                 <button
                   onClick={openAddModal}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors print:hidden cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#D97A34] hover:text-[#c26827] transition-colors print:hidden cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add Another Row</span>
                 </button>
-                <span className="text-xs text-slate-600 dark:text-slate-300">
+                <span className="text-xs text-[#6B6B6B]">
                   Subtotal Ingredients:{" "}
-                  <strong className="font-black text-slate-900 dark:text-white text-sm">
+                  <strong className="font-mono font-black text-[#0F0F0F] text-sm">
                     {fmt(result.total_ingredient_cost ?? result.total_variable_cost)}
                   </strong>
                 </span>
@@ -1158,23 +1151,23 @@ export default function RecipeBuilder() {
           </div>
 
           {/* ── Card: Recipe Packaging & Presentation ── */}
-          <div className="relative overflow-hidden rounded-3xl p-6 bg-white/90 dark:bg-[#0c101a] backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 shadow-xs">
+          <div className="relative overflow-hidden rounded-2xl p-6 bg-white border border-[#E5E3DF] shadow-[0_4px_20px_rgba(0,0,0,0.05)]">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200/80 dark:border-amber-800/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shadow-xs">
+                <div className="w-10 h-10 rounded-lg bg-[#D97A34]/10 border border-[#D97A34]/30 text-[#D97A34] flex items-center justify-center shadow-xs">
                   <Box className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                    <h2 className="text-base font-bold text-[#0F0F0F] tracking-tight">
                       Recipe Packaging &amp; Presentation
                     </h2>
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#D97A34]/10 text-[#D97A34] border border-[#D97A34]/30">
                       {result.packaging_items?.length || 0} items
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-[#6B6B6B] mt-0.5">
                     Direct packaging materials, boxes, liners, and containers allocated per batch
                   </p>
                 </div>
@@ -1185,7 +1178,7 @@ export default function RecipeBuilder() {
                   type="button"
                   onClick={() => setAddPkgModalOpen(true)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold
-                    text-white bg-amber-600 hover:bg-amber-500 shadow-xs active:scale-95 transition-all cursor-pointer"
+                    bg-transparent border border-[#0F0F0F] text-[#0F0F0F] hover:bg-[#0F0F0F]/5 shadow-xs active:scale-95 transition-all cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Packaging</span>
@@ -1195,30 +1188,30 @@ export default function RecipeBuilder() {
 
             {/* Packaging Table */}
             <div className="overflow-x-auto -mx-6 px-6">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800/80 text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                    <th className="text-left py-3 pr-4">Packaging Material</th>
+                  <tr className="border-b border-[#E5E3DF] bg-[#F9F8F6] text-[11px] font-semibold text-[#6B6B6B]">
+                    <th className="text-left py-3 px-3">Packaging Material</th>
                     <th className="text-left py-3 px-3">Type</th>
                     <th className="text-right py-3 px-3">Unit Cost</th>
                     <th className="text-center py-3 px-3">Batch Qty</th>
-                    <th className="text-right py-3 pl-3">Line Cost</th>
-                    <th className="w-8 py-3 pl-2 print:hidden" />
+                    <th className="text-right py-3 px-3">Line Cost</th>
+                    <th className="w-8 py-3 px-2 print:hidden" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                <tbody className="divide-y divide-[#E5E3DF]">
                   {!result.packaging_items || result.packaging_items.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-10 text-center text-slate-400 dark:text-slate-500">
-                        <Box className="w-8 h-8 mx-auto mb-2 opacity-30 text-amber-500" />
-                        <p className="font-semibold text-sm">No packaging materials assigned to this recipe.</p>
-                        <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                      <td colSpan={6} className="py-10 text-center text-[#6B6B6B]">
+                        <Box className="w-8 h-8 mx-auto mb-2 opacity-30 text-[#D97A34]" />
+                        <p className="font-semibold text-sm text-[#0F0F0F]">No packaging materials assigned to this recipe.</p>
+                        <p className="text-xs text-[#6B6B6B] mt-1 max-w-sm mx-auto">
                           Product will be calculated without packaging containers (bulk unpackaged product).
                         </p>
                         <button
                           type="button"
                           onClick={() => setAddPkgModalOpen(true)}
-                          className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-amber-600 hover:bg-amber-500 shadow-xs active:scale-95 transition-all cursor-pointer"
+                          className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white bg-[#D97A34] hover:bg-[#c26827] shadow-xs active:scale-95 transition-all cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           <span>Add First Packaging</span>
@@ -1229,41 +1222,41 @@ export default function RecipeBuilder() {
                     result.packaging_items.map((pkg) => (
                       <tr
                         key={pkg.id}
-                        className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"
+                        className="min-h-[48px] h-12 even:bg-[#F9F8F6] odd:bg-white hover:bg-[#F9F8F6]/80 transition-colors group"
                       >
-                        <td className="py-3.5 pr-4">
+                        <td className="py-3 px-3">
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 dark:text-white text-sm">
+                            <span className="font-bold text-[#0F0F0F] text-sm">
                               {pkg.packaging_name}
                             </span>
-                            <span className="text-[11px] text-slate-400 font-mono">
+                            <span className="text-[11px] text-[#6B6B6B] font-mono">
                               SKU: {pkg.packaging_code}
                             </span>
                           </div>
                         </td>
 
-                        <td className="py-3.5 px-3">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/40">
+                        <td className="py-3 px-3">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#D97A34]/10 text-[#D97A34] border border-[#D97A34]/30">
                             {pkg.packaging_type}
                           </span>
                         </td>
 
-                        <td className="py-3.5 px-3 text-right font-mono font-medium text-slate-700 dark:text-slate-300">
+                        <td className="py-3 px-3 text-right font-mono font-medium text-[#0F0F0F]">
                           {fmt(pkg.current_unit_cost)} / {pkg.unit}
                         </td>
 
-                        <td className="py-3.5 px-3 text-center">
-                          <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
+                        <td className="py-3 px-3 text-center">
+                          <span className="font-mono font-bold text-sm text-[#0F0F0F]">
                             {pkg.batch_qty}
                           </span>{" "}
-                          <span className="text-[11px] text-slate-400 font-sans">{pkg.unit}s</span>
+                          <span className="text-[11px] text-[#6B6B6B] font-sans">{pkg.unit}s</span>
                         </td>
 
-                        <td className="py-3.5 pl-3 text-right font-mono font-bold text-slate-900 dark:text-white text-sm">
+                        <td className="py-3 px-3 text-right font-mono font-bold text-[#0F0F0F] text-sm">
                           {fmt(pkg.line_item_cost)}
                         </td>
 
-                        <td className="py-3.5 pl-2 text-right print:hidden">
+                        <td className="py-3 px-2 text-right print:hidden">
                           <button
                             type="button"
                             onClick={async () => {
@@ -1274,7 +1267,7 @@ export default function RecipeBuilder() {
                                 console.error(e);
                               }
                             }}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                            className="p-1.5 rounded-lg text-[#6B6B6B] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                             title="Remove packaging from recipe"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1289,13 +1282,13 @@ export default function RecipeBuilder() {
 
             {/* Packaging Card Footer */}
             {result.packaging_items && result.packaging_items.length > 0 && (
-              <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <span className="text-slate-400">
+              <div className="pt-4 mt-2 border-t border-[#E5E3DF] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <span className="text-[#6B6B6B]">
                   Packaging items deduct automatically during batch production.
                 </span>
-                <span className="text-xs text-slate-600 dark:text-slate-300">
+                <span className="text-xs text-[#6B6B6B]">
                   Subtotal Packaging:{" "}
-                  <strong className="font-black text-amber-700 dark:text-amber-400 text-sm font-mono">
+                  <strong className="font-black text-[#D97A34] text-sm font-mono">
                     {fmt(result.total_packaging_cost || 0)}
                   </strong>
                 </span>
@@ -1304,74 +1297,74 @@ export default function RecipeBuilder() {
           </div>
 
           {/* ── Card: Consolidated Direct Materials Summary ── */}
-          <div className="relative overflow-hidden rounded-3xl p-5 bg-gradient-to-br from-white/95 via-emerald-50/20 to-white/95 dark:from-[#0c101a] dark:via-emerald-950/10 dark:to-[#0c101a] backdrop-blur-xl border border-emerald-200/60 dark:border-emerald-800/40 shadow-xs space-y-4">
+          <div className="relative overflow-hidden rounded-2xl p-5 bg-white border border-[#E5E3DF] shadow-[0_4px_20px_rgba(0,0,0,0.05)] space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-300/60 dark:border-emerald-700/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shadow-2xs">
+                <div className="w-10 h-10 rounded-lg bg-[#4A7C59]/10 border border-[#4A7C59]/30 text-[#4A7C59] flex items-center justify-center shadow-2xs">
                   <PackageCheck className="w-5 h-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight uppercase">
+                    <h3 className="text-sm font-extrabold text-[#0F0F0F] tracking-tight uppercase">
                       Total Direct Materials
                     </h3>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/60 dark:border-emerald-700/40">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30">
                       Consolidated
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-[#6B6B6B] mt-0.5">
                     Combined raw ingredients & packaging materials cost per batch
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 self-start sm:self-auto">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-300/60 dark:border-emerald-700/40 text-emerald-800 dark:text-emerald-300 font-bold text-xs tabular-nums">
-                  <span>Unit Material Cost:</span>
-                  <span className="font-extrabold font-mono text-sm">{fmt(directMaterialsPerUnit)}</span>
-                  <span className="text-[10px] text-slate-400 font-normal">/ unit</span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F9F8F6] border border-[#E5E3DF] text-[#0F0F0F] font-bold text-xs tabular-nums">
+                  <span className="text-[#6B6B6B]">Unit Material Cost:</span>
+                  <span className="font-extrabold font-mono text-sm text-[#0F0F0F]">{fmt(directMaterialsPerUnit)}</span>
+                  <span className="text-[10px] text-[#6B6B6B] font-normal">/ unit</span>
                 </span>
               </div>
             </div>
 
             {/* 3-Column Metric Breakdown */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="rounded-2xl p-3 bg-white/80 dark:bg-[#121826]/80 border border-slate-200/70 dark:border-slate-800/70 space-y-1">
-                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="rounded-xl p-3 bg-[#F9F8F6] border border-[#E5E3DF] space-y-1">
+                <div className="flex items-center justify-between text-xs text-[#6B6B6B]">
                   <span className="flex items-center gap-1.5 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="w-2 h-2 rounded-full bg-[#4A7C59]" />
                     <span>Ingredients Subtotal:</span>
                   </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-[#E5E3DF] font-mono text-[#0F0F0F]">
                     {result.line_items.length} items
                   </span>
                 </div>
-                <div className="text-base font-extrabold text-slate-900 dark:text-white tabular-nums font-mono">
+                <div className="text-base font-extrabold text-[#0F0F0F] tabular-nums font-mono">
                   {fmt(rawIngredientsCost)}
                 </div>
               </div>
 
-              <div className="rounded-2xl p-3 bg-white/80 dark:bg-[#121826]/80 border border-slate-200/70 dark:border-slate-800/70 space-y-1">
-                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="rounded-xl p-3 bg-[#F9F8F6] border border-[#E5E3DF] space-y-1">
+                <div className="flex items-center justify-between text-xs text-[#6B6B6B]">
                   <span className="flex items-center gap-1.5 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span className="w-2 h-2 rounded-full bg-[#D97A34]" />
                     <span>Packaging Subtotal:</span>
                   </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono">
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white border border-[#E5E3DF] font-mono text-[#0F0F0F]">
                     {result.packaging_items?.length || 0} items
                   </span>
                 </div>
-                <div className="text-base font-extrabold text-amber-700 dark:text-amber-400 tabular-nums font-mono">
+                <div className="text-base font-extrabold text-[#D97A34] tabular-nums font-mono">
                   {fmt(packagingMaterialsCost)}
                 </div>
               </div>
 
-              <div className="rounded-2xl p-3 bg-emerald-500/10 dark:bg-emerald-950/30 border border-emerald-300/70 dark:border-emerald-800/50 space-y-1">
-                <div className="flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300">
+              <div className="rounded-xl p-3 bg-[#4A7C59]/10 border border-[#4A7C59]/30 space-y-1">
+                <div className="flex items-center justify-between text-xs text-[#4A7C59]">
                   <span className="font-bold">Total Direct Materials:</span>
                   <span className="text-[10px] font-mono font-semibold">100% Prime</span>
                 </div>
-                <div className="text-base font-black text-emerald-700 dark:text-emerald-400 tabular-nums font-mono">
+                <div className="text-base font-black text-[#4A7C59] tabular-nums font-mono">
                   {fmt(totalDirectMaterials)}
                 </div>
               </div>
@@ -1379,24 +1372,24 @@ export default function RecipeBuilder() {
 
             {/* Proportional Ratio Bar */}
             {totalDirectMaterials > 0 && (
-              <div className="space-y-1.5 pt-1 border-t border-emerald-100 dark:border-emerald-900/30">
-                <div className="h-2 w-full rounded-full overflow-hidden flex bg-slate-100 dark:bg-slate-800">
+              <div className="space-y-1.5 pt-1 border-t border-[#E5E3DF]">
+                <div className="h-2 w-full rounded-full overflow-hidden flex bg-[#E5E3DF]">
                   <div
                     style={{ width: `${ingMaterialsRatio}%` }}
-                    className="bg-emerald-500 transition-all duration-300"
+                    className="bg-[#4A7C59] transition-all duration-300"
                     title={`Ingredients: ${ingMaterialsRatio}%`}
                   />
                   <div
                     style={{ width: `${pkgMaterialsRatio}%` }}
-                    className="bg-amber-500 transition-all duration-300"
+                    className="bg-[#D97A34] transition-all duration-300"
                     title={`Packaging: ${pkgMaterialsRatio}%`}
                   />
                 </div>
-                <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                <div className="flex items-center justify-between text-[11px] font-medium text-[#6B6B6B]">
+                  <span className="text-[#4A7C59] font-semibold">
                     Ingredients Share ({ingMaterialsRatio}%)
                   </span>
-                  <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                  <span className="text-[#D97A34] font-semibold">
                     Packaging Share ({pkgMaterialsRatio}%)
                   </span>
                 </div>
@@ -1408,24 +1401,24 @@ export default function RecipeBuilder() {
         {/* ── Right Column: Sidebar Costing Cards (Col Span 5 / 4) ── */}
         <div className="xl:col-span-4 space-y-6">
           {/* ── Card 1: Production Overheads ── */}
-          <div className="rounded-3xl p-6 bg-white/90 dark:bg-[#0c101a] backdrop-blur-xl border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-4">
+          <div className="rounded-2xl p-6 bg-white border border-[#E5E3DF] shadow-[0_4px_20px_rgba(0,0,0,0.05)] space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#D97A34]/10 text-[#D97A34] flex items-center justify-center">
                   <Zap className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                  <h3 className="text-sm font-bold text-[#0F0F0F] tracking-tight">
                     Production Overheads
                   </h3>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-[#6B6B6B]">
                     Fixed utility & labor allocation per batch
                   </p>
                 </div>
               </div>
               <button
                 onClick={openEdit}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#D97A34] hover:text-[#c26827] transition-colors cursor-pointer"
               >
                 <Pencil className="w-3.5 h-3.5" />
                 <span>Edit Overheads</span>
@@ -1435,21 +1428,21 @@ export default function RecipeBuilder() {
             {/* Overhead Line Items */}
             <div className="space-y-2.5 text-xs">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                <div className="flex items-center gap-2 text-[#6B6B6B]">
+                  <span className="w-2 h-2 rounded-full bg-[#0F0F0F]" />
                   <span>Labor Allocation</span>
                 </div>
-                <span className="font-bold text-slate-900 dark:text-white tabular-nums">
+                <span className="font-mono font-bold text-[#0F0F0F] tabular-nums">
                   {fmt(r.labor_cost)}
                 </span>
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <div className="flex items-center gap-2 text-[#6B6B6B]">
+                  <span className="w-2 h-2 rounded-full bg-[#D97A34]" />
                   <span>Electricity / Gas</span>
                 </div>
-                <span className="font-bold text-slate-900 dark:text-white tabular-nums">
+                <span className="font-mono font-bold text-[#0F0F0F] tabular-nums">
                   {fmt(r.electricity_cost)}
                 </span>
               </div>
@@ -1457,98 +1450,98 @@ export default function RecipeBuilder() {
 
             {/* Visual Distribution Bar */}
             <div className="pt-2">
-              <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-800 flex overflow-hidden">
+              <div className="h-2 rounded-full bg-[#E5E3DF] flex overflow-hidden">
                 <div
                   style={{ width: `${laborPct}%` }}
-                  className="bg-blue-500 transition-all duration-300"
+                  className="bg-[#0F0F0F] transition-all duration-300"
                   title={`Labor: ${laborPct}%`}
                 />
                 <div
                   style={{ width: `${utilPct}%` }}
-                  className="bg-amber-500 transition-all duration-300"
+                  className="bg-[#D97A34] transition-all duration-300"
                   title={`Utilities: ${utilPct}%`}
                 />
               </div>
-              <div className="flex items-center justify-between text-[10px] text-slate-400 mt-1.5 font-medium">
+              <div className="flex items-center justify-between text-[10px] text-[#6B6B6B] mt-1.5 font-medium">
                 <span>Labor ({laborPct}%)</span>
                 <span>Utilities ({utilPct}%)</span>
               </div>
             </div>
 
             {/* Total Overhead Footer */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-              <span className="font-bold text-slate-700 dark:text-slate-300">Total Fixed Overhead:</span>
-              <span className="font-extrabold text-sm text-slate-900 dark:text-white tabular-nums">
+            <div className="pt-3 border-t border-[#E5E3DF] flex items-center justify-between text-xs">
+              <span className="font-bold text-[#6B6B6B]">Total Fixed Overhead:</span>
+              <span className="font-mono font-extrabold text-sm text-[#0F0F0F] tabular-nums">
                 {fmt(result.total_overhead)}
               </span>
             </div>
           </div>
 
           {/* ── Card 2: Pricing & Margin Engine ── */}
-          <div className="rounded-3xl p-6 bg-white dark:bg-[#0c101a] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-4">
+          <div className="rounded-2xl p-6 bg-white border border-[#E5E3DF] shadow-[0_4px_20px_rgba(0,0,0,0.05)] space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#4A7C59]/10 border border-[#4A7C59]/30 text-[#4A7C59] flex items-center justify-center">
                   <Calculator className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                  <h3 className="text-sm font-bold text-[#0F0F0F] tracking-tight">
                     Pricing & Margin Engine
                   </h3>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-[#6B6B6B]">
                     Yield: {r.yield_qty} Finished Units
                   </p>
                 </div>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/40">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30">
                 LIVE CALC
               </span>
             </div>
 
             {/* Cost Details & Visual Ratio Bar */}
             <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <div className="flex items-center justify-between text-[#6B6B6B]">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="w-2 h-2 rounded-full bg-[#4A7C59]" />
                   <span>Raw Ingredients:</span>
                 </span>
-                <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
+                <span className="font-mono font-semibold text-[#0F0F0F] tabular-nums">
                   {fmt(result.total_ingredient_cost ?? result.total_variable_cost)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <div className="flex items-center justify-between text-[#6B6B6B]">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="w-2 h-2 rounded-full bg-[#D97A34]" />
                   <span>Packaging &amp; Materials:</span>
                 </span>
-                <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
+                <span className="font-mono font-semibold text-[#0F0F0F] tabular-nums">
                   {fmt(packagingMaterialsCost)}
                 </span>
               </div>
 
               {/* Subtotal: Total Direct Materials */}
-              <div className="flex items-center justify-between py-1.5 px-2.5 rounded-xl bg-slate-50 dark:bg-[#121826] border border-slate-200/80 dark:border-slate-800/80 font-bold text-slate-800 dark:text-slate-200">
-                <span className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
-                  <PackageCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-[#F9F8F6] border border-[#E5E3DF] font-bold text-[#0F0F0F]">
+                <span className="flex items-center gap-1.5 text-xs text-[#0F0F0F]">
+                  <PackageCheck className="w-3.5 h-3.5 text-[#4A7C59]" />
                   <span>Total Direct Materials:</span>
                 </span>
                 <div className="text-right">
-                  <span className="font-black text-slate-900 dark:text-white tabular-nums font-mono">
+                  <span className="font-black text-[#0F0F0F] tabular-nums font-mono">
                     {fmt(totalDirectMaterials)}
                   </span>
-                  <span className="text-[10px] text-slate-400 block font-normal leading-tight">
+                  <span className="text-[10px] text-[#6B6B6B] block font-normal leading-tight font-mono">
                     {fmt(directMaterialsPerUnit)}/unit
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <div className="flex items-center justify-between text-[#6B6B6B]">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-sky-500" />
+                  <span className="w-2 h-2 rounded-full bg-[#0F0F0F]" />
                   <span>Fixed Overhead:</span>
                 </span>
-                <span className="font-semibold text-slate-900 dark:text-white tabular-nums">
+                <span className="font-mono font-semibold text-[#0F0F0F] tabular-nums">
                   {fmt(result.total_overhead)}
                 </span>
               </div>
@@ -1556,7 +1549,7 @@ export default function RecipeBuilder() {
               {/* ── Visual Cost Ratio Distribution Bar ── */}
               {result.total_cost_per_batch > 0 && (
                 <div className="space-y-1.5 pt-1">
-                  <div className="h-2.5 w-full rounded-full overflow-hidden flex bg-slate-100 dark:bg-slate-800 shadow-inner">
+                  <div className="h-2.5 w-full rounded-full overflow-hidden flex bg-[#E5E3DF]">
                     <div
                       style={{
                         width: `${Math.max(
@@ -1569,7 +1562,7 @@ export default function RecipeBuilder() {
                           )
                         )}%`,
                       }}
-                      className="bg-emerald-500 transition-all duration-300"
+                      className="bg-[#4A7C59] transition-all duration-300"
                       title={`Ingredients: ${(
                         ((result.total_ingredient_cost ?? result.total_variable_cost) /
                           result.total_cost_per_batch) *
@@ -1586,7 +1579,7 @@ export default function RecipeBuilder() {
                           )
                         )}%`,
                       }}
-                      className="bg-amber-500 transition-all duration-300"
+                      className="bg-[#D97A34] transition-all duration-300"
                       title={`Packaging: ${(
                         ((result.total_packaging_cost || 0) / result.total_cost_per_batch) *
                         100
@@ -1599,7 +1592,7 @@ export default function RecipeBuilder() {
                           Math.min(100, (result.total_overhead / result.total_cost_per_batch) * 100)
                         )}%`,
                       }}
-                      className="bg-sky-500 transition-all duration-300"
+                      className="bg-[#0F0F0F] transition-all duration-300"
                       title={`Overhead: ${(
                         (result.total_overhead / result.total_cost_per_batch) *
                         100
@@ -1608,127 +1601,127 @@ export default function RecipeBuilder() {
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] font-mono">
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="text-[#4A7C59] font-bold">
                       {`${(((result.total_ingredient_cost ?? result.total_variable_cost) / result.total_cost_per_batch) * 100).toFixed(0)}% Ingredients`}
                     </span>
-                    <span className="text-amber-600 dark:text-amber-400 font-bold">
+                    <span className="text-[#D97A34] font-bold">
                       {`${(((result.total_packaging_cost || 0) / result.total_cost_per_batch) * 100).toFixed(0)}% Packaging`}
                     </span>
-                    <span className="text-sky-600 dark:text-sky-400 font-bold">
+                    <span className="text-[#0F0F0F] font-bold">
                       {`${((result.total_overhead / result.total_cost_per_batch) * 100).toFixed(0)}% Overhead`}
                     </span>
                   </div>
                 </div>
               )}
 
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between font-bold">
-                <span className="text-slate-900 dark:text-white">Total Batch Cost:</span>
-                <span className="text-sm text-slate-900 dark:text-white tabular-nums font-mono font-black">
+              <div className="pt-2 border-t border-[#E5E3DF] flex items-center justify-between font-bold">
+                <span className="text-[#0F0F0F]">Total Batch Cost:</span>
+                <span className="text-sm text-[#0F0F0F] tabular-nums font-mono font-black">
                   {fmt(result.total_cost_per_batch)}
                 </span>
               </div>
             </div>
 
             {/* Base Cost Box */}
-            <div className="rounded-xl p-3 bg-slate-50 dark:bg-[#121826] border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <div className="rounded-lg p-3 bg-[#F9F8F6] border border-[#E5E3DF] flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#6B6B6B]">
+                <span className="w-2 h-2 rounded-full bg-[#4A7C59]" />
                 <span>Base Cost per Item:</span>
               </div>
-              <span className="text-base font-black text-slate-900 dark:text-white tabular-nums">
+              <span className="text-base font-mono font-black text-[#0F0F0F] tabular-nums">
                 {fmt(result.cost_per_item)}
               </span>
             </div>
           </div>
 
           {/* ── Card 3: Channel Pricing & Target Margins ── */}
-          <div className="rounded-3xl p-6 bg-white dark:bg-[#0c101a] border border-slate-200/90 dark:border-slate-800/90 shadow-xs space-y-4">
+          <div className="rounded-2xl p-6 bg-white border border-[#E5E3DF] shadow-[0_4px_20px_rgba(0,0,0,0.05)] space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-[#4A7C59]/10 border border-[#4A7C59]/30 text-[#4A7C59] flex items-center justify-center">
                 <TrendingUp className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight uppercase">
+                <h3 className="text-sm font-bold text-[#0F0F0F] tracking-tight uppercase">
                   CHANNEL PRICING & TARGET MARGINS
                 </h3>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-[#6B6B6B]">
                   Multi-tier distribution pricing
                 </p>
               </div>
             </div>
 
             {/* Box 1: Recommended Retail (RRP) */}
-            <div className="rounded-2xl p-4 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-800/40 space-y-2">
+            <div className="rounded-xl p-4 bg-[#4A7C59]/5 border border-[#4A7C59]/30 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">
+                  <span className="text-xs font-bold text-[#0F0F0F]">
                     Recommended Retail (RRP)
                   </span>
                   <Tooltip
                     position="top"
                     content={
                       <div className="space-y-1 text-left max-w-[200px]">
-                        <p className="font-semibold text-slate-900 dark:text-white">Retail Markup (+{r.target_markup_pct.toFixed(0)}%)</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                        <p className="font-semibold text-[#0F0F0F]">Retail Markup (+{r.target_markup_pct.toFixed(0)}%)</p>
+                        <p className="text-[11px] text-[#6B6B6B] leading-snug">
                           Applied over unit cost ({fmt(result.cost_per_item)}) to determine customer selling price.
                         </p>
                       </div>
                     }
                   >
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/60 dark:border-emerald-700/50 cursor-help">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30 cursor-help">
                       +{r.target_markup_pct.toFixed(0)}%
                     </span>
                   </Tooltip>
                 </div>
-                <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+                <span className="text-lg font-mono font-black text-[#4A7C59] tabular-nums">
                   {fmt(result.recommended_retail_price_item)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-emerald-200/50 dark:border-emerald-800/30">
-                <span>Gross Profit / Item: <strong className="text-slate-900 dark:text-white font-bold">{fmt(result.gross_profit_item)}</strong></span>
-                <span>Gross Margin: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{result.gross_margin_pct.toFixed(1)}%</strong></span>
+              <div className="flex items-center justify-between text-[11px] text-[#6B6B6B] pt-1 border-t border-[#4A7C59]/20">
+                <span>Gross Profit / Item: <strong className="text-[#0F0F0F] font-mono font-bold">{fmt(result.gross_profit_item)}</strong></span>
+                <span>Gross Margin: <strong className="text-[#4A7C59] font-mono font-bold">{result.gross_margin_pct.toFixed(1)}%</strong></span>
               </div>
             </div>
 
             {/* Box 2: Reseller / Wholesale */}
-            <div className="rounded-2xl p-4 bg-slate-50 dark:bg-[#121826] border border-slate-200 dark:border-slate-800 space-y-2">
+            <div className="rounded-xl p-4 bg-[#F9F8F6] border border-[#E5E3DF] space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">
-                    Reseller / Wholesale <span className="text-slate-400 font-normal text-[11px]">(Base + Markup)</span>
+                  <span className="text-xs font-bold text-[#0F0F0F]">
+                    Reseller / Wholesale <span className="text-[#6B6B6B] font-normal text-[11px]">(Base + Markup)</span>
                   </span>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-[#E5E3DF] text-[#0F0F0F]">
                     +{r.reseller_markup_pct.toFixed(0)}%
                   </span>
                 </div>
-                <span className="text-lg font-black text-slate-900 dark:text-white tabular-nums">
+                <span className="text-lg font-mono font-black text-[#0F0F0F] tabular-nums">
                   {fmt(result.reseller_price_per_item)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
-                <span>Profit / Item: <strong className="text-slate-900 dark:text-white font-bold">{fmt(resellerProfitItem)}</strong></span>
-                <span>Channel Margin: <strong className="text-slate-700 dark:text-slate-300 font-bold">{resellerMarginPct.toFixed(1)}%</strong></span>
+              <div className="flex items-center justify-between text-[11px] text-[#6B6B6B] pt-1 border-t border-[#E5E3DF]">
+                <span>Profit / Item: <strong className="text-[#0F0F0F] font-mono font-bold">{fmt(resellerProfitItem)}</strong></span>
+                <span>Channel Margin: <strong className="text-[#0F0F0F] font-mono font-bold">{resellerMarginPct.toFixed(1)}%</strong></span>
               </div>
             </div>
 
             {/* Revenue & Gross Profit Breakdown */}
             <div className="space-y-2 pt-1 text-xs">
-              <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <div className="flex items-center justify-between text-[#6B6B6B]">
                 <span>Retail Revenue / Batch:</span>
-                <span className="font-black text-emerald-600 dark:text-emerald-400 tabular-nums text-sm">
+                <span className="font-mono font-black text-[#4A7C59] tabular-nums text-sm">
                   {fmt(result.retail_revenue_batch)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between text-slate-600 dark:text-slate-300">
+              <div className="flex items-center justify-between text-[#6B6B6B]">
                 <span>Gross Profit / Batch:</span>
                 <span
-                  className={`font-black tabular-nums text-sm ${
+                  className={`font-mono font-black tabular-nums text-sm ${
                     result.profit_alert_triggered
-                      ? "text-rose-600 dark:text-rose-400"
-                      : "text-emerald-600 dark:text-emerald-400"
+                      ? "text-rose-600"
+                      : "text-[#4A7C59]"
                   }`}
                 >
                   {fmt(result.gross_profit_per_batch)}
@@ -1737,23 +1730,23 @@ export default function RecipeBuilder() {
             </div>
 
             {/* Benchmark Objective Status Box */}
-            <div className="rounded-2xl p-3 bg-slate-50 dark:bg-[#121826] border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+            <div className="rounded-xl p-3 bg-[#F9F8F6] border border-[#E5E3DF] flex items-center justify-between text-xs">
               <div>
-                <span className="text-[10px] text-slate-400 block font-medium">Benchmark Objective</span>
-                <span className="font-bold text-slate-900 dark:text-white">
+                <span className="text-[10px] text-[#6B6B6B] block font-medium">Benchmark Objective</span>
+                <span className="font-bold text-[#0F0F0F]">
                   Target: ≥ {fmt(r.desired_profit_alert)}
                 </span>
               </div>
               <span
                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
                   result.profit_alert_triggered
-                    ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800/40"
-                    : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40"
+                    ? "bg-rose-50 text-rose-700 border-rose-200"
+                    : "bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30"
                 }`}
               >
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
-                    result.profit_alert_triggered ? "bg-rose-500" : "bg-emerald-500"
+                    result.profit_alert_triggered ? "bg-rose-500" : "bg-[#4A7C59]"
                   }`}
                 />
                 <span>{result.profit_alert_triggered ? "Below Target" : "On Target ✓"}</span>
@@ -1761,13 +1754,13 @@ export default function RecipeBuilder() {
             </div>
 
             {/* Quick Markup Simulations */}
-            <div className="space-y-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="space-y-2.5 pt-2.5 border-t border-[#E5E3DF]">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                <span className="font-semibold text-[#0F0F0F]">
                   Quick Markup Simulation:
                 </span>
                 {optimalMarkupPct > 0 && (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  <span className="text-[#4A7C59] font-bold">
                     +{optimalMarkupPct}% needed for {fmt(r.desired_profit_alert)}
                   </span>
                 )}
@@ -1775,7 +1768,7 @@ export default function RecipeBuilder() {
 
               {/* Standard Industry Presets (20%, 30%, 40%, 50%, 60%, 75%, 100%) */}
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B6B6B]">
                   Standard Presets
                 </span>
                 <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
@@ -1786,10 +1779,10 @@ export default function RecipeBuilder() {
                         key={pct}
                         type="button"
                         onClick={() => handleQuickMarkup(pct)}
-                        className={`py-1.5 px-1.5 rounded-xl text-[11px] font-bold text-center border transition-all cursor-pointer ${
+                        className={`py-1.5 px-1.5 rounded-lg text-[11px] font-mono font-bold text-center border transition-all cursor-pointer ${
                           isActive
-                            ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs font-extrabold ring-1 ring-emerald-500/50"
-                            : "bg-white dark:bg-[#121826] border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400"
+                            ? "bg-[#0F0F0F] text-white border-[#0F0F0F] shadow-sm font-extrabold"
+                            : "bg-white border-[#E5E3DF] text-[#0F0F0F] hover:border-[#D97A34]"
                         }`}
                         title={`Simulate +${pct}% markup`}
                         data-purpose={`quick-markup-preset-${pct}`}
@@ -1806,8 +1799,8 @@ export default function RecipeBuilder() {
                 <button
                   type="button"
                   onClick={() => handleQuickMarkup(r.target_markup_pct)}
-                  className="py-1.5 px-2 rounded-xl text-[11px] font-bold text-center border transition-all cursor-pointer
-                    bg-emerald-50/70 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 shadow-2xs hover:bg-emerald-100 dark:hover:bg-emerald-900/60"
+                  className="py-1.5 px-2 rounded-lg text-[11px] font-bold text-center border transition-all cursor-pointer
+                    bg-[#F9F8F6] border-[#E5E3DF] text-[#0F0F0F] shadow-2xs hover:bg-[#E5E3DF]/50"
                   data-purpose="quick-markup-current"
                 >
                   +{r.target_markup_pct.toFixed(0)}% (Current)
@@ -1817,9 +1810,9 @@ export default function RecipeBuilder() {
                   type="button"
                   onClick={() => handleQuickMarkup(optimalMarkupPct)}
                   disabled={optimalMarkupPct === 0}
-                  className="py-1.5 px-2 rounded-xl text-[11px] font-bold text-center border transition-all cursor-pointer
-                    bg-white dark:bg-[#121826] border-slate-200 dark:border-slate-800 hover:border-emerald-500
-                    text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+                  className="py-1.5 px-2 rounded-lg text-[11px] font-bold text-center border transition-all cursor-pointer
+                    bg-white border-[#E5E3DF] hover:border-[#D97A34]
+                    text-[#0F0F0F] hover:text-[#D97A34] disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
                   data-purpose="quick-markup-optimal"
                 >
                   +{optimalMarkupPct}% (Optimal)
@@ -1832,14 +1825,14 @@ export default function RecipeBuilder() {
               type="button"
               onClick={handleCommitPricing}
               disabled={saving}
-              className="w-full py-3 px-4 rounded-xl font-bold text-xs text-white uppercase tracking-wider
-                bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800
-                shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 hover:-translate-y-0.5 active:translate-y-0
+              className="w-full py-3.5 px-4 rounded-lg font-bold text-xs text-white uppercase tracking-wider
+                bg-[#D97A34] hover:bg-[#c26827] active:bg-[#a6541b]
+                shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 active:translate-y-0
                 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
             >
               {committedFeedback ? (
                 <>
-                  <Check className="w-4 h-4 text-emerald-200" />
+                  <Check className="w-4 h-4 text-white" />
                   <span>FORMULA PRICING SAVED ✓</span>
                 </>
               ) : (
@@ -1866,19 +1859,19 @@ export default function RecipeBuilder() {
             onClick={() => setEditModalOpen(false)}
           />
           <div
-            className="relative z-10 w-full max-w-lg rounded-3xl border border-slate-200 dark:border-slate-800
-              bg-white dark:bg-[#0c101a] p-6 shadow-2xl animate-in zoom-in-95 duration-200 space-y-5"
+            className="relative z-10 w-full max-w-lg rounded-2xl border border-[#E5E3DF]
+              bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.08)] animate-in zoom-in-95 duration-200 space-y-5"
           >
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+            <div className="flex items-center justify-between border-b border-[#E5E3DF] pb-4">
               <div>
-                <h2 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                <h2 className="text-base font-bold text-[#0F0F0F] tracking-tight">
                   Edit Recipe Settings
                 </h2>
-                <p className="text-xs text-slate-400">Configure yields, overheads, and target pricing tiers</p>
+                <p className="text-xs text-[#6B6B6B]">Configure yields, overheads, and target pricing tiers</p>
               </div>
               <button
                 onClick={() => setEditModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1 rounded-lg text-[#6B6B6B] hover:text-[#0F0F0F]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1886,18 +1879,18 @@ export default function RecipeBuilder() {
 
             <div className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="font-semibold text-slate-700 dark:text-slate-300">Recipe Name</label>
+                <label className="font-semibold text-[#0F0F0F]">Recipe Name</label>
                 <input
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#121826] text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 font-medium"
+                  className="w-full px-3 py-2 rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] focus:outline-none focus:border-[#D97A34] font-medium"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Batch Yield (units)</label>
+                  <label className="font-semibold text-[#0F0F0F]">Batch Yield (units)</label>
                   <input
                     type="number"
                     min="1"
@@ -1905,12 +1898,12 @@ export default function RecipeBuilder() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, yield_qty: parseFloat(e.target.value) || 1 })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#121826] text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 font-medium tabular-nums"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] focus:outline-none focus:border-[#D97A34] font-medium font-mono tabular-nums"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Profit Alert Target (₱)</label>
+                  <label className="font-semibold text-[#0F0F0F]">Profit Alert Target (₱)</label>
                   <input
                     type="number"
                     min="0"
@@ -1918,14 +1911,14 @@ export default function RecipeBuilder() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, desired_profit_alert: parseFloat(e.target.value) || 0 })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#121826] text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 font-medium tabular-nums"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] focus:outline-none focus:border-[#D97A34] font-medium font-mono tabular-nums"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Labor (₱)</label>
+                  <label className="font-semibold text-[#0F0F0F]">Labor (₱)</label>
                   <input
                     type="number"
                     min="0"
@@ -1934,12 +1927,12 @@ export default function RecipeBuilder() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, labor_cost: parseFloat(e.target.value) || 0 })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#121826] text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 font-medium tabular-nums"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] focus:outline-none focus:border-[#D97A34] font-medium font-mono tabular-nums"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Electricity (₱)</label>
+                  <label className="font-semibold text-[#0F0F0F]">Electricity (₱)</label>
                   <input
                     type="number"
                     min="0"
@@ -1948,14 +1941,14 @@ export default function RecipeBuilder() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, electricity_cost: parseFloat(e.target.value) || 0 })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#121826] text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 font-medium tabular-nums"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] focus:outline-none focus:border-[#D97A34] font-medium font-mono tabular-nums"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Retail Markup (%)</label>
+                  <label className="font-semibold text-[#0F0F0F]">Retail Markup (%)</label>
                   <input
                     type="number"
                     min="0"
@@ -1964,12 +1957,12 @@ export default function RecipeBuilder() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, target_markup_pct: parseFloat(e.target.value) || 0 })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#121826] text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 font-medium tabular-nums"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] focus:outline-none focus:border-[#D97A34] font-medium font-mono tabular-nums"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-700 dark:text-slate-300">Reseller Markup (%)</label>
+                  <label className="font-semibold text-[#0F0F0F]">Reseller Markup (%)</label>
                   <input
                     type="number"
                     min="0"
@@ -1978,17 +1971,17 @@ export default function RecipeBuilder() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, reseller_markup_pct: parseFloat(e.target.value) || 0 })
                     }
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#121826] text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 font-medium tabular-nums"
+                    className="w-full px-3 py-2 rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] focus:outline-none focus:border-[#D97A34] font-medium font-mono tabular-nums"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end gap-2.5">
+            <div className="pt-4 border-t border-[#E5E3DF] flex items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setEditModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-white border border-[#0F0F0F] text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1996,7 +1989,7 @@ export default function RecipeBuilder() {
                 type="button"
                 onClick={handleSaveRecipe}
                 disabled={saving}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-violet-600 hover:bg-violet-500 transition-colors shadow-sm"
+                className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-[#D97A34] hover:bg-[#c26827] transition-colors shadow-sm cursor-pointer"
               >
                 {saving ? "Saving..." : "Save Changes"}
               </button>
@@ -2016,26 +2009,26 @@ export default function RecipeBuilder() {
           onClick={() => setAddModalOpen(false)}
         />
         <div
-          className="relative z-10 w-full max-w-2xl rounded-3xl border border-slate-200/90 dark:border-slate-800
-            bg-white dark:bg-[#0c101a] shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh] overflow-hidden"
+          className="relative z-10 w-full max-w-2xl rounded-2xl border border-[#E5E3DF]
+            bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)] animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="p-5 md:p-6 pb-4 border-b border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0c101a] flex items-start justify-between gap-3">
+          <div className="p-5 md:p-6 pb-4 border-b border-[#E5E3DF] bg-white flex items-start justify-between gap-3">
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-xs">
+              <div className="w-10 h-10 rounded-lg bg-[#4A7C59]/10 border border-[#4A7C59]/30 flex items-center justify-center text-[#4A7C59] shrink-0 shadow-xs">
                 <Plus className="w-5 h-5 stroke-[2.5]" />
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  <h2 className="text-base sm:text-lg font-extrabold text-[#0F0F0F] tracking-tight">
                     Add Ingredient to Recipe
                   </h2>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30">
                     ₱ PHP
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                <p className="text-xs text-[#6B6B6B] mt-0.5 leading-relaxed">
                   Select an item from your pantry master inventory or convert units on the fly.
                 </p>
               </div>
@@ -2043,22 +2036,22 @@ export default function RecipeBuilder() {
 
             <button
               onClick={() => setAddModalOpen(false)}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6B6B6B] hover:text-[#0F0F0F] hover:bg-[#F9F8F6] transition-colors shrink-0 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Modal Scrollable Body */}
-          <div className="p-5 md:p-6 space-y-4 overflow-y-auto flex-1 bg-white dark:bg-[#0c101a]">
+          <div className="p-5 md:p-6 space-y-4 overflow-y-auto flex-1 bg-white">
             {/* Search & Category Header Row */}
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <div className="flex items-center gap-1.5 font-bold uppercase tracking-wider text-[#6B6B6B] text-[11px]">
+                  <span className="w-2 h-2 rounded-full bg-[#4A7C59]" />
                   <span>SEARCH PANTRY ITEMS</span>
                 </div>
-                <div className="text-xs text-slate-400 dark:text-slate-500 font-medium">
+                <div className="text-xs text-[#6B6B6B] font-medium font-mono">
                   {addSearch ? (
                     <span>
                       {filteredIngredients.length} {filteredIngredients.length === 1 ? "item" : "items"} matching "{addSearch}"
@@ -2071,27 +2064,27 @@ export default function RecipeBuilder() {
 
               {/* Search Input */}
               <div className="relative flex items-center">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                <Search className="w-4 h-4 text-[#6B6B6B] absolute left-3.5 pointer-events-none" />
                 <input
                   ref={searchInputRef}
                   type="text"
                   placeholder="Type ingredient name (e.g. Flour, Sugar, Butter)..."
                   value={addSearch}
                   onChange={(e) => setAddSearch(e.target.value)}
-                  className="w-full pl-10 pr-20 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#141b2c] text-slate-900 dark:text-white placeholder:text-slate-400 text-xs sm:text-sm font-medium focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-2xs"
+                  className="w-full pl-10 pr-20 py-2.5 rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] placeholder:text-[#6B6B6B] text-xs sm:text-sm font-medium focus:outline-none focus:border-[#D97A34] transition-all shadow-2xs"
                 />
                 <div className="absolute right-3 flex items-center gap-1.5">
                   {addSearch && (
                     <button
                       type="button"
                       onClick={() => setAddSearch("")}
-                      className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                      className="p-1 rounded-md text-[#6B6B6B] hover:text-[#0F0F0F] transition-colors"
                       title="Clear search"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
                   )}
-                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] text-[10px] font-mono font-medium text-slate-400 shadow-2xs">
+                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded border border-[#E5E3DF] bg-[#F9F8F6] text-[10px] font-mono font-medium text-[#6B6B6B]">
                     ⌘K
                   </kbd>
                 </div>
@@ -2109,8 +2102,8 @@ export default function RecipeBuilder() {
                       onClick={() => setAddCategory(cat.id)}
                       className={`px-3 py-1.5 rounded-full text-xs transition-all cursor-pointer ${
                         isActive
-                          ? "bg-[#0f766e] dark:bg-emerald-600 text-white font-bold shadow-xs"
-                          : "bg-slate-100/90 dark:bg-[#141b2c] text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800 hover:bg-slate-200/70 dark:hover:bg-slate-800/80 font-medium"
+                          ? "bg-[#0F0F0F] text-white font-bold shadow-xs"
+                          : "bg-[#F9F8F6] text-[#0F0F0F] border border-[#E5E3DF] hover:bg-[#E5E3DF]/50 font-medium"
                       }`}
                     >
                       {cat.label} {showCount ? `(${cat.count})` : ""}
@@ -2121,7 +2114,7 @@ export default function RecipeBuilder() {
             </div>
 
             {/* Inventory List Header */}
-            <div className="flex items-center justify-between px-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            <div className="flex items-center justify-between px-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-[#6B6B6B]">
               <span>INVENTORY ITEM & YIELD SPECIFICATION</span>
               <span>MASTER UNIT COST</span>
             </div>
@@ -2134,24 +2127,24 @@ export default function RecipeBuilder() {
                   {[1, 2, 3, 4].map((s) => (
                     <div
                       key={s}
-                      className="p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0f1422] flex items-center justify-between"
+                      className="p-3.5 rounded-xl border border-[#E5E3DF] bg-white flex items-center justify-between"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-800" />
+                        <div className="w-5 h-5 rounded-full bg-[#E5E3DF]" />
                         <div className="space-y-1.5">
-                          <div className="h-4 w-36 rounded bg-slate-200 dark:bg-slate-800" />
-                          <div className="h-3 w-48 rounded bg-slate-100 dark:bg-slate-800/60" />
+                          <div className="h-4 w-36 rounded bg-[#E5E3DF]" />
+                          <div className="h-3 w-48 rounded bg-[#F9F8F6]" />
                         </div>
                       </div>
-                      <div className="h-4 w-20 rounded bg-slate-200 dark:bg-slate-800" />
+                      <div className="h-4 w-20 rounded bg-[#E5E3DF]" />
                     </div>
                   ))}
                 </div>
               ) : filteredIngredients.length === 0 ? (
-                <div className="p-8 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#121826]/30">
-                  <Box className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-                  <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">No matching ingredients</p>
-                  <p className="text-[11px] text-slate-400 mt-1">
+                <div className="p-8 text-center rounded-xl border border-dashed border-[#E5E3DF] bg-[#F9F8F6]">
+                  <Box className="w-8 h-8 mx-auto text-[#6B6B6B] mb-2" />
+                  <p className="font-bold text-[#0F0F0F] text-xs">No matching ingredients</p>
+                  <p className="text-[11px] text-[#6B6B6B] mt-1">
                     {addSearch
                       ? `No items match "${addSearch}". Try a different keyword or category.`
                       : "All ingredients in your inventory have already been added to this recipe."}
@@ -2169,41 +2162,41 @@ export default function RecipeBuilder() {
                     <div
                       key={ing.ingredient_id}
                       onClick={() => handleSelectIngredient(ing)}
-                      className={`w-full flex items-center justify-between p-3.5 rounded-2xl border transition-all duration-150 cursor-pointer ${
+                      className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all duration-150 cursor-pointer ${
                         isSelected
-                          ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-2 border-emerald-500 shadow-xs shadow-emerald-500/10"
-                          : "bg-white dark:bg-[#0f1422] border-slate-200/90 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-slate-800/30"
+                          ? "bg-[#D97A34]/5 border-2 border-[#D97A34] shadow-xs"
+                          : "bg-white border-[#E5E3DF] hover:border-[#D97A34]/50 hover:bg-[#F9F8F6]"
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         {isSelected ? (
-                          <div className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <div className="w-5 h-5 rounded-full bg-[#D97A34] text-white flex items-center justify-center shrink-0 shadow-xs">
                             <Check className="w-3 h-3 stroke-[3]" />
                           </div>
                         ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-slate-300 dark:border-slate-600 shrink-0" />
+                          <div className="w-5 h-5 rounded-full border-2 border-[#E5E3DF] shrink-0" />
                         )}
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 dark:text-white text-sm truncate">
+                            <span className="font-bold text-[#0F0F0F] text-sm truncate">
                               {ing.name}
                             </span>
                             {isSelected ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shrink-0">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#D97A34]/10 text-[#D97A34] border border-[#D97A34]/30 shrink-0">
                                 Selected
                               </span>
                             ) : (() => {
                               const alreadyAddedCount = result?.line_items.filter((li) => li.ingredient_id === ing.ingredient_id).length || 0;
                               if (alreadyAddedCount > 0) {
                                 return (
-                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200/80 dark:border-sky-800/50 shrink-0">
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#0F0F0F]/10 text-[#0F0F0F] border border-[#E5E3DF] shrink-0">
                                     Multi-unit ({alreadyAddedCount} in recipe)
                                   </span>
                                 );
                               }
                               if (ing.purchase_price <= 0) {
                                 return (
-                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/50 shrink-0">
+                                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
                                     Unpriced
                                   </span>
                                 );
@@ -2211,7 +2204,7 @@ export default function RecipeBuilder() {
                               return null;
                             })()}
                           </div>
-                          <div className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate font-medium">
+                          <div className="text-xs text-[#6B6B6B] mt-0.5 truncate font-medium">
                             Pkg: {ing.purchase_unit || (ing.package_type ? `${ing.package_type} (${ing.net_quantity ?? 1} ${ing.net_unit ?? "kg"})` : "Package")} • {ing.conversions && ing.conversions.length > 1 ? `${ing.conversions.length} Unit Types (${ing.conversions.map((c) => c.recipe_unit).join(", ")})` : `Yield: ${ing.yield_factor} ${ing.recipe_unit}s`}
                           </div>
                         </div>
@@ -2219,12 +2212,12 @@ export default function RecipeBuilder() {
 
                       <div className="text-right shrink-0 pl-3">
                         <div
-                          className={`font-bold tabular-nums text-sm ${
+                          className={`font-mono font-bold tabular-nums text-sm ${
                             isSelected
-                              ? "text-emerald-600 dark:text-emerald-400"
+                              ? "text-[#D97A34]"
                               : ing.purchase_price <= 0
-                              ? "text-slate-400 dark:text-slate-500 font-semibold"
-                              : "text-slate-900 dark:text-white"
+                              ? "text-[#6B6B6B] font-semibold"
+                              : "text-[#0F0F0F]"
                           }`}
                         >
                           {fmt(unitCost)} / {ing.recipe_unit}
@@ -2238,22 +2231,22 @@ export default function RecipeBuilder() {
 
             {/* ── Configure Portion Drawer (When Selected) ── */}
             {selectedIng && (
-              <div className="rounded-2xl p-4 sm:p-4.5 bg-slate-50/80 dark:bg-[#121826]/80 border border-slate-200/90 dark:border-slate-800 space-y-3.5 backdrop-blur-xs animate-in fade-in duration-150">
+              <div className="rounded-xl p-4 sm:p-4.5 bg-[#F9F8F6] border border-[#E5E3DF] space-y-3.5 animate-in fade-in duration-150">
                 {/* Portion Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2.5 border-b border-slate-200/60 dark:border-slate-800/80">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2.5 border-b border-[#E5E3DF]">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+                    <span className="w-2 h-2 rounded-full bg-[#4A7C59]" />
+                    <h3 className="font-bold text-[#0F0F0F] text-sm">
                       Configure Portion: {selectedIng.name}
                     </h3>
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 flex-wrap">
+                  <div className="text-xs text-[#6B6B6B] flex items-center gap-1.5 flex-wrap">
                     <span>Active Unit Cost:</span>
-                    <span className="px-2 py-0.5 rounded-lg bg-white dark:bg-[#182032] border border-slate-200 dark:border-slate-700 font-mono font-bold text-slate-800 dark:text-slate-200 text-xs shadow-2xs">
+                    <span className="px-2 py-0.5 rounded-lg bg-white border border-[#E5E3DF] font-mono font-bold text-[#0F0F0F] text-xs shadow-2xs">
                       {fmt(activeUnitCost)} / {activeRecipeUnit}
                     </span>
                     {selectedIng.purchase_price > 0 && (
-                      <span className="text-slate-400 dark:text-slate-500 text-[11px]">
+                      <span className="text-[#6B6B6B] text-[11px] font-mono">
                         ({fmt(selectedIng.purchase_price)} / {selectedIng.purchase_unit || selectedIng.package_type || "pkg"})
                       </span>
                     )}
@@ -2265,12 +2258,12 @@ export default function RecipeBuilder() {
                   {/* Batch Quantity with Stepper */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <label className="text-xs font-bold text-[#0F0F0F]">
                         Batch Quantity ({activeRecipeUnit})
                       </label>
-                      <span className="text-[10px] text-slate-400">e.g. 250 or 1.5</span>
+                      <span className="text-[10px] text-[#6B6B6B]">e.g. 250 or 1.5</span>
                     </div>
-                    <div className="flex rounded-xl overflow-hidden shadow-2xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                    <div className="flex rounded-lg overflow-hidden shadow-2xs border border-[#E5E3DF] bg-white focus-within:border-[#D97A34] transition-all">
                       <input
                         type="number"
                         min="0"
@@ -2278,14 +2271,14 @@ export default function RecipeBuilder() {
                         value={batchQty === 0 ? "" : batchQty}
                         onChange={(e) => setBatchQty(parseFloat(e.target.value) || 0)}
                         placeholder="250"
-                        className="w-full px-3.5 py-2 text-sm font-bold text-slate-900 dark:text-white bg-transparent focus:outline-none tabular-nums"
+                        className="w-full px-3.5 py-2 text-sm font-mono font-bold text-[#0F0F0F] bg-transparent focus:outline-none tabular-nums"
                       />
-                      <div className="flex border-l border-slate-200 dark:border-slate-700 divide-x divide-slate-200 dark:divide-slate-700 bg-slate-50 dark:bg-[#141b2c]">
+                      <div className="flex border-l border-[#E5E3DF] divide-x divide-[#E5E3DF] bg-[#F9F8F6]">
                         <button
                           type="button"
                           onClick={() => handleStepQty(-1)}
                           disabled={batchQty <= 0}
-                          className="px-3 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors font-bold text-base flex items-center justify-center cursor-pointer active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
+                          className="px-3 text-[#0F0F0F] hover:bg-[#E5E3DF] transition-colors font-bold text-base flex items-center justify-center cursor-pointer active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed"
                           title="Decrease quantity"
                         >
                           -
@@ -2293,7 +2286,7 @@ export default function RecipeBuilder() {
                         <button
                           type="button"
                           onClick={() => handleStepQty(1)}
-                          className="px-3 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors font-bold text-base flex items-center justify-center cursor-pointer active:scale-90"
+                          className="px-3 text-[#0F0F0F] hover:bg-[#E5E3DF] transition-colors font-bold text-base flex items-center justify-center cursor-pointer active:scale-90"
                           title="Increase quantity"
                         >
                           +
@@ -2305,11 +2298,11 @@ export default function RecipeBuilder() {
                   {/* Measure Unit Dropdown */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <label className="text-xs font-bold text-[#0F0F0F]">
                         Recipe Measure Unit
                       </label>
                       {selectedIng.conversions && selectedIng.conversions.length > 1 && (
-                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span className="text-[10px] font-semibold text-[#4A7C59]">
                           {selectedIng.conversions.length} conversions
                         </span>
                       )}
@@ -2324,7 +2317,7 @@ export default function RecipeBuilder() {
                             const found = selectedIng.conversions?.find((c) => c.conversion_id === cid);
                             if (found) setSelectedMeasureUnit(found.recipe_unit);
                           }}
-                          className="w-full appearance-none px-3.5 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer pr-9 shadow-2xs"
+                          className="w-full appearance-none px-3.5 py-2 text-sm font-semibold rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] focus:outline-none focus:border-[#D97A34] transition-all cursor-pointer pr-9 shadow-2xs"
                         >
                           {selectedIng.conversions.map((conv) => {
                             const isAlreadyUsed = result?.line_items.some(
@@ -2341,7 +2334,7 @@ export default function RecipeBuilder() {
                         <select
                           value={selectedMeasureUnit}
                           onChange={(e) => setSelectedMeasureUnit(e.target.value)}
-                          className="w-full appearance-none px-3.5 py-2 text-sm font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0c101a] text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer pr-9 shadow-2xs"
+                          className="w-full appearance-none px-3.5 py-2 text-sm font-semibold rounded-lg border border-[#E5E3DF] bg-white text-[#0F0F0F] focus:outline-none focus:border-[#D97A34] transition-all cursor-pointer pr-9 shadow-2xs"
                         >
                           <option value={selectedIng.recipe_unit}>
                             {selectedIng.recipe_unit} (Default)
@@ -2353,7 +2346,7 @@ export default function RecipeBuilder() {
                           ))}
                         </select>
                       )}
-                      <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <ChevronDown className="w-4 h-4 text-[#6B6B6B] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -2361,7 +2354,7 @@ export default function RecipeBuilder() {
                 {/* Presets and Batch Line Cost Row */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs text-slate-400 font-semibold mr-1">Presets:</span>
+                    <span className="text-xs text-[#6B6B6B] font-semibold mr-1">Presets:</span>
                     {currentPresets.map((preset) => {
                       const isActive = isPresetActive(preset);
                       return (
@@ -2369,10 +2362,10 @@ export default function RecipeBuilder() {
                           key={preset.label}
                           type="button"
                           onClick={() => handleApplyPreset(preset)}
-                          className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all cursor-pointer active:scale-95 ${
+                          className={`px-3 py-1 text-xs font-mono font-bold rounded-lg border transition-all cursor-pointer active:scale-95 ${
                             isActive
-                              ? "bg-emerald-100/80 dark:bg-emerald-950/80 border-emerald-400 dark:border-emerald-600 text-emerald-800 dark:text-emerald-300 shadow-2xs"
-                              : "bg-white dark:bg-[#141b2c] border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:border-slate-300"
+                              ? "bg-[#0F0F0F] text-white border-[#0F0F0F] shadow-2xs"
+                              : "bg-white border-[#E5E3DF] text-[#0F0F0F] hover:bg-[#F9F8F6] hover:border-[#D97A34]"
                           }`}
                         >
                           {preset.label}
@@ -2382,8 +2375,8 @@ export default function RecipeBuilder() {
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <div className="px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 text-xs font-black text-emerald-600 dark:text-emerald-400 tabular-nums shadow-xs flex items-center gap-1.5">
-                      <span className="text-slate-500 dark:text-slate-400 font-medium">Batch Line Cost:</span>
+                    <div className="px-3.5 py-1.5 rounded-full bg-[#4A7C59]/10 border border-[#4A7C59]/30 text-xs font-mono font-bold text-[#4A7C59] tabular-nums shadow-xs flex items-center gap-1.5">
+                      <span className="text-[#6B6B6B] font-sans font-medium">Batch Line Cost:</span>
                       <span>{fmt(batchLineCost)}</span>
                     </div>
                   </div>
@@ -2393,11 +2386,11 @@ export default function RecipeBuilder() {
           </div>
 
           {/* Modal Footer */}
-          <div className="p-4 md:p-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#0c101a] flex items-center justify-end gap-3">
+          <div className="p-4 md:p-6 pt-4 border-t border-[#E5E3DF] bg-[#F9F8F6] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={() => setAddModalOpen(false)}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] transition-all cursor-pointer"
+              className="px-4 py-2.5 rounded-lg text-xs font-semibold bg-white border border-[#0F0F0F] text-[#0F0F0F] hover:bg-[#0F0F0F]/5 active:scale-[0.98] transition-all cursor-pointer"
             >
               Cancel
             </button>
@@ -2405,7 +2398,7 @@ export default function RecipeBuilder() {
               type="button"
               onClick={handleAddIngredient}
               disabled={!selectedIngId || batchQty <= 0 || addSaving}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-600/20 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-[0.98] active:translate-y-0.5 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="px-5 py-2.5 rounded-lg text-xs font-bold text-white bg-[#D97A34] hover:bg-[#c26827] shadow-[0_4px_20px_rgba(0,0,0,0.08)] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {addSaving ? (
                 <>
@@ -2477,21 +2470,15 @@ export default function RecipeBuilder() {
       {toast?.show && (
         <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
           <div
-            className={`flex items-start gap-3 p-4 rounded-2xl shadow-2xl border backdrop-blur-md max-w-sm ${
-              toast.type === "success"
-                ? "bg-white/95 dark:bg-[#0f1422]/95 border-emerald-500/80 shadow-emerald-500/10 text-slate-900 dark:text-white"
-                : toast.type === "error"
-                ? "bg-white/95 dark:bg-[#0f1422]/95 border-rose-500/80 shadow-rose-500/10 text-slate-900 dark:text-white"
-                : "bg-white/95 dark:bg-[#0f1422]/95 border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white"
-            }`}
+            className={`flex items-start gap-3 p-4 rounded-xl shadow-xl border border-[#E5E3DF] bg-white text-[#0F0F0F] max-w-sm`}
           >
             <div
-              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                 toast.type === "success"
-                  ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400"
+                  ? "bg-[#4A7C59]/10 text-[#4A7C59]"
                   : toast.type === "error"
-                  ? "bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400"
-                  : "bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400"
+                  ? "bg-rose-100 text-rose-600"
+                  : "bg-[#F9F8F6] text-[#0F0F0F]"
               }`}
             >
               {toast.type === "success" ? (
@@ -2504,15 +2491,15 @@ export default function RecipeBuilder() {
             </div>
 
             <div className="flex-1 min-w-0 pr-2">
-              <h4 className="text-sm font-bold tracking-tight">{toast.title}</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+              <h4 className="text-sm font-bold tracking-tight text-[#0F0F0F]">{toast.title}</h4>
+              <p className="text-xs text-[#6B6B6B] mt-0.5 leading-relaxed">
                 {toast.message}
               </p>
             </div>
 
             <button
               onClick={() => setToast(null)}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-lg cursor-pointer"
+              className="text-[#6B6B6B] hover:text-[#0F0F0F] transition-colors p-1 rounded-lg cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>

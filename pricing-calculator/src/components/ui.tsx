@@ -14,21 +14,21 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    "bg-culinary-600 hover:bg-culinary-700 text-white font-bold shadow-artisan-glow hover:scale-[1.01] active:scale-[0.99]",
+    "bg-[#D97A34] hover:bg-[#c26827] text-white font-bold shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.01] active:scale-[0.99]",
   secondary:
-    "bg-artisan-surface dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-800 dark:text-slate-100 border border-artisan-border dark:border-slate-800 shadow-artisan-subtle font-semibold hover:scale-[1.01] active:scale-[0.99]",
+    "bg-transparent hover:bg-[#0F0F0F]/5 text-[#0F0F0F] border border-[#0F0F0F] font-semibold hover:scale-[1.01] active:scale-[0.99]",
   ghost:
-    "hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-700 dark:text-slate-300 hover:text-espresso-900 dark:hover:text-white font-medium",
+    "hover:bg-[#F9F8F6] text-[#0F0F0F] hover:text-[#0F0F0F] font-medium",
   destructive:
     "bg-rose-600 text-white hover:bg-rose-700 font-bold shadow-sm active:scale-[0.99]",
   outline:
-    "border border-artisan-border dark:border-slate-800 bg-transparent hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-800 dark:text-slate-200 font-semibold",
+    "border border-[#E5E3DF] bg-white hover:bg-[#F9F8F6] text-[#0F0F0F] font-semibold",
 };
 
 const buttonSizes: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-xs rounded-lg",
-  md: "px-4 py-2 text-sm rounded-xl",
-  lg: "px-5 py-2.5 text-base rounded-xl",
+  sm: "px-3 py-1.5 text-xs rounded-lg min-h-[32px]",
+  md: "px-4 py-2 text-sm rounded-lg min-h-[36px]",
+  lg: "px-6 py-3 text-base rounded-lg min-h-[44px]",
 };
 
 export function Button({
@@ -44,7 +44,7 @@ export function Button({
     <button
       className={`inline-flex items-center justify-center gap-2 font-medium
         transition-all duration-150 focus-visible:outline-none focus-visible:ring-2
-        focus-visible:ring-culinary-500 disabled:opacity-50 disabled:pointer-events-none cursor-pointer
+        focus-visible:ring-[#D97A34] disabled:opacity-50 disabled:pointer-events-none cursor-pointer
         ${buttonVariants[variant]} ${buttonSizes[size]} ${className}`}
       disabled={disabled || isLoading}
       {...props}
@@ -74,7 +74,7 @@ export function Input({ label, error, suffix, tooltip, className = "", id, ...pr
     <div className="flex flex-col gap-1">
       {label && (
         <div className="flex items-center gap-1.5">
-          <label htmlFor={inputId} className="text-xs font-bold text-espresso-700 dark:text-slate-300 uppercase tracking-wide">
+          <label htmlFor={inputId} className="text-xs font-bold text-[#0F0F0F] uppercase tracking-wide">
             {label}
           </label>
           {tooltip && <InfoTooltip content={tooltip} ariaLabel={`Information about ${label}`} />}
@@ -83,10 +83,10 @@ export function Input({ label, error, suffix, tooltip, className = "", id, ...pr
       <div className="relative flex items-center">
         <input
           id={inputId}
-          className={`w-full rounded-xl border border-artisan-border dark:border-slate-800
-            bg-artisan-surface dark:bg-[#141b2c] px-3.5 py-2 text-sm text-espresso-900 dark:text-white
-            placeholder:text-espresso-400 dark:placeholder:text-slate-500
-            focus:outline-none focus:border-culinary-500 focus:ring-4 focus:ring-culinary-500/10
+          className={`w-full rounded-lg border border-[#E5E3DF]
+            bg-white px-3.5 py-2 text-sm text-[#0F0F0F]
+            placeholder:text-[#6B6B6B]
+            focus:outline-none focus:border-[#D97A34] focus:ring-4 focus:ring-[#D97A34]/10
             transition-all disabled:opacity-50
             ${suffix ? "pr-10" : ""}
             ${error ? "border-rose-400" : ""}
@@ -94,7 +94,7 @@ export function Input({ label, error, suffix, tooltip, className = "", id, ...pr
           {...props}
         />
         {suffix && (
-          <span className="absolute right-3 text-xs font-semibold text-espresso-400 dark:text-slate-400">
+          <span className="absolute right-3 text-xs font-semibold text-[#6B6B6B]">
             {suffix}
           </span>
         )}
@@ -113,8 +113,8 @@ interface CardProps {
 export function Card({ children, className = "" }: CardProps) {
   return (
     <div
-      className={`rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0c101a]
-        text-espresso-900 dark:text-slate-100 shadow-artisan-card ${className}`}
+      className={`rounded-2xl border border-[#E5E3DF] bg-white
+        text-[#0F0F0F] shadow-[0_4px_20px_rgba(0,0,0,0.05)] ${className}`}
     >
       {children}
     </div>
@@ -122,7 +122,7 @@ export function Card({ children, className = "" }: CardProps) {
 }
 
 export function CardHeader({ children, className = "" }: CardProps) {
-  return <div className={`px-6 py-4 border-b border-artisan-border dark:border-slate-800 ${className}`}>{children}</div>;
+  return <div className={`px-6 py-4 border-b border-[#E5E3DF] ${className}`}>{children}</div>;
 }
 
 export function CardBody({ children, className = "" }: CardProps) {
@@ -130,7 +130,7 @@ export function CardBody({ children, className = "" }: CardProps) {
 }
 
 // ── Badge ─────────────────────────────────────────────────────────────────────
-type BadgeVariant = "default" | "success" | "warning" | "destructive";
+type BadgeVariant = "default" | "success" | "warning" | "destructive" | "artisan" | "quantitative";
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -139,16 +139,18 @@ interface BadgeProps {
 }
 
 const badgeVariants: Record<BadgeVariant, string> = {
-  default: "bg-artisan-subtle dark:bg-[#141b2c] text-espresso-700 dark:text-slate-300 border border-artisan-border dark:border-slate-800",
-  success: "bg-culinary-50 dark:bg-emerald-950/70 text-culinary-700 dark:text-emerald-300 border border-culinary-200 dark:border-emerald-800/60",
-  warning: "bg-caramel-50 dark:bg-amber-950/70 text-caramel-700 dark:text-amber-300 border border-caramel-200 dark:border-amber-800/60",
-  destructive: "bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60",
+  default: "bg-[#F9F8F6] text-[#0F0F0F] border border-[#E5E3DF]",
+  success: "bg-[#4A7C59] text-white",
+  warning: "bg-amber-600 text-white",
+  destructive: "bg-rose-600 text-white",
+  artisan: "bg-[#4A7C59] text-white",
+  quantitative: "bg-[#D97A34] text-white",
 };
 
 export function Badge({ variant = "default", children, className = "" }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold
         ${badgeVariants[variant]} ${className}`}
     >
       {children}
@@ -164,9 +166,9 @@ interface AlertBannerProps {
 }
 
 const alertStyles = {
-  warning: "bg-[hsl(var(--warning)/0.12)] border-[hsl(var(--warning)/0.5)] text-[hsl(var(--warning))]",
-  success: "bg-[hsl(var(--success)/0.12)] border-[hsl(var(--success)/0.5)] text-[hsl(var(--success))]",
-  error: "bg-[hsl(var(--destructive)/0.12)] border-[hsl(var(--destructive)/0.5)] text-[hsl(var(--destructive))]",
+  warning: "bg-amber-500/10 border-amber-500/30 text-amber-700",
+  success: "bg-[#4A7C59]/10 border-[#4A7C59]/30 text-[#4A7C59]",
+  error: "bg-rose-500/10 border-rose-500/30 text-rose-700",
 };
 
 const alertIcons = {
@@ -212,15 +214,15 @@ export function Modal({ isOpen, onClose, title, children, footer, size = "md" }:
     >
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className={`relative z-10 w-full ${modalSizes[size]} rounded-xl border border-[hsl(var(--border))]
-          bg-[hsl(var(--card))] shadow-2xl animate-in fade-in zoom-in-95 duration-200`}
+        className={`relative z-10 w-full ${modalSizes[size]} rounded-2xl border border-[#E5E3DF]
+          bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] animate-in fade-in zoom-in-95 duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[hsl(var(--border))]">
-          <h2 className="text-base font-semibold text-[hsl(var(--foreground))]">{title}</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E3DF]">
+          <h2 className="text-base font-semibold text-[#0F0F0F]">{title}</h2>
           <button
             onClick={onClose}
-            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]
+            className="text-[#6B6B6B] hover:text-[#0F0F0F]
               transition-colors text-lg leading-none"
           >
             ✕
@@ -228,7 +230,7 @@ export function Modal({ isOpen, onClose, title, children, footer, size = "md" }:
         </div>
         <div className="px-6 py-4">{children}</div>
         {footer && (
-          <div className="px-6 py-4 border-t border-[hsl(var(--border))] flex items-center justify-end gap-2">
+          <div className="px-6 py-4 border-t border-[#E5E3DF] flex items-center justify-end gap-2">
             {footer}
           </div>
         )}
@@ -236,6 +238,7 @@ export function Modal({ isOpen, onClose, title, children, footer, size = "md" }:
     </div>
   );
 }
+
 
 // ── Spinner ───────────────────────────────────────────────────────────────────
 export function Spinner({ className = "" }: { className?: string }) {

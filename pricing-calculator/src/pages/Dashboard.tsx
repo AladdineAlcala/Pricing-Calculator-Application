@@ -158,42 +158,42 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14]">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#F9F8F6] text-[#0F0F0F]">
         <Header unpricedCount={0} />
         <main className="flex-1 p-6 md:p-8 w-full space-y-8 animate-pulse">
           {/* Skeleton Header */}
           <div className="space-y-3">
-            <div className="h-5 w-44 bg-artisan-subtle dark:bg-slate-800 rounded-full" />
-            <div className="h-9 w-72 bg-artisan-subtle dark:bg-slate-800 rounded-xl" />
-            <div className="h-4 w-96 bg-artisan-subtle dark:bg-slate-800 rounded" />
+            <div className="h-5 w-44 bg-[#E5E3DF] rounded-full" />
+            <div className="h-12 w-72 bg-[#E5E3DF] rounded-2xl" />
+            <div className="h-4 w-96 bg-[#E5E3DF] rounded-lg" />
           </div>
 
           {/* Skeleton Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
-                className="h-44 rounded-xl bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 p-5 space-y-4"
+                className="h-48 rounded-2xl bg-white border border-[#E5E3DF] p-6 space-y-4"
               >
                 <div className="flex justify-between items-center">
-                  <div className="w-10 h-10 rounded-lg bg-artisan-subtle dark:bg-slate-800" />
-                  <div className="w-20 h-5 rounded-md bg-artisan-subtle dark:bg-slate-800" />
+                  <div className="w-10 h-10 rounded-lg bg-[#E5E3DF]" />
+                  <div className="w-20 h-5 rounded-full bg-[#E5E3DF]" />
                 </div>
-                <div className="h-8 w-24 bg-artisan-subtle dark:bg-slate-800 rounded" />
-                <div className="h-4 w-36 bg-artisan-subtle dark:bg-slate-800 rounded" />
+                <div className="h-9 w-24 bg-[#E5E3DF] rounded-lg" />
+                <div className="h-4 w-36 bg-[#E5E3DF] rounded-lg" />
               </div>
             ))}
           </div>
 
           {/* Skeleton Hero */}
-          <div className="h-80 rounded-2xl bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 p-8" />
+          <div className="h-80 rounded-2xl bg-white border border-[#E5E3DF] p-8" />
         </main>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 transition-colors">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#F9F8F6] text-[#0F0F0F]">
       {/* ── TopBar Header ── */}
       <Header unpricedCount={unpricedCount} />
 
@@ -201,16 +201,16 @@ export default function Dashboard() {
       <main className="flex-1 p-6 md:p-8 w-full space-y-8">
         {/* Seed Data Success Toast */}
         {seedSuccessNotice && (
-          <div className="flex items-center justify-between p-4 rounded-xl bg-culinary-50 dark:bg-emerald-950/70 border border-culinary-200 dark:border-emerald-800 text-culinary-800 dark:text-emerald-200 text-xs shadow-artisan-subtle animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-[#4A7C59]/10 border border-[#4A7C59]/30 text-[#4A7C59] text-xs shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-culinary-600 dark:text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 text-[#4A7C59]" />
               <span className="font-semibold">
                 Manila Artisan Bakery Wholesale Seed Data applied! All 11 ingredients now have live market costs.
               </span>
             </div>
             <button
               onClick={() => setSeedSuccessNotice(false)}
-              className="text-xs font-bold text-culinary-700 dark:text-emerald-300 hover:underline cursor-pointer"
+              className="text-xs font-bold text-[#4A7C59] hover:underline cursor-pointer"
             >
               Dismiss
             </button>
@@ -223,84 +223,77 @@ export default function Dashboard() {
           data-purpose="dashboard-heading"
         >
           <div>
-            <div className="inline-flex items-center gap-2 text-xs font-bold tracking-wide uppercase text-culinary-700 dark:text-emerald-400 mb-1">
+            <div className="inline-flex items-center gap-2 text-xs font-bold tracking-wide uppercase text-[#4A7C59] mb-1">
               <span>● Production Telemetry</span>
-              <span className="text-espresso-200 dark:text-slate-700">/</span>
+              <span className="text-[#E5E3DF]">/</span>
               <span>Kitchen Master Batch</span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-espresso-900 dark:text-white tracking-tight">
+            <h1 className="text-4xl md:text-5xl font-bold text-[#0F0F0F] tracking-tight">
               BakeIQ Operations Dashboard
             </h1>
-            <p className="text-sm text-espresso-600 dark:text-slate-400 mt-1 max-w-2xl">
+            <p className="text-sm text-[#6B6B6B] mt-1 max-w-2xl">
               Real-time recipe costing, ingredient inventory yields, and pricing telemetry.
             </p>
           </div>
 
           {/* Quick Metric Status Pill */}
-          <div className="flex items-center gap-2 self-start md:self-auto bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 px-3.5 py-1.5 rounded-lg shadow-artisan-subtle text-xs">
-            <span className="text-espresso-400 dark:text-slate-400">Valuation:</span>
-            <span className="font-bold text-espresso-900 dark:text-white font-mono">Weighted FIFO</span>
+          <div className="flex items-center gap-2 self-start md:self-auto bg-white border border-[#E5E3DF] px-3.5 py-1.5 rounded-lg shadow-sm text-xs">
+            <span className="text-[#6B6B6B]">Valuation:</span>
+            <span className="font-bold text-[#0F0F0F] font-mono">Weighted FIFO</span>
           </div>
         </section>
         {/* ── END: DashboardHeader ── */}
 
-        {/* ── BEGIN: FourKPICards ── */}
+        {/* ── BEGIN: FourKPICards (Bento Box Style) ── */}
         <section
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
           data-purpose="metric-summary-grid"
         >
           {/* KPI CARD 1: Total Ingredients */}
-          <div className="bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 hover:border-espresso-200 dark:hover:border-slate-700 rounded-xl p-5 shadow-artisan-card transition-all flex flex-col justify-between group">
+          <div className="bg-white border border-[#E5E3DF] rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-culinary-50 dark:bg-emerald-950/70 text-culinary-700 dark:text-emerald-400 border border-culinary-100 dark:border-emerald-800/60 flex items-center justify-center">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                    />
-                  </svg>
+                <div className="w-10 h-10 rounded-lg bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30 flex items-center justify-center">
+                  <Package className="w-5 h-5" />
                 </div>
                 <Link
                   to="/ingredients"
-                  className="text-xs font-semibold text-espresso-600 dark:text-slate-400 bg-artisan-subtle dark:bg-[#141b2c] px-2 py-0.5 rounded-md flex items-center gap-1 group-hover:text-espresso-900 dark:group-hover:text-white transition-colors"
+                  className="text-xs font-semibold text-[#6B6B6B] bg-[#F9F8F6] border border-[#E5E3DF] px-2.5 py-0.5 rounded-full flex items-center gap-1 group-hover:text-[#0F0F0F] transition-colors"
                 >
                   Pantry Master <span className="text-[10px]">↗</span>
                 </Link>
               </div>
 
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-espresso-900 dark:text-white tracking-tight tabular-nums">
+                <span className="text-4xl font-extrabold text-[#0F0F0F] tracking-tight font-mono">
                   {ingredients.length}
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-espresso-400 dark:text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#6B6B6B]">
                   Items
                 </span>
               </div>
-              <p className="text-xs font-semibold text-espresso-700 dark:text-slate-300 mt-1">
+              <p className="text-xs font-medium text-[#6B6B6B] mt-1">
                 Total Ingredients
               </p>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-artisan-border/70 dark:border-slate-800 flex flex-col gap-2">
+            <div className="mt-5 pt-3 border-t border-[#E5E3DF] flex flex-col gap-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-caramel-700 dark:text-amber-400 font-medium flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-caramel-500" />
+                <span className="text-[#D97A34] font-medium flex items-center gap-1 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#D97A34]" />
                   {pricedIngredientsCount} of {ingredients.length} priced
                 </span>
                 <Link
                   to="/ingredients"
-                  className="text-culinary-700 dark:text-emerald-400 hover:text-culinary-800 dark:hover:text-emerald-300 font-bold hover:underline flex items-center gap-0.5"
+                  className="text-[#4A7C59] hover:underline font-bold flex items-center gap-0.5"
                 >
                   View →
                 </Link>
               </div>
-              <div className="w-full bg-artisan-subtle dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-[#F9F8F6] border border-[#E5E3DF]/50 h-2 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    pricingCoverage === 100 ? "bg-culinary-600" : "bg-caramel-500"
+                    pricingCoverage === 100 ? "bg-[#4A7C59]" : "bg-[#D97A34]"
                   }`}
                   style={{ width: `${Math.max(pricingCoverage, 6)}%` }}
                   title={`${pricingCoverage}% Completed`}
@@ -310,55 +303,48 @@ export default function Dashboard() {
           </div>
 
           {/* KPI CARD 2: Active Recipes */}
-          <div className="bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 hover:border-espresso-200 dark:hover:border-slate-700 rounded-xl p-5 shadow-artisan-card transition-all flex flex-col justify-between group">
+          <div className="bg-white border border-[#E5E3DF] rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-artisan-subtle dark:bg-[#141b2c] text-espresso-800 dark:text-slate-200 border border-artisan-border dark:border-slate-800 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-espresso-700 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                    />
-                  </svg>
+                <div className="w-10 h-10 rounded-lg bg-[#D97A34]/10 text-[#D97A34] border border-[#D97A34]/30 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5" />
                 </div>
                 <Link
                   to="/recipes"
-                  className="text-xs font-semibold text-espresso-600 dark:text-slate-400 bg-artisan-subtle dark:bg-[#141b2c] px-2 py-0.5 rounded-md flex items-center gap-1 group-hover:text-espresso-900 dark:group-hover:text-white transition-colors"
+                  className="text-xs font-semibold text-[#6B6B6B] bg-[#F9F8F6] border border-[#E5E3DF] px-2.5 py-0.5 rounded-full flex items-center gap-1 group-hover:text-[#0F0F0F] transition-colors"
                 >
                   Cost Engine <span className="text-[10px]">↗</span>
                 </Link>
               </div>
 
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-espresso-900 dark:text-white tracking-tight tabular-nums">
+                <span className="text-4xl font-extrabold text-[#0F0F0F] tracking-tight font-mono">
                   {recipes.length}
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-espresso-400 dark:text-slate-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#6B6B6B]">
                   Formulas
                 </span>
               </div>
-              <p className="text-xs font-semibold text-espresso-700 dark:text-slate-300 mt-1">
+              <p className="text-xs font-medium text-[#6B6B6B] mt-1">
                 Active Recipes
               </p>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-artisan-border/70 dark:border-slate-800 flex flex-col gap-2">
+            <div className="mt-5 pt-3 border-t border-[#E5E3DF] flex flex-col gap-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-espresso-500 dark:text-slate-400 font-medium">
+                <span className="text-[#6B6B6B] font-medium font-mono">
                   {recipes.length} ready for batch costing
                 </span>
                 <Link
                   to="/recipes"
-                  className="text-culinary-700 dark:text-emerald-400 hover:text-culinary-800 dark:hover:text-emerald-300 font-bold hover:underline flex items-center gap-0.5"
+                  className="text-[#4A7C59] hover:underline font-bold flex items-center gap-0.5"
                 >
                   View →
                 </Link>
               </div>
-              <div className="w-full bg-artisan-subtle dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-[#F9F8F6] border border-[#E5E3DF]/50 h-2 rounded-full overflow-hidden">
                 <div
-                  className="bg-espresso-300 dark:bg-slate-700 h-full rounded-full transition-all duration-500"
+                  className="bg-[#D97A34] h-full rounded-full transition-all duration-500"
                   style={{ width: `${recipes.length > 0 ? 100 : 0}%` }}
                   title={`${recipes.length} Active Recipes`}
                 />
@@ -367,48 +353,46 @@ export default function Dashboard() {
           </div>
 
           {/* KPI CARD 3: Avg Target Markup */}
-          <div className="bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 hover:border-espresso-200 dark:hover:border-slate-700 rounded-xl p-5 shadow-artisan-card transition-all flex flex-col justify-between group">
+          <div className="bg-white border border-[#E5E3DF] rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-culinary-100 dark:bg-emerald-950/70 text-culinary-800 dark:text-emerald-300 border border-culinary-200 dark:border-emerald-800/60 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-culinary-700 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                  </svg>
+                <div className="w-10 h-10 rounded-lg bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5" />
                 </div>
-                <span className="text-xs font-bold text-culinary-700 dark:text-emerald-400 bg-culinary-50 dark:bg-emerald-950/60 border border-culinary-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-md flex items-center gap-1">
+                <span className="text-xs font-bold text-white bg-[#4A7C59] px-2.5 py-0.5 rounded-full flex items-center gap-1">
                   Target: 50%+ <span className="text-[10px]">↗</span>
                 </span>
               </div>
 
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-espresso-900 dark:text-white tracking-tight tabular-nums">
+                <span className="text-4xl font-extrabold text-[#0F0F0F] tracking-tight font-mono">
                   {avgMarkup ? avgMarkup : "50.0"}
                   <span className="text-xl font-bold">%</span>
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-culinary-700 dark:text-emerald-300 bg-culinary-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded">
+                <span className="text-xs font-bold uppercase tracking-wider text-white bg-[#D97A34] px-2 py-0.5 rounded-full">
                   Retail
                 </span>
               </div>
-              <p className="text-xs font-semibold text-espresso-700 dark:text-slate-300 mt-1">
+              <p className="text-xs font-medium text-[#6B6B6B] mt-1">
                 Avg Target Markup
               </p>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-artisan-border/70 dark:border-slate-800 flex flex-col gap-2">
+            <div className="mt-5 pt-3 border-t border-[#E5E3DF] flex flex-col gap-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-espresso-500 dark:text-slate-400 font-medium truncate">
+                <span className="text-[#6B6B6B] font-medium truncate">
                   Target gross margin benchmark
                 </span>
                 <Link
                   to="/recipes"
-                  className="text-culinary-700 dark:text-emerald-400 hover:text-culinary-800 dark:hover:text-emerald-300 font-bold hover:underline flex items-center gap-0.5 shrink-0"
+                  className="text-[#4A7C59] hover:underline font-bold flex items-center gap-0.5 shrink-0"
                 >
                   View →
                 </Link>
               </div>
-              <div className="w-full bg-artisan-subtle dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-[#F9F8F6] border border-[#E5E3DF]/50 h-2 rounded-full overflow-hidden">
                 <div
-                  className="bg-culinary-600 h-full rounded-full transition-all duration-500"
+                  className="bg-[#4A7C59] h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(avgMarkup ? parseFloat(avgMarkup) : 50, 100)}%` }}
                   title="Configured benchmark"
                 />
@@ -417,24 +401,15 @@ export default function Dashboard() {
           </div>
 
           {/* KPI CARD 4: Pricing Coverage */}
-          <div className="bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 hover:border-espresso-200 dark:hover:border-slate-700 rounded-xl p-5 shadow-artisan-card transition-all flex flex-col justify-between group">
+          <div className="bg-white border border-[#E5E3DF] rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-lg bg-caramel-100 dark:bg-amber-950/70 text-caramel-700 dark:text-amber-400 border border-caramel-200 dark:border-amber-800/60 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-caramel-700 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                    />
-                  </svg>
+                <div className="w-10 h-10 rounded-lg bg-[#D97A34]/10 text-[#D97A34] border border-[#D97A34]/30 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5" />
                 </div>
                 <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded-md flex items-center gap-1 ${
-                    pricingCoverage === 100
-                      ? "text-culinary-700 dark:text-emerald-400 bg-culinary-50 dark:bg-emerald-950/60 border border-culinary-200 dark:border-emerald-800/60"
-                      : "text-caramel-700 dark:text-amber-400 bg-caramel-50 dark:bg-amber-950/60 border border-caramel-200 dark:border-amber-800/60"
+                  className={`text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 text-white ${
+                    pricingCoverage === 100 ? "bg-[#4A7C59]" : "bg-[#D97A34]"
                   }`}
                 >
                   {pricingCoverage === 100 ? "Fully Costed" : "Action Required"}{" "}
@@ -443,35 +418,35 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-3xl font-extrabold text-espresso-900 dark:text-white tracking-tight tabular-nums">
+                <span className="text-4xl font-extrabold text-[#0F0F0F] tracking-tight font-mono">
                   {pricingCoverage}
                   <span className="text-xl font-bold">%</span>
                 </span>
-                <span className="text-xs font-bold uppercase tracking-wider text-caramel-700 dark:text-amber-400">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#6B6B6B]">
                   Complete
                 </span>
               </div>
-              <p className="text-xs font-semibold text-espresso-700 dark:text-slate-300 mt-1">
+              <p className="text-xs font-medium text-[#6B6B6B] mt-1">
                 Pricing Coverage
               </p>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-artisan-border/70 dark:border-slate-800 flex flex-col gap-2">
+            <div className="mt-5 pt-3 border-t border-[#E5E3DF] flex flex-col gap-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-espresso-500 dark:text-slate-400 font-medium truncate">
+                <span className="text-[#6B6B6B] font-medium truncate font-mono">
                   {unpricedCount > 0 ? `${unpricedCount} ingredients need price` : "All ingredients costed"}
                 </span>
                 <Link
                   to="/ingredients"
-                  className="text-caramel-700 dark:text-amber-400 hover:text-caramel-800 dark:hover:text-amber-300 font-bold hover:underline flex items-center gap-0.5 shrink-0"
+                  className="text-[#D97A34] hover:underline font-bold flex items-center gap-0.5 shrink-0"
                 >
                   View →
                 </Link>
               </div>
-              <div className="w-full bg-artisan-subtle dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-[#F9F8F6] border border-[#E5E3DF]/50 h-2 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    pricingCoverage === 100 ? "bg-culinary-600" : "bg-caramel-500"
+                    pricingCoverage === 100 ? "bg-[#4A7C59]" : "bg-[#D97A34]"
                   }`}
                   style={{ width: `${Math.max(pricingCoverage, 2)}%` }}
                   title="Pricing Coverage"
@@ -484,35 +459,28 @@ export default function Dashboard() {
 
         {/* ── BEGIN: ElevatedOnboardingHero ── */}
         <section
-          className="bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 rounded-2xl p-6 sm:p-8 md:p-10 shadow-artisan-card relative overflow-hidden"
+          className="bg-white border border-[#E5E3DF] rounded-2xl p-6 sm:p-8 md:p-10 shadow-[0_4px_20px_rgba(0,0,0,0.05)] relative overflow-hidden"
           data-purpose="onboarding-launchpad"
         >
           {/* Subtle decorative background warmth curves */}
-          <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-artisan-subtle/60 dark:bg-slate-800/20 pointer-events-none -z-0" />
-          <div className="absolute right-40 -bottom-24 w-64 h-64 rounded-full bg-culinary-50/50 dark:bg-emerald-950/20 pointer-events-none -z-0" />
+          <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-[#F9F8F6] pointer-events-none -z-0" />
+          <div className="absolute right-40 -bottom-24 w-64 h-64 rounded-full bg-[#D97A34]/5 pointer-events-none -z-0" />
 
           <div className="relative z-10 max-w-3xl mx-auto text-center">
             {/* Central Action Icon */}
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-espresso-900 dark:bg-[#1a2234] text-amber-400 shadow-md mb-5 border border-espresso-700 dark:border-slate-700 ring-4 ring-artisan-subtle dark:ring-slate-800/60">
-              <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                />
-              </svg>
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0F0F0F] text-[#D97A34] shadow-md mb-5 border border-[#E5E3DF] ring-4 ring-[#F9F8F6]">
+              <SlidersHorizontal className="w-8 h-8 text-[#D97A34]" />
             </div>
 
             {/* Headline */}
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-espresso-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#0F0F0F] tracking-tight">
               Ready to Price Your First Bakery Product?
             </h2>
 
             {/* Narrative / Guide */}
-            <p className="text-sm sm:text-base text-espresso-600 dark:text-slate-300 mt-3 leading-relaxed">
+            <p className="text-sm sm:text-base text-[#6B6B6B] mt-3 leading-relaxed">
               Your{" "}
-              <strong className="text-espresso-900 dark:text-white font-semibold">
+              <strong className="text-[#0F0F0F] font-semibold font-mono">
                 {ingredients.length || 11} common baking ingredients
               </strong>{" "}
               are already seeded into the database (All-Purpose Flour, Unsalted Butter, Cane Sugar, Eggs,
@@ -524,107 +492,98 @@ export default function Dashboard() {
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
               {/* Step 1 (Active Pending) */}
               <div
-                className={`rounded-xl p-3.5 relative transition-all ${
+                className={`rounded-2xl p-4 relative transition-all ${
                   unpricedCount > 0
-                    ? "bg-artisan-canvas dark:bg-[#141b2c] border-2 border-caramel-500/80"
-                    : "bg-artisan-canvas dark:bg-[#141b2c] border border-culinary-500/60"
+                    ? "bg-[#F9F8F6] border-2 border-[#D97A34]"
+                    : "bg-[#F9F8F6] border border-[#4A7C59]/60"
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-2">
                   <span
-                    className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
+                    className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full text-white ${
                       unpricedCount > 0
-                        ? "text-caramel-700 dark:text-amber-300 bg-caramel-100 dark:bg-amber-950/80"
-                        : "text-culinary-700 dark:text-emerald-300 bg-culinary-100 dark:bg-emerald-950/80"
+                        ? "bg-[#D97A34]"
+                        : "bg-[#4A7C59]"
                     }`}
                   >
                     {unpricedCount > 0 ? "Step 1 • Action" : "Step 1 • Done ✓"}
                   </span>
                   {unpricedCount > 0 ? (
-                    <span className="w-2 h-2 rounded-full bg-caramel-500 animate-ping" />
+                    <span className="w-2 h-2 rounded-full bg-[#D97A34] animate-ping" />
                   ) : (
-                    <span className="w-2 h-2 rounded-full bg-culinary-500" />
+                    <span className="w-2 h-2 rounded-full bg-[#4A7C59]" />
                   )}
                 </div>
-                <h4 className="text-xs font-bold text-espresso-900 dark:text-white">
+                <h4 className="text-xs font-bold text-[#0F0F0F]">
                   Input Purchase Costs
                 </h4>
-                <p className="text-[11px] text-espresso-600 dark:text-slate-400 mt-1 leading-snug">
+                <p className="text-[11px] text-[#6B6B6B] mt-1 leading-snug">
                   Set invoice prices per kg or pack for your {ingredients.length || 11} seeded pantry items.
                 </p>
               </div>
 
               {/* Step 2 */}
-              <div className="bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 rounded-xl p-3.5 opacity-90">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-espresso-400 dark:text-slate-400 bg-artisan-subtle dark:bg-slate-800 px-2 py-0.5 rounded">
+              <div className="bg-[#F9F8F6] border border-[#E5E3DF] rounded-2xl p-4 opacity-90">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B6B6B] bg-white border border-[#E5E3DF] px-2.5 py-0.5 rounded-full">
                     Step 2
                   </span>
-                  <span className="text-xs text-espresso-400 dark:text-slate-400">Next</span>
+                  <span className="text-xs text-[#6B6B6B]">Next</span>
                 </div>
-                <h4 className="text-xs font-bold text-espresso-900 dark:text-white">
+                <h4 className="text-xs font-bold text-[#0F0F0F]">
                   Assemble Recipe Formula
                 </h4>
-                <p className="text-[11px] text-espresso-500 dark:text-slate-400 mt-1 leading-snug">
+                <p className="text-[11px] text-[#6B6B6B] mt-1 leading-snug">
                   Combine cups/grams with waste factors and batch yields.
                 </p>
               </div>
 
               {/* Step 3 */}
-              <div className="bg-artisan-canvas dark:bg-[#141b2c] border border-artisan-border dark:border-slate-800 rounded-xl p-3.5 opacity-90">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-espresso-400 dark:text-slate-400 bg-artisan-subtle dark:bg-slate-800 px-2 py-0.5 rounded">
+              <div className="bg-[#F9F8F6] border border-[#E5E3DF] rounded-2xl p-4 opacity-90">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#6B6B6B] bg-white border border-[#E5E3DF] px-2.5 py-0.5 rounded-full">
                     Step 3
                   </span>
-                  <span className="text-xs text-espresso-400 dark:text-slate-400">Target</span>
+                  <span className="text-xs text-[#6B6B6B]">Target</span>
                 </div>
-                <h4 className="text-xs font-bold text-espresso-900 dark:text-white">
+                <h4 className="text-xs font-bold text-[#0F0F0F]">
                   Auto Gross Margin
                 </h4>
-                <p className="text-[11px] text-espresso-500 dark:text-slate-400 mt-1 leading-snug">
+                <p className="text-[11px] text-[#6B6B6B] mt-1 leading-snug">
                   Lock in 50%+ profit margin telemetry for retail and cafe wholesale.
                 </p>
               </div>
             </div>
 
             {/* Primary CTAs */}
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 to="/ingredients"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-[#141b2c] hover:bg-artisan-subtle dark:hover:bg-slate-800 text-espresso-850 dark:text-slate-100 font-bold text-sm border border-artisan-border dark:border-slate-800 shadow-artisan-subtle transition-all hover:scale-[1.01] cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-transparent hover:bg-[#0F0F0F]/5 text-[#0F0F0F] font-bold text-sm border border-[#0F0F0F] transition-all cursor-pointer min-h-[44px]"
               >
-                <svg className="w-4 h-4 text-caramel-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                  />
-                </svg>
+                <Coins className="w-4 h-4 text-[#D97A34]" />
                 <span>Set Ingredient Purchase Prices</span>
-                <span className="bg-caramel-100 text-caramel-700 dark:bg-amber-950/80 dark:text-amber-300 text-xs px-1.5 py-0.5 rounded font-mono font-medium ml-1">
+                <span className="bg-[#D97A34]/10 text-[#D97A34] text-xs px-2 py-0.5 rounded-full font-mono font-medium ml-1">
                   {ingredients.length || 11} Items
                 </span>
               </Link>
 
               <Link
                 to="/recipes"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-culinary-600 hover:bg-culinary-700 text-white font-bold text-sm shadow-artisan-glow transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#D97A34] hover:bg-[#c26827] text-white font-bold text-sm shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer min-h-[44px]"
               >
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 4v16m8-8H4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" />
-                </svg>
+                <Plus className="w-4 h-4 text-white" />
                 <span>Create First Recipe</span>
               </Link>
             </div>
 
             {/* Small helper text with sample data loader */}
-            <p className="text-[11px] text-espresso-400 dark:text-slate-400 mt-4">
+            <p className="text-[11px] text-[#6B6B6B] mt-4">
               ✨ Need sample bakery costs?{" "}
               <button
                 onClick={handleLoadSampleData}
                 disabled={seedingLoading}
-                className="text-culinary-700 dark:text-emerald-400 hover:underline font-semibold cursor-pointer disabled:opacity-50"
+                className="text-[#D97A34] hover:underline font-semibold cursor-pointer disabled:opacity-50"
                 type="button"
               >
                 {seedingLoading
@@ -639,17 +598,17 @@ export default function Dashboard() {
 
         {/* ── Active Recipes Showcase (If Any Exist) ── */}
         {recipes.length > 0 && (
-          <section className="space-y-4 pt-4 border-t border-artisan-border dark:border-slate-800">
+          <section className="space-y-4 pt-4 border-t border-[#E5E3DF]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-culinary-50 dark:bg-emerald-950/70 text-culinary-700 dark:text-emerald-300 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-[#4A7C59]/10 text-[#4A7C59] border border-[#4A7C59]/30 flex items-center justify-center">
                   <ChefHat className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-espresso-900 dark:text-white tracking-tight">
+                  <h2 className="text-base font-bold text-[#0F0F0F] tracking-tight">
                     Active Recipe Formulas
                   </h2>
-                  <p className="text-xs text-espresso-500 dark:text-slate-400">
+                  <p className="text-xs text-[#6B6B6B]">
                     Batches with computed unit and retail prices
                   </p>
                 </div>
@@ -657,14 +616,14 @@ export default function Dashboard() {
 
               <Link
                 to="/recipes"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-culinary-700 dark:text-emerald-400 hover:text-culinary-800 dark:hover:text-emerald-300 group"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D97A34] hover:underline group"
               >
                 <span>Explore all {recipes.length} recipes</span>
                 <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {recipes.slice(0, 6).map((r) => {
                 const markupPercent = Math.round(r.target_markup_pct * 100);
                 return (
@@ -673,50 +632,50 @@ export default function Dashboard() {
                     to={`/recipes/${r.recipe_id}`}
                     className="group outline-none"
                   >
-                    <div className="relative overflow-hidden rounded-xl p-5 bg-artisan-surface dark:bg-[#0c101a] border border-artisan-border dark:border-slate-800 shadow-artisan-card hover:border-espresso-200 dark:hover:border-slate-700 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
+                    <div className="relative overflow-hidden rounded-2xl p-6 bg-white border border-[#E5E3DF] shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:border-[#D97A34] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer">
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div>
-                          <h3 className="font-bold text-sm text-espresso-900 dark:text-white group-hover:text-culinary-700 dark:group-hover:text-emerald-400 transition-colors">
+                          <h3 className="font-bold text-sm text-[#0F0F0F] group-hover:text-[#D97A34] transition-colors">
                             {r.name}
                           </h3>
-                          <p className="text-xs text-espresso-500 dark:text-slate-400 mt-0.5">
+                          <p className="text-xs text-[#6B6B6B] mt-0.5">
                             Standard Yield:{" "}
-                            <strong className="text-espresso-800 dark:text-slate-200 font-semibold">
+                            <strong className="text-[#0F0F0F] font-semibold font-mono">
                               {r.yield_qty} units
                             </strong>
                           </p>
                         </div>
 
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold bg-culinary-50 dark:bg-emerald-950/70 text-culinary-700 dark:text-emerald-300 border border-culinary-200 dark:border-emerald-800/60">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#D97A34] text-white">
                           {markupPercent}% Markup
                         </span>
                       </div>
 
-                      <div className="bg-artisan-canvas dark:bg-[#141b2c] rounded-lg p-3 border border-artisan-border dark:border-slate-800 grid grid-cols-2 gap-3 text-xs">
+                      <div className="bg-[#F9F8F6] rounded-xl p-3 border border-[#E5E3DF] grid grid-cols-2 gap-3 text-xs">
                         <div>
-                          <span className="text-[10px] uppercase tracking-wider text-espresso-400 dark:text-slate-400 block font-medium">
+                          <span className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block font-medium">
                             Labor Overhead
                           </span>
-                          <span className="font-bold text-espresso-800 dark:text-slate-200 tabular-nums">
+                          <span className="font-bold text-[#0F0F0F] font-mono">
                             {fmt(r.labor_cost)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] uppercase tracking-wider text-espresso-400 dark:text-slate-400 block font-medium">
+                          <span className="text-[10px] uppercase tracking-wider text-[#6B6B6B] block font-medium">
                             Profit Alert At
                           </span>
-                          <span className="font-bold text-espresso-800 dark:text-slate-200 tabular-nums">
+                          <span className="font-bold text-[#0F0F0F] font-mono">
                             {fmt(r.desired_profit_alert)}
                           </span>
                         </div>
                       </div>
 
-                      <div className="mt-3.5 flex items-center justify-between text-xs text-espresso-500 dark:text-slate-400 pt-2 border-t border-artisan-border/70 dark:border-slate-800">
+                      <div className="mt-3.5 flex items-center justify-between text-xs text-[#6B6B6B] pt-2 border-t border-[#E5E3DF]">
                         <span className="inline-flex items-center gap-1.5 text-[11px]">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-culinary-600 dark:text-emerald-400" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#4A7C59]" />
                           Formula active
                         </span>
-                        <span className="font-semibold text-culinary-700 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                        <span className="font-semibold text-[#D97A34] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
                           Open Calculator →
                         </span>
                       </div>

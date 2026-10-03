@@ -14,7 +14,7 @@ export default function App() {
   return (
     <AppProvider>
       <BrowserRouter>
-        <div className="flex h-screen overflow-hidden bg-artisan-canvas dark:bg-[#080c14] text-espresso-850 dark:text-slate-100 font-sans selection:bg-culinary-100 selection:text-culinary-800">
+        <div className="flex h-screen overflow-hidden bg-[#F9F8F6] text-[#0F0F0F] font-sans selection:bg-[#D97A34]/20 selection:text-[#0F0F0F]">
           <Sidebar />
           <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">

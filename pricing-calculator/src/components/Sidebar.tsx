@@ -7,13 +7,13 @@ export function Sidebar() {
 
   return (
     <aside
-      className="w-64 bg-artisan-surface dark:bg-[#0c101a] border-r border-artisan-border dark:border-slate-800 flex-shrink-0 flex flex-col justify-between hidden md:flex z-30"
+      className="w-[240px] bg-[#0F0F0F] text-slate-100 border-r border-[#E5E3DF]/15 flex-shrink-0 flex flex-col justify-between hidden md:flex z-30"
       data-purpose="sidebar-navigation"
     >
       {/* Top Brand Lockup and Primary Navigation */}
       <div className="flex flex-col">
         {/* Logo Header */}
-        <div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0">
+        <div className="h-20 px-5 flex items-center border-b border-[#E5E3DF]/15 shrink-0">
           <BakeIQBrand />
         </div>
 
@@ -27,8 +27,8 @@ export function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-[#D97A34] text-white shadow-sm"
+                      : "text-slate-300 hover:bg-white/10 hover:text-white font-medium"
                   }`
                 }
               >
@@ -36,7 +36,7 @@ export function Sidebar() {
                   <>
                     <div className="flex items-center gap-2.5">
                       <svg
-                        className={`w-4 h-4 ${isActive ? "text-white" : "text-espresso-400 dark:text-slate-400"}`}
+                        className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -62,8 +62,8 @@ export function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-[#D97A34] text-white shadow-sm"
+                      : "text-slate-300 hover:bg-white/10 hover:text-white font-medium"
                   }`
                 }
               >
@@ -71,7 +71,7 @@ export function Sidebar() {
                   <>
                     <div className="flex items-center gap-2.5">
                       <svg
-                        className={`w-4 h-4 ${isActive ? "text-white" : "text-espresso-400 dark:text-slate-400"}`}
+                        className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -97,8 +97,8 @@ export function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-[#D97A34] text-white shadow-sm"
+                      : "text-slate-300 hover:bg-white/10 hover:text-white font-medium"
                   }`
                 }
               >
@@ -106,7 +106,7 @@ export function Sidebar() {
                   <>
                     <div className="flex items-center gap-2.5">
                       <svg
-                        className={`w-4 h-4 ${isActive ? "text-white" : "text-espresso-400 dark:text-slate-400"}`}
+                        className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -132,8 +132,8 @@ export function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-[#D97A34] text-white shadow-sm"
+                      : "text-slate-300 hover:bg-white/10 hover:text-white font-medium"
                   }`
                 }
               >
@@ -141,7 +141,7 @@ export function Sidebar() {
                   <>
                     <div className="flex items-center gap-2.5">
                       <svg
-                        className={`w-4 h-4 ${isActive ? "text-white" : "text-espresso-400 dark:text-slate-400"}`}
+                        className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -167,8 +167,8 @@ export function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-[#D97A34] text-white shadow-sm"
+                      : "text-slate-300 hover:bg-white/10 hover:text-white font-medium"
                   }`
                 }
               >
@@ -176,7 +176,7 @@ export function Sidebar() {
                   <>
                     <div className="flex items-center gap-2.5">
                       <svg
-                        className={`w-4 h-4 ${isActive ? "text-white" : "text-espresso-400 dark:text-slate-400"}`}
+                        className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -206,10 +206,10 @@ export function Sidebar() {
       </div>
 
       {/* Bottom Sidebar Footer with Engine Status */}
-      <div className="h-12 px-4 flex items-center border-t border-artisan-border dark:border-slate-800 shrink-0">
-        <div className="w-full flex items-center justify-between text-[11px] text-espresso-400 dark:text-slate-400">
+      <div className="h-12 px-4 flex items-center border-t border-[#E5E3DF]/15 shrink-0">
+        <div className="w-full flex items-center justify-between text-[11px] text-slate-400">
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-culinary-500" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4A7C59]" />
             v3.2.0 • Real-Time FIFO
           </span>
           <span className="font-mono">PHP (₱)</span>
