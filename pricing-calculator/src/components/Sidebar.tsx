@@ -7,28 +7,28 @@ export function Sidebar() {
 
   return (
     <aside
-      className="w-64 bg-artisan-surface dark:bg-[#0c101a] border-r border-artisan-border dark:border-slate-800 flex-shrink-0 flex flex-col justify-between hidden md:flex z-30"
+      className="w-64 bg-white border-r border-stoneBorder/80 flex-shrink-0 flex flex-col justify-between hidden md:flex z-30"
       data-purpose="sidebar-navigation"
     >
       {/* Top Brand Lockup and Primary Navigation */}
       <div className="flex flex-col">
         {/* Logo Header */}
-        <div className="h-20 px-5 flex items-center border-b border-artisan-border dark:border-slate-800 shrink-0">
+        <div className="h-20 px-5 flex items-center border-b border-stoneBorder/60 shrink-0">
           <BakeIQBrand />
         </div>
 
         {/* Navigation Menu Groups */}
-        <nav className="p-3 space-y-6 overflow-y-auto max-h-[calc(100vh-180px)]">
+        <nav className="p-5 space-y-6 overflow-y-auto max-h-[calc(100vh-180px)]">
           <ul className="space-y-1.5">
             <li>
               <NavLink
                 to="/"
                 end
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
+                  `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-culinary-600 text-white shadow-sm shadow-culinary-600/20"
+                      : "text-espresso-600 hover:bg-flour-100 hover:text-espresso-800 transition-colors font-medium"
                   }`
                 }
               >
@@ -60,10 +60,10 @@ export function Sidebar() {
               <NavLink
                 to="/ingredients"
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
+                  `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-culinary-600 text-white shadow-sm shadow-culinary-600/20"
+                      : "text-espresso-600 hover:bg-flour-100 hover:text-espresso-800 transition-colors font-medium"
                   }`
                 }
               >
@@ -95,10 +95,10 @@ export function Sidebar() {
               <NavLink
                 to="/inventory"
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
+                  `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-culinary-600 text-white shadow-sm shadow-culinary-600/20"
+                      : "text-espresso-600 hover:bg-flour-100 hover:text-espresso-800 transition-colors font-medium"
                   }`
                 }
               >
@@ -130,10 +130,10 @@ export function Sidebar() {
               <NavLink
                 to="/recipes"
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
+                  `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-culinary-600 text-white shadow-sm shadow-culinary-600/20"
+                      : "text-espresso-600 hover:bg-flour-100 hover:text-espresso-800 transition-colors font-medium"
                   }`
                 }
               >
@@ -165,10 +165,10 @@ export function Sidebar() {
               <NavLink
                 to="/settings"
                 className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all group ${
+                  `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
                     isActive
-                      ? "bg-culinary-600 text-white shadow-sm"
-                      : "text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-[#141b2c] hover:text-espresso-900 dark:hover:text-white font-medium"
+                      ? "bg-culinary-600 text-white shadow-sm shadow-culinary-600/20"
+                      : "text-espresso-600 hover:bg-flour-100 hover:text-espresso-800 transition-colors font-medium"
                   }`
                 }
               >
@@ -206,7 +206,7 @@ export function Sidebar() {
       </div>
 
       {/* Bottom Sidebar Footer with Engine Status */}
-      <div className="h-12 px-4 flex items-center border-t border-artisan-border dark:border-slate-800 shrink-0">
+      <div className="h-12 px-4 flex items-center border-t border-stoneBorder/60 shrink-0">
         <div className="w-full flex items-center justify-between text-[11px] text-espresso-400 dark:text-slate-400">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-culinary-500" />

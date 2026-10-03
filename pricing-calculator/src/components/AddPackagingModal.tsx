@@ -145,11 +145,11 @@ export function AddPackagingModal({
       aria-labelledby="add-packaging-modal-title"
     >
       <div
-        className="relative z-10 w-full max-w-xl rounded-3xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0c101a] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative z-10 w-full max-w-xl rounded-3xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0c101a] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-artisan-border/80 dark:border-slate-800/80 bg-artisan-subtle/50 dark:bg-slate-900/40">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stoneBorder/80 dark:border-slate-800/80 bg-flour-100/50 dark:bg-slate-900/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
               <Box className="w-5 h-5" />
@@ -165,7 +165,7 @@ export function AddPackagingModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-espresso-400 hover:text-espresso-700 dark:text-slate-400 dark:hover:text-white hover:bg-artisan-subtle dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-espresso-400 hover:text-espresso-700 dark:text-slate-400 dark:hover:text-white hover:bg-flour-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -191,7 +191,7 @@ export function AddPackagingModal({
                 placeholder="Search packaging material or code..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-slate-900/60 text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
+                className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-slate-900/60 text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
               />
             </div>
 
@@ -230,7 +230,7 @@ export function AddPackagingModal({
                 <Spinner className="w-5 h-5 text-amber-600" />
               </div>
             ) : (
-              <div className="max-h-44 overflow-y-auto rounded-xl border border-artisan-border dark:border-slate-800 divide-y divide-artisan-border/60 dark:divide-slate-800/60 bg-artisan-canvas/30 dark:bg-slate-900/30">
+              <div className="max-h-44 overflow-y-auto rounded-xl border border-stoneBorder dark:border-slate-800 divide-y divide-stoneBorder/60 dark:divide-slate-800/60 bg-flour-100/30 dark:bg-slate-900/30">
                 {filteredItems.map((p) => {
                   const isSelected = p.packaging_id === selectedId;
                   return (
@@ -244,7 +244,7 @@ export function AddPackagingModal({
                       className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between text-xs transition-colors cursor-pointer ${
                         isSelected
                           ? "bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-semibold"
-                          : "hover:bg-artisan-subtle/80 dark:hover:bg-slate-800/40 text-espresso-700 dark:text-slate-300"
+                          : "hover:bg-flour-100/80 dark:hover:bg-slate-800/40 text-espresso-700 dark:text-slate-300"
                       }`}
                     >
                       <div className="flex items-center gap-2">
@@ -252,7 +252,7 @@ export function AddPackagingModal({
                           {p.packaging_code}
                         </span>
                         <span>{p.name}</span>
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-artisan-subtle dark:bg-slate-800 text-espresso-500 dark:text-slate-400">
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-flour-100 dark:bg-slate-800 text-espresso-500 dark:text-slate-400">
                           {p.packaging_type}
                         </span>
                       </div>
@@ -270,7 +270,7 @@ export function AddPackagingModal({
           </div>
 
           {/* Quantity Controls & Quick Presets */}
-          <div className="space-y-2 pt-2 border-t border-artisan-border dark:border-slate-800">
+          <div className="space-y-2 pt-2 border-t border-stoneBorder dark:border-slate-800">
             <div className="flex items-center justify-between text-xs">
               <label htmlFor="pkg-batch-qty-input" className="font-bold text-espresso-800 dark:text-slate-200">
                 Batch Allocation ({selectedItem?.unit || "unit"}s per batch)
@@ -284,7 +284,7 @@ export function AddPackagingModal({
                     className={`px-2 py-0.5 rounded-lg text-[11px] font-mono font-bold transition-all cursor-pointer ${
                       batchQty === preset
                         ? "bg-amber-600 text-white shadow-2xs"
-                        : "bg-artisan-subtle dark:bg-slate-800 text-espresso-600 dark:text-slate-300 hover:bg-amber-100 dark:hover:bg-amber-950/60"
+                        : "bg-flour-100 dark:bg-slate-800 text-espresso-600 dark:text-slate-300 hover:bg-amber-100 dark:hover:bg-amber-950/60"
                     }`}
                   >
                     {preset}
@@ -297,7 +297,7 @@ export function AddPackagingModal({
               <button
                 type="button"
                 onClick={() => handleStepQty(-1)}
-                className="w-10 h-10 rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas dark:bg-[#141b2c] text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-slate-800 font-bold text-base flex items-center justify-center cursor-pointer transition-colors"
+                className="w-10 h-10 rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100 dark:bg-[#141b2c] text-espresso-700 dark:text-slate-300 hover:bg-flour-100 dark:hover:bg-slate-800 font-bold text-base flex items-center justify-center cursor-pointer transition-colors"
               >
                 -
               </button>
@@ -311,13 +311,13 @@ export function AddPackagingModal({
                   const val = parseFloat(e.target.value);
                   setBatchQty(isNaN(val) ? 0 : val);
                 }}
-                className="flex-1 px-4 py-2.5 text-center font-mono font-bold text-base rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas dark:bg-[#141b2c] text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
+                className="flex-1 px-4 py-2.5 text-center font-mono font-bold text-base rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100 dark:bg-[#141b2c] text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
                 required
               />
               <button
                 type="button"
                 onClick={() => handleStepQty(1)}
-                className="w-10 h-10 rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas dark:bg-[#141b2c] text-espresso-700 dark:text-slate-300 hover:bg-artisan-subtle dark:hover:bg-slate-800 font-bold text-base flex items-center justify-center cursor-pointer transition-colors"
+                className="w-10 h-10 rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100 dark:bg-[#141b2c] text-espresso-700 dark:text-slate-300 hover:bg-flour-100 dark:hover:bg-slate-800 font-bold text-base flex items-center justify-center cursor-pointer transition-colors"
               >
                 +
               </button>
@@ -346,11 +346,11 @@ export function AddPackagingModal({
           </div>
 
           {/* Actions */}
-          <div className="pt-2 border-t border-artisan-border/80 dark:border-slate-800/80 flex items-center justify-end gap-3">
+          <div className="pt-2 border-t border-stoneBorder/80 dark:border-slate-800/80 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-300 bg-artisan-surface dark:bg-slate-800 hover:bg-artisan-subtle dark:hover:bg-slate-700 border border-artisan-border dark:border-slate-700 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-flour-100 dark:hover:bg-slate-700 border border-stoneBorder dark:border-slate-700 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>

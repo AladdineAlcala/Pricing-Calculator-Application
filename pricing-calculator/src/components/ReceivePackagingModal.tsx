@@ -144,11 +144,11 @@ export function ReceivePackagingModal({
       aria-labelledby="packaging-delivery-modal-title"
     >
       <div
-        className="relative z-10 w-full max-w-xl rounded-2xl border border-artisan-border dark:border-slate-800 bg-artisan-surface dark:bg-[#0c101a] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative z-10 w-full max-w-xl rounded-2xl border border-stoneBorder dark:border-slate-800 bg-white dark:bg-[#0c101a] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-artisan-border/80 dark:border-slate-800/80 bg-artisan-subtle/50 dark:bg-slate-900/40">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-stoneBorder/80 dark:border-slate-800/80 bg-flour-100/50 dark:bg-slate-900/40">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-700 dark:text-amber-400 shrink-0">
               <Box className="w-5 h-5" />
@@ -164,7 +164,7 @@ export function ReceivePackagingModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-espresso-400 hover:text-espresso-700 dark:text-slate-400 dark:hover:text-white hover:bg-artisan-subtle dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg text-espresso-400 hover:text-espresso-700 dark:text-slate-400 dark:hover:text-white hover:bg-flour-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -202,11 +202,11 @@ export function ReceivePackagingModal({
                     placeholder="Search packaging code or name..."
                     value={searchFilter}
                     onChange={(e) => setSearchFilter(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-slate-900/60 text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
+                    className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-slate-900/60 text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
-                <div className="max-h-36 overflow-y-auto rounded-xl border border-artisan-border dark:border-slate-800 divide-y divide-artisan-border/60 dark:divide-slate-800/60 bg-artisan-canvas/30 dark:bg-slate-900/30">
+                <div className="max-h-36 overflow-y-auto rounded-xl border border-stoneBorder dark:border-slate-800 divide-y divide-stoneBorder/60 dark:divide-slate-800/60 bg-flour-100/30 dark:bg-slate-900/30">
                   {filteredItems.map((p) => {
                     const isSelected = p.packaging_id === selectedId;
                     return (
@@ -217,7 +217,7 @@ export function ReceivePackagingModal({
                         className={`w-full text-left px-3 py-2.5 flex items-center justify-between text-xs transition-colors cursor-pointer ${
                           isSelected
                             ? "bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-semibold"
-                            : "hover:bg-artisan-subtle/80 dark:hover:bg-slate-800/40 text-espresso-700 dark:text-slate-300"
+                            : "hover:bg-flour-100/80 dark:hover:bg-slate-800/40 text-espresso-700 dark:text-slate-300"
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -276,7 +276,7 @@ export function ReceivePackagingModal({
                 placeholder="e.g. 50"
                 value={addedQty}
                 onChange={(e) => setAddedQty(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-mono font-bold rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-slate-900/60 text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
+                className="w-full px-3 py-2 text-xs font-mono font-bold rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-slate-900/60 text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
                 required
               />
             </div>
@@ -293,14 +293,14 @@ export function ReceivePackagingModal({
                 placeholder="e.g. 2.50"
                 value={newUnitCost}
                 onChange={(e) => setNewUnitCost(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-mono font-bold rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-slate-900/60 text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
+                className="w-full px-3 py-2 text-xs font-mono font-bold rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-slate-900/60 text-espresso-900 dark:text-white focus:outline-none focus:border-amber-500"
                 required
               />
             </div>
           </div>
 
           {/* Real-time Calculation Hero Banner */}
-          <div className="p-4 rounded-xl border border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-slate-900/40 flex items-center justify-between text-xs">
+          <div className="p-4 rounded-xl border border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-slate-900/40 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <PackageCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               <span className="font-semibold text-espresso-600 dark:text-slate-300">
@@ -313,11 +313,11 @@ export function ReceivePackagingModal({
           </div>
 
           {/* Modal Actions */}
-          <div className="pt-2 border-t border-artisan-border/80 dark:border-slate-800/80 flex items-center justify-end gap-3">
+          <div className="pt-2 border-t border-stoneBorder/80 dark:border-slate-800/80 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-300 bg-artisan-surface dark:bg-slate-800 hover:bg-artisan-subtle dark:hover:bg-slate-700 border border-artisan-border dark:border-slate-700 rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-flour-100 dark:hover:bg-slate-700 border border-stoneBorder dark:border-slate-700 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>

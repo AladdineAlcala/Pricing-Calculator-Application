@@ -6,36 +6,54 @@
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
+  /* ── Legacy artisan-* tokens (kept for backward compatibility during migration) ── */
   --color-artisan-canvas: #FAF8F5;
   --color-artisan-surface: #FFFFFF;
   --color-artisan-subtle: #F4EFEB;
   --color-artisan-border: #E8E1D9;
   --color-artisan-dark-border: #DDD5CC;
 
-  --color-espresso-900: #1A120B;
-  --color-espresso-850: #231810;
-  --color-espresso-800: #2D1F15;
-  --color-espresso-700: #433022;
-  --color-espresso-600: #634835;
+  /* ── BakeIQ v2 Espresso Palette (corrected hex values per design spec) ── */
+  --color-espresso-900: #140E0A;
+  --color-espresso-850: #1A120D;
+  --color-espresso-800: #1E1510;
+  --color-espresso-700: #2A1F18;
+  --color-espresso-600: #3D2F26;
+  --color-espresso-500: #524135;
   --color-espresso-400: #8C7362;
   --color-espresso-300: #B5A795;
   --color-espresso-200: #C7B9AC;
 
+  /* ── BakeIQ v2 Flour Palette (canvas / light surface) ── */
+  --color-flour-50: #FDFCFB;
+  --color-flour-100: #FBF9F5;
+  --color-flour-200: #F5F1EA;
+  --color-flour-300: #EAE3D6;
+  --color-flour-400: #D9D0C1;
+
+  /* ── BakeIQ v2 Stone Border ── */
+  --color-stoneBorder: #E6DFD5;
+
+  /* ── BakeIQ v2 Culinary (Success / Active) ── */
   --color-culinary-50: #F0FDF4;
   --color-culinary-100: #DCFCE7;
   --color-culinary-200: #BBF7D0;
+  --color-culinary-400: #4ADE80;
   --color-culinary-500: #22C55E;
   --color-culinary-600: #16A34A;
   --color-culinary-700: #15803D;
   --color-culinary-800: #166534;
 
+  /* ── BakeIQ v2 Caramel (Warm Accent) ── */
   --color-caramel-50: #FFFBEB;
   --color-caramel-100: #FEF3C7;
   --color-caramel-200: #FDE68A;
+  --color-caramel-400: #FBBF24;
   --color-caramel-500: #F59E0B;
   --color-caramel-600: #D97706;
   --color-caramel-700: #B45309;
 
+  /* ── Shadows (artisan-* kept; stoneBorder-based variants added) ── */
   --shadow-artisan-subtle: 0 1px 3px rgba(35, 24, 16, 0.04), 0 1px 2px rgba(35, 24, 16, 0.02);
   --shadow-artisan-card: 0 4px 16px -2px rgba(35, 24, 16, 0.05), 0 2px 6px -1px rgba(35, 24, 16, 0.03);
   --shadow-artisan-glow: 0 8px 24px -4px rgba(22, 163, 74, 0.16);

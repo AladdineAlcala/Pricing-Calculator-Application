@@ -30,7 +30,7 @@ export function StockDeficitModal({
       aria-labelledby="deficit-modal-title"
     >
       <div
-        className="relative z-10 w-full max-w-2xl rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-artisan-surface dark:bg-[#0f1422] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative z-10 w-full max-w-2xl rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-[#0f1422] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -76,10 +76,10 @@ export function StockDeficitModal({
               </span>
             </div>
 
-            <div className="rounded-xl border border-artisan-border dark:border-slate-800 overflow-hidden bg-artisan-canvas/50 dark:bg-[#141b2c]/50">
+            <div className="rounded-xl border border-stoneBorder dark:border-slate-800 overflow-hidden bg-flour-100/50 dark:bg-[#141b2c]/50">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-artisan-border dark:border-slate-800 bg-artisan-subtle/60 dark:bg-slate-800/40 text-[11px] font-semibold text-espresso-500 dark:text-slate-400">
+                  <tr className="border-b border-stoneBorder dark:border-slate-800 bg-flour-100/60 dark:bg-slate-800/40 text-[11px] font-semibold text-espresso-500 dark:text-slate-400">
                     <th className="py-2.5 px-4">Material / Item</th>
                     <th className="py-2.5 px-3">Type</th>
                     <th className="py-2.5 px-3 text-right">Required</th>
@@ -88,7 +88,7 @@ export function StockDeficitModal({
                     <th className="py-2.5 px-4 text-center">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-artisan-border dark:divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-stoneBorder dark:divide-slate-800/60 font-mono">
                   {deficits.map((d, idx) => (
                     <tr key={idx} className="hover:bg-rose-50/30 dark:hover:bg-rose-950/20 transition-colors">
                       <td className="py-3 px-4 font-sans font-bold text-espresso-900 dark:text-white">
@@ -138,14 +138,14 @@ export function StockDeficitModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-artisan-border dark:border-slate-800 bg-artisan-canvas/50 dark:bg-[#141b2c]/50 flex items-center justify-between gap-3">
+        <div className="p-4 border-t border-stoneBorder dark:border-slate-800 bg-flour-100/50 dark:bg-[#141b2c]/50 flex items-center justify-between gap-3">
           <span className="text-[11px] text-espresso-500 dark:text-slate-400">
             Log inventory delivery intake to fulfill recipe requirement.
           </span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-200 bg-artisan-surface dark:bg-slate-800 hover:bg-artisan-subtle dark:hover:bg-slate-700 border border-artisan-border dark:border-slate-700 rounded-xl transition-colors cursor-pointer"
+            className="px-4 py-2 text-xs font-semibold text-espresso-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-flour-100 dark:hover:bg-slate-700 border border-stoneBorder dark:border-slate-700 rounded-xl transition-colors cursor-pointer"
           >
             Dismiss Alert
           </button>
